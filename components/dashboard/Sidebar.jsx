@@ -160,7 +160,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
                   : 'gap-3 px-4 py-2.5',
                 isActive
                   ? 'bg-[#2563eb] text-white shadow-[0_0_16px_rgba(37,99,235,0.35)]'
-                  : 'text-slate-500 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-800 dark:hover:text-white/90',
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white',
               )}
               title={isCollapsed ? item.label : undefined}
             >
@@ -168,7 +168,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
                 size={17}
                 className={cn(
                   'shrink-0',
-                  isActive ? 'text-white' : 'text-slate-400 dark:text-white/35'
+                  isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'
                 )}
               />
               {!isCollapsed && (
@@ -199,7 +199,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
                   : 'gap-3 px-4 py-2.5',
                 isActive
                   ? 'bg-[#2563eb] text-white shadow-[0_0_16px_rgba(37,99,235,0.35)]'
-                  : 'text-slate-400 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-700 dark:hover:text-white/80',
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white',
               )}
               title={isCollapsed ? item.label : undefined}
             >
@@ -207,7 +207,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
                 size={17}
                 className={cn(
                   'shrink-0',
-                  isActive ? 'text-white' : 'text-slate-300 dark:text-white/30'
+                  isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'
                 )}
               />
               {!isCollapsed && (
