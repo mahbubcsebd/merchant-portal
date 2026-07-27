@@ -1,14 +1,12 @@
-
-import { useState } from "react"
 import { OverviewCards } from "@/components/dashboard/OverviewCards"
 import { LatestActivities } from "@/components/dashboard/LatestActivities"
 import { RecentTransactionsTable } from "@/components/dashboard/RecentTransactionsTable"
 import { StatisticsChart } from "@/components/dashboard/StatisticsChart"
 import { PeriodDropdown, CurrencyDropdown } from "@/components/dashboard/Dropdowns"
+import { useDashboardContext } from "@/pages/dashboard/layout"
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState("3m")
-  const [currency, setCurrency] = useState("xcg")
+  const { period, setPeriod, currency, setCurrency } = useDashboardContext();
 
   return (
     <div className="w-full">

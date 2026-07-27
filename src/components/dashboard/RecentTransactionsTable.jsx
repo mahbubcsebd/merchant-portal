@@ -1,16 +1,11 @@
-
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
-
-const MOCK_TRANSACTIONS = [
-  { id: "TXN-001", type: "Pay To Email", description: "test",              amount: 1.63, currency: "XCG", direction: "in",  date: "Apr 13, 2026" },
-  { id: "TXN-002", type: "Pay To Email", description: "check Hold amount", amount: 4.70, currency: "XCG", direction: "in",  date: "Feb 03, 2026" },
-  { id: "TXN-003", type: "Pay To Email", description: "test",              amount: 1.10, currency: "XCG", direction: "in",  date: "Feb 03, 2026" },
-]
+import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useMemo } from "react"
 
 const columns = [
   {
@@ -53,21 +48,39 @@ const columns = [
   {
     accessorKey: "amount",
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => (
-      <div className={`text-right font-semibold text-sm shrink-0 ${
-        row.original.direction === "in"
-          ? "text-emerald-500 dark:text-emerald-400"
-          : "text-red-500 dark:text-red-400"
-      }`}>
-        {row.original.direction === "in" ? "+" : "-"}{row.original.currency} {row.getValue("amount").toFixed(2)}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const formattedAmount = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(row.getValue("amount"));
+      return (
+        <div className={`text-right font-semibold text-sm shrink-0 ${
+          row.original.direction === "in"
+            ? "text-emerald-500 dark:text-emerald-400"
+            : "text-red-500 dark:text-red-400"
+        }`}>
+          {row.original.direction === "in" ? "+" : "-"}{row.original.currency} {formattedAmount}
+        </div>
+      )
+    },
   },
 ]
 
 export function RecentTransactionsTable({ currencyDropdown }) {
+  const { transactions } = useDashboardContext();
+
+  const formattedTransactions = useMemo(() => {
+    if (!transactions) return [];
+    return transactions.slice(0, 6).map((txn, index) => ({
+      id: `TXN-${index}`,
+      type: txn.txnName || "Transaction",
+      description: txn.description || "",
+      amount: parseFloat(txn.amount) || 0, // Using amount directly assuming it's correctly scaled in old portal
+      currency: txn.currencyCode || "XCG",
+      direction: txn.txnDebitCreditCode === "C" ? "in" : "out",
+      date: txn.txnDate || "",
+    }));
+  }, [transactions]);
+
   const table = useReactTable({
-    data: MOCK_TRANSACTIONS,
+    data: formattedTransactions,
     columns,
     getCoreRowModel: getCoreRowModel(),
   })

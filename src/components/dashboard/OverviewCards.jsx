@@ -1,54 +1,77 @@
-
 import { TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from "lucide-react"
+import { useDashboardContext } from "@/pages/dashboard/layout"
 
-const cards = [
-  {
-    label: "Incoming",
-    value: "XCG 6.33",
-    count: "2 transactions",
-    trend: "up",
-    change: "+12.5%",
-    icon: ArrowDownLeft,
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    bgClass: "bg-emerald-50 dark:bg-emerald-500/5",
-    borderClass: "border-emerald-200/50 dark:border-emerald-500/20",
-  },
-  {
-    label: "Outgoing",
-    value: "XCG 0.00",
-    count: "0 transactions",
-    trend: "down",
-    change: "0%",
-    icon: ArrowUpRight,
-    iconColor: "text-red-500 dark:text-red-400",
-    bgClass: "bg-red-50 dark:bg-red-500/5",
-    borderClass: "border-red-200/50 dark:border-red-500/20",
-  },
-  {
-    label: "Total Balance",
-    value: "XCG 2,497.63",
-    count: "All time",
-    trend: "up",
-    change: "Active",
-    icon: TrendingUp,
-    iconColor: "text-blue-600 dark:text-blue-400",
-    bgClass: "bg-blue-50 dark:bg-blue-500/5",
-    borderClass: "border-blue-200/50 dark:border-blue-500/20",
-  },
-  {
-    label: "This Month",
-    value: "XCG 6.33",
-    count: "May 2026",
-    trend: "up",
-    change: "+100%",
-    icon: TrendingUp,
-    iconColor: "text-purple-600 dark:text-purple-400",
-    bgClass: "bg-purple-50 dark:bg-purple-500/5",
-    borderClass: "border-purple-200/50 dark:border-purple-500/20",
-  },
-]
+// Helper function to format balance
+function formatBalance(amountStr, currencyStr) {
+  if (!amountStr) return `${currencyStr || 'XCG'} 0.00`;
+  const amount = parseFloat(amountStr) / 100;
+  return `${currencyStr || 'XCG'} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
+}
 
 export function OverviewCards() {
+  const { profile, accounts, dashboardInfo } = useDashboardContext();
+
+  const mainAccount = accounts?.length > 0 ? accounts[0] : null;
+  const currencyStr = mainAccount?.CURSHRTNAME || 'XCG';
+  
+  const totalBalanceRaw = mainAccount ? parseFloat(mainAccount.AVBALANCE) : 0;
+  const totalBalanceStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalBalanceRaw)}`;
+
+  const incomingRaw = dashboardInfo ? parseFloat(dashboardInfo.totalAmountIncoming || 0) : 0;
+  const incomingStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(incomingRaw)}`;
+  const incomingCount = dashboardInfo ? dashboardInfo.totalCountIncoming || 0 : 0;
+
+  const outgoingRaw = dashboardInfo ? parseFloat(dashboardInfo.totalAmountOutgoing || 0) : 0;
+  const outgoingStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(outgoingRaw)}`;
+  const outgoingCount = dashboardInfo ? dashboardInfo.totalCountOutgoing || 0 : 0;
+
+  const cards = [
+    {
+      label: "Incoming",
+      value: incomingStr,
+      count: `${incomingCount} transactions`,
+      trend: "up",
+      change: "0%",
+      icon: ArrowDownLeft,
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      bgClass: "bg-emerald-50 dark:bg-emerald-500/5",
+      borderClass: "border-emerald-200/50 dark:border-emerald-500/20",
+    },
+    {
+      label: "Outgoing",
+      value: outgoingStr,
+      count: `${outgoingCount} transactions`,
+      trend: "down",
+      change: "0%",
+      icon: ArrowUpRight,
+      iconColor: "text-red-500 dark:text-red-400",
+      bgClass: "bg-red-50 dark:bg-red-500/5",
+      borderClass: "border-red-200/50 dark:border-red-500/20",
+    },
+    {
+      label: "Available Balance",
+      value: totalBalanceStr,
+      count: mainAccount ? mainAccount.ACCOUNTNO : "All time",
+      trend: "up",
+      change: "Active",
+      icon: TrendingUp,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      bgClass: "bg-blue-50 dark:bg-blue-500/5",
+      borderClass: "border-blue-200/50 dark:border-blue-500/20",
+    },
+    {
+      label: "This Month",
+      value: "XCG 0.00",
+      count: "May 2026",
+      trend: "up",
+      change: "0%",
+      icon: TrendingUp,
+      iconColor: "text-purple-600 dark:text-purple-400",
+      bgClass: "bg-purple-50 dark:bg-purple-500/5",
+      borderClass: "border-purple-200/50 dark:border-purple-500/20",
+    },
+  ]
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {cards.map((card) => (

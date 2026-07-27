@@ -18,3 +18,33 @@ export async function loginWithPin(payload = {}) {
 export async function verifyOTP(payload = {}) {
   return post("/verifyOTP", payload);
 }
+
+// Get User Profile
+export async function getUserProfile(payload = {}) {
+  return post("/getUserProfile", payload);
+}
+
+// Get Accounts
+export async function getAccounts(payload = {}) {
+  return post("/getAccounts", payload);
+}
+
+// Get Dashboard Info
+export async function getDashboardInfo(payload = {}) {
+  return post("/getDashboardInfo", payload);
+}
+
+// Get Portal Notifications
+export async function getPortalNotifications(payload = {}) {
+  return post("/getPortalNotifications", payload);
+}
+
+// Get Transaction History
+export async function transactionHistory(payload = {}) {
+  return post("/transactionHistory", payload);
+}
+
+// Get Document Content
+export async function getDocumentContent(payload = {}) {
+  return post("/getDocumentContent", payload);
+}

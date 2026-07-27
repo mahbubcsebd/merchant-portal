@@ -2,10 +2,15 @@
 import { Bell, Moon, Sun, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { useDashboardContext } from '@/pages/dashboard/layout';
 
 export function Header({ title = 'Dashboard', setIsMobileOpen }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { profile } = useDashboardContext();
+
+  const userName = profile?.custName || profile?.FIRSTNAME || 'Merchant';
+  const userInitials = userName.substring(0, 2).toUpperCase();
 
   useEffect(() => setMounted(true), []);
 
@@ -27,7 +32,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
             {title}
           </h1>
           <p className="hidden sm:block text-[10px] sm:text-xs text-slate-400 dark:text-white/30 font-medium">
-            Welcome back, Huawel Corp
+            Welcome back, {userName}
           </p>
         </div>
       </div>
@@ -52,7 +57,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
 
         {/* Avatar */}
         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs select-none">
-          HC
+          {userInitials}
         </div>
       </div>
     </header>

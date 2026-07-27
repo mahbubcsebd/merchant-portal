@@ -1,17 +1,13 @@
-
 import GlobalSelect from "@/components/globals/GlobalSelect"
+import { useDashboardContext } from "@/pages/dashboard/layout"
 
 const TIME_PERIODS = [
-  { label: "3 Months", value: "3m" },
-  { label: "This Month", value: "1m" },
-  { label: "This Year", value: "1y" },
-  { label: "All Time", value: "all" },
+  { label: "3 Months", value: "last3months" },
+  { label: "This Month", value: "thismonth" },
+  { label: "This Year", value: "thisyear" },
+  { label: "All Time", value: "alltime" },
 ]
 
-const CURRENCIES = [
-  { label: "2,497.63 XCG", value: "xcg" },
-  { label: "0.00 JMD", value: "jmd" },
-]
 
 export function PeriodDropdown({ value, onChange }) {
   return (
@@ -25,12 +21,23 @@ export function PeriodDropdown({ value, onChange }) {
 }
 
 export function CurrencyDropdown({ value, onChange }) {
+  const { accounts } = useDashboardContext();
+
+  const options = accounts?.map(acc => {
+    const rawBal = parseFloat(acc.AVBALANCE || 0);
+    const formattedBal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rawBal);
+    return {
+      label: `${formattedBal} ${acc.CURSHRTNAME}`,
+      value: acc.ACCOUNTNUMBER
+    };
+  }) || [];
+
   return (
     <GlobalSelect
       value={value}
       onChange={onChange}
       containerClassName="w-[150px]"
-      options={CURRENCIES}
+      options={options.length > 0 ? options : [{ label: "No accounts", value: "" }]}
     />
   )
 }

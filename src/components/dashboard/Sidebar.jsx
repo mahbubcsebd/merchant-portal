@@ -20,6 +20,7 @@ import {
 
 import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDashboardContext } from '@/pages/dashboard/layout';
 
 export const MENU_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -49,6 +50,10 @@ export const BOTTOM_MENU_ITEMS = [
 
 export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const pathname = useLocation().pathname;
+  const { profile } = useDashboardContext();
+
+  const userName = profile?.custName || profile?.FIRSTNAME || 'Merchant';
+  const userInitials = userName.substring(0, 2).toUpperCase();
 
   return (
     <aside
@@ -126,12 +131,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         )}
       >
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm shrink-0">
-          HC
+          {userInitials}
         </div>
         {!isCollapsed && (
           <div className="min-w-0 animate-in fade-in duration-200">
             <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
-              Huawel Corp
+              {userName}
             </p>
             <p className="text-xs text-slate-400 dark:text-white/40 truncate">
               Merchant
