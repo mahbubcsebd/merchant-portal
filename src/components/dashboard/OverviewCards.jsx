@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from "lucide-react"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 
 // Helper function to format balance
 function formatBalance(amountStr, currencyStr) {

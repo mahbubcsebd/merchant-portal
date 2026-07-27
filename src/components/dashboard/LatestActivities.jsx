@@ -1,5 +1,5 @@
 import { Bell } from "lucide-react"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 
 export function LatestActivities() {
   const { notifications } = useDashboardContext();

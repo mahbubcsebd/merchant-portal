@@ -1,5 +1,5 @@
 import GlobalSelect from "@/components/globals/GlobalSelect"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 
 const TIME_PERIODS = [
   { label: "3 Months", value: "last3months" },

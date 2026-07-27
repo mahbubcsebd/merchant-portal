@@ -48,3 +48,8 @@ export async function transactionHistory(payload = {}) {
 export async function getDocumentContent(payload = {}) {
   return post("/getDocumentContent", payload);
 }
+
+// Logout
+export async function logout(payload = {}) {
+  return post("/logout", payload);
+}

@@ -20,7 +20,9 @@ import {
 
 import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDashboardContext } from '@/pages/dashboard/layout';
+import { useDashboardContext } from '@/pages/dashboard/context';
+import { useDialog } from '@/components/globals/DialogProvider';
+import { logout } from '@/lib/api/endpoints';
 
 export const MENU_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -50,7 +52,27 @@ export const BOTTOM_MENU_ITEMS = [
 
 export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const pathname = useLocation().pathname;
+  const navigate = useNavigate();
   const { profile } = useDashboardContext();
+  const { openConfirmDialog } = useDialog();
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    openConfirmDialog({
+      title: "Sign Out",
+      description: "Are you sure you want to sign out of your account?",
+      confirmText: "Yes, Sign Out",
+      iconType: "danger",
+      onConfirm: async () => {
+        try {
+          await logout();
+        } catch (err) {
+          console.error("Logout error", err);
+        }
+        navigate("/");
+      }
+    });
+  };
 
   const userName = profile?.custName || profile?.FIRSTNAME || 'Merchant';
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -192,6 +214,39 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
       )}>
         {BOTTOM_MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
+          
+          if (item.label === 'Sign Out') {
+            return (
+              <button
+                key={item.label}
+                onClick={handleLogout}
+                className={cn(
+                  'flex items-center rounded-lg text-sm font-medium transition-all duration-150 w-full',
+                  isCollapsed
+                    ? 'justify-center h-10 mx-auto'
+                    : 'gap-3 px-4 py-2.5',
+                  isActive
+                    ? 'bg-[#2563eb] text-white shadow-[0_0_16px_rgba(37,99,235,0.35)]'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white',
+                )}
+                title={isCollapsed ? item.label : undefined}
+              >
+                <item.icon
+                  size={17}
+                  className={cn(
+                    'shrink-0',
+                    isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'
+                  )}
+                />
+                {!isCollapsed && (
+                  <span className="truncate animate-in fade-in duration-200">
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            );
+          }
+
           return (
             <Link
               key={item.label}

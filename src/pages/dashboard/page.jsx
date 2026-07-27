@@ -3,7 +3,7 @@ import { LatestActivities } from "@/components/dashboard/LatestActivities"
 import { RecentTransactionsTable } from "@/components/dashboard/RecentTransactionsTable"
 import { StatisticsChart } from "@/components/dashboard/StatisticsChart"
 import { PeriodDropdown, CurrencyDropdown } from "@/components/dashboard/Dropdowns"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 
 export default function DashboardPage() {
   const { period, setPeriod, currency, setCurrency } = useDashboardContext();

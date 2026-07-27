@@ -6,7 +6,7 @@ import {
 } from "recharts"
 import { useTheme } from "next-themes"
 import { useState, useEffect, useMemo } from "react"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {

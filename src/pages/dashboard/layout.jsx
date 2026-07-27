@@ -10,11 +10,7 @@ import {
   transactionHistory,
 } from "@/lib/api/endpoints";
 
-const DashboardContext = createContext(null);
-
-export function useDashboardContext() {
-  return useContext(DashboardContext);
-}
+import { DashboardContext } from "./context";
 
 export default function DashboardLayout() {
   const [period, setPeriod] = useState("last3months");

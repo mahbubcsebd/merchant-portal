@@ -4,7 +4,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
-import { useDashboardContext } from "@/pages/dashboard/layout"
+import { useDashboardContext } from "@/pages/dashboard/context"
 import { useMemo } from "react"
 
 const columns = [

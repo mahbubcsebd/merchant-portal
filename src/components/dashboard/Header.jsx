@@ -2,7 +2,7 @@
 import { Bell, Moon, Sun, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { useDashboardContext } from '@/pages/dashboard/layout';
+import { useDashboardContext } from '@/pages/dashboard/context';
 
 export function Header({ title = 'Dashboard', setIsMobileOpen }) {
   const { theme, setTheme } = useTheme();
