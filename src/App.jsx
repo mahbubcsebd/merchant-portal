@@ -1,4 +1,7 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { welcomeApi } from '@/lib/api/endpoints';
+import { globalDefaultParams } from '@/lib/api/api';
 
 // Layouts
 import RootAuthLayout from './pages/(root)/layout';
@@ -27,10 +30,43 @@ import DashboardPayBillsTemplates from './pages/dashboard/pay-bills/templates/pa
 import DashboardReports from './pages/dashboard/reports/page';
 import DashboardTransfer from './pages/dashboard/transfer/page';
 
+function BootLoader({ children }) {
+  const { isLoading } = useQuery({
+    queryKey: ['welcome'],
+    queryFn: async () => {
+      const response = await welcomeApi();
+      if (response && response.status === 'success') {
+        // Automatically inject institutionID into all future API requests
+        if (response.institutionID) {
+          globalDefaultParams.institutionID = response.institutionID.toString();
+        }
+      }
+      return response;
+    },
+    // We only need to fetch this once when the app loads
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">Loading Merchant Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <BootLoader>
+        <Routes>
         {/* Auth routes */}
         <Route element={<RootAuthLayout />}>
           <Route path="/" element={<Home />} />
@@ -57,7 +93,8 @@ export default function App() {
           <Route path="reports" element={<DashboardReports />} />
           <Route path="transfer" element={<DashboardTransfer />} />
         </Route>
-      </Routes>
+        </Routes>
+      </BootLoader>
     </BrowserRouter>
   );
 }

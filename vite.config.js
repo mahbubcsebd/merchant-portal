@@ -21,7 +21,23 @@ export default defineConfig({
       '/api': {
         target: 'https://core1.moadbusglobal.com',
         changeOrigin: true,
+        secure: false, // Don't verify SSL certs
         rewrite: (path) => path.replace(/^\/api/, '/walletmc'),
+        cookieDomainRewrite: "localhost",
+        cookiePathRewrite: { "*": "/" },
+        configure: (proxy, _options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            const setCookie = proxyRes.headers['set-cookie'];
+            if (setCookie) {
+              // Strip out Secure and SameSite attributes so localhost accepts the cookie
+              proxyRes.headers['set-cookie'] = setCookie.map(cookie => {
+                return cookie
+                  .replace(/;\s*Secure/gi, '')
+                  .replace(/;\s*SameSite=(Lax|Strict|None)/gi, '');
+              });
+            }
+          });
+        }
       },
     },
   },

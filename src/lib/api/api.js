@@ -1,14 +1,26 @@
 import axios from "axios";
+import CryptoJS from "crypto-js";
+
+const SECRET_KEY = "testkey1234";
 
 const apiClient = axios.create({
   baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    // Generate signature if we have data
+    if (config.data) {
+      const str = new URLSearchParams(config.data).toString();
+      const hash = CryptoJS.SHA256(str + SECRET_KEY).toString(CryptoJS.enc.Hex);
+      config.headers["requestsignature"] = hash;
+    }
+    return config;
+  },
   (error) => Promise.reject(error),
 );
 
@@ -20,8 +32,13 @@ apiClient.interceptors.response.use(
   },
 );
 
-const globalDefaultParams = {
+export const globalDefaultParams = {
   respType: "json",
+  coordLat: "1.1",
+  coordLong: "1.1",
+  langId: "en",
+  institutionID: "",
+  custType: "C",
 };
 
 export const get = async (url, params = {}) => {

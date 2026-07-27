@@ -5,6 +5,8 @@ import { Lock, Mail } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { loginWithPin, verifyOTP } from '@/lib/api/endpoints';
 
 import GlobalButton from "@/components/globals/GlobalButton"
 import GlobalInput from "@/components/globals/GlobalInput"
@@ -32,27 +34,71 @@ export function LoginForm() {
   const [showOtpDialog, setShowOtpDialog] = useState(false)
   const [otpValue, setOtpValue] = useState("")
   const [otpError, setOtpError] = useState(false)
+  const [otpErrorMessage, setOtpErrorMessage] = useState("")
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", pin: "" },
   })
 
-  async function onSubmit(values) {
-    setIsSubmitting(true)
-    await new Promise((r) => setTimeout(r, 600))
-    console.log("mPay Merchant Login →", values)
-    setIsSubmitting(false)
+  const loginMutation = useMutation({
+    mutationFn: (values) => loginWithPin({ username: values.email, pin: values.pin }),
+    onSuccess: (data) => {
+      // Based on portal-old logic
+      if (data.status === "success") {
+        if (data.show_otp) {
+          setShowOtpDialog(true);
+        } else {
+          router("/dashboard");
+        }
+      } else {
+        // Handle error returned in success body (common in older APIs)
+        setError("root.serverError", {
+          type: "manual",
+          message: data.message || "Invalid credentials. Please try again.",
+        });
+      }
+    },
+    onError: (error) => {
+      setError("root.serverError", {
+        type: "manual",
+        message: error?.response?.data?.message || "Something went wrong connecting to the server.",
+      });
+    },
+  });
 
-    // Trigger OTP for any valid login (for demo purposes)
-    // Or specifically for a demo user
-    if (values.email) {
-      setShowOtpDialog(true)
-    }
+  const verifyOTPMutation = useMutation({
+    mutationFn: (values) => verifyOTP({ otp: values.otp }),
+    onSuccess: (data) => {
+      if (data.status === "success" && data.statusCode === 0) {
+        setShowOtpDialog(false);
+        router("/dashboard");
+      } else {
+        setOtpError(true);
+        setOtpErrorMessage(data.message || "Invalid OTP code. Please try again.");
+        setTimeout(() => {
+          setOtpValue("");
+        }, 800);
+      }
+    },
+    onError: (error) => {
+      setOtpError(true);
+      setOtpErrorMessage(error?.response?.data?.message || "Something went wrong verifying OTP.");
+      setTimeout(() => {
+        setOtpValue("");
+      }, 800);
+    },
+  });
+
+  async function onSubmit(values) {
+    // Clear any previous root errors
+    setError("root.serverError", { type: "manual", message: "" });
+    loginMutation.mutate(values);
   }
   return (
     <div className="w-full">
@@ -88,6 +134,11 @@ export function LoginForm() {
         className="space-y-5 xl:space-y-6 animate-[fade-up_0.5s_ease-out_0.1s_both]"
         noValidate
       >
+        {errors.root?.serverError?.message && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50">
+            {errors.root.serverError.message}
+          </div>
+        )}
 
         {/* Email */}
         <GlobalInput
@@ -132,7 +183,7 @@ export function LoginForm() {
           type="submit"
           variant="primary"
           fullWidth
-          isLoading={isSubmitting}
+          isLoading={loginMutation.isPending}
           loadingText="Signing in…"
           className="mt-2"
         >
@@ -173,16 +224,9 @@ export function LoginForm() {
                   setOtpError(false)
                 }}
                 onComplete={(val) => {
-                  if (val === "123456") {
-                    router.push("/dashboard")
-                  } else {
-                    setOtpError(true)
-                    // Automatically clear value on error after a brief visual shake feedback
-                    setTimeout(() => {
-                      setOtpValue("")
-                    }, 800)
-                  }
+                  verifyOTPMutation.mutate({ otp: val })
                 }}
+                disabled={verifyOTPMutation.isPending}
               >
                 <InputOTPGroup className="gap-2.5">
                   {Array.from({ length: 6 }).map((_, i) => (
@@ -195,7 +239,8 @@ export function LoginForm() {
                 </InputOTPGroup>
               </InputOTP>
             </div>
-            {otpError && <p className="text-red-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">Invalid OTP code. Please try again.</p>}
+            {otpError && <p className="text-red-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">{otpErrorMessage || "Invalid OTP code. Please try again."}</p>}
+            {verifyOTPMutation.isPending && <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">Verifying...</p>}
           </div>
 
           <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
