@@ -53,3 +53,13 @@ export async function getDocumentContent(payload = {}) {
 export async function logout(payload = {}) {
   return post("/logout", payload);
 }
+
+// Update User Profile
+export async function updateProfile(payload = {}) {
+  return post("/updateProfile", payload);
+}
+
+// Load User Profile (Fresh Data)
+export async function loadUserProfile(payload = {}) {
+  return post("/loadUserProfile", payload);
+}

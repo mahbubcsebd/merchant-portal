@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
   getUserProfile,
+  loadUserProfile,
   getAccounts,
   getDashboardInfo,
   getPortalNotifications,
@@ -18,14 +19,12 @@ export default function DashboardLayout() {
 
   const { data: profileResponse, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["userProfile"],
-    queryFn: () => getUserProfile(),
-    staleTime: 5 * 60 * 1000,
+    queryFn: () => loadUserProfile(),
   });
 
   const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
-    staleTime: 5 * 60 * 1000,
   });
 
   const profile = profileResponse?.data || null;
@@ -46,7 +45,6 @@ export default function DashboardLayout() {
       queryKey: ["dashboardInfo", activeAccountId, period],
       queryFn: () => getDashboardInfo({ period, accountId: activeAccountId }),
       enabled: !!activeAccountId,
-      staleTime: 5 * 60 * 1000,
     });
 
   const { data: notificationsResponse, isLoading: isLoadingNotifications } =
@@ -55,7 +53,6 @@ export default function DashboardLayout() {
       queryFn: () =>
         getPortalNotifications({ custType: profile?.custType || "C" }),
       enabled: !!profile,
-      staleTime: 5 * 60 * 1000,
     });
 
   const { data: transactionsResponse, isLoading: isLoadingTransactions } =
@@ -68,7 +65,6 @@ export default function DashboardLayout() {
           accountId: activeAccountId,
         }),
       enabled: !!activeAccountId,
-      staleTime: 5 * 60 * 1000,
     });
 
   const isLoading =

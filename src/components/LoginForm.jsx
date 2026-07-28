@@ -1,40 +1,40 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Lock, Mail } from "lucide-react"
-import { useState } from "react"
-import { Link } from "react-router-dom"
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { loginWithPin, verifyOTP } from '@/lib/api/endpoints';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Lock, Mail } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { loginWithPin, verifyOTP } from "@/lib/api/endpoints";
 
-import GlobalButton from "@/components/globals/GlobalButton"
-import GlobalInput from "@/components/globals/GlobalInput"
+import GlobalButton from "@/components/globals/GlobalButton";
+import GlobalInput from "@/components/globals/GlobalInput";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "@/components/ui/input-otp";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
   pin: z.string().min(4, { message: "PIN must be at least 4 digits." }),
-})
+});
 
 export function LoginForm() {
-  const router = useNavigate()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showOtpDialog, setShowOtpDialog] = useState(false)
-  const [otpValue, setOtpValue] = useState("")
-  const [otpError, setOtpError] = useState(false)
-  const [otpErrorMessage, setOtpErrorMessage] = useState("")
+  const router = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpError, setOtpError] = useState(false);
+  const [otpErrorMessage, setOtpErrorMessage] = useState("");
 
   const {
     register,
@@ -44,10 +44,11 @@ export function LoginForm() {
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", pin: "" },
-  })
+  });
 
   const loginMutation = useMutation({
-    mutationFn: (values) => loginWithPin({ username: values.email, pin: values.pin }),
+    mutationFn: (values) =>
+      loginWithPin({ username: values.email, pin: values.pin }),
     onSuccess: (data) => {
       // Based on portal-old logic
       if (data.status === "success") {
@@ -67,7 +68,9 @@ export function LoginForm() {
     onError: (error) => {
       setError("root.serverError", {
         type: "manual",
-        message: error?.response?.data?.message || "Something went wrong connecting to the server.",
+        message:
+          error?.response?.data?.message ||
+          "Something went wrong connecting to the server.",
       });
     },
   });
@@ -80,7 +83,9 @@ export function LoginForm() {
         router("/dashboard");
       } else {
         setOtpError(true);
-        setOtpErrorMessage(data.message || "Invalid OTP code. Please try again.");
+        setOtpErrorMessage(
+          data.message || "Invalid OTP code. Please try again.",
+        );
         setTimeout(() => {
           setOtpValue("");
         }, 800);
@@ -88,7 +93,9 @@ export function LoginForm() {
     },
     onError: (error) => {
       setOtpError(true);
-      setOtpErrorMessage(error?.response?.data?.message || "Something went wrong verifying OTP.");
+      setOtpErrorMessage(
+        error?.response?.data?.message || "Something went wrong verifying OTP.",
+      );
       setTimeout(() => {
         setOtpValue("");
       }, 800);
@@ -115,12 +122,14 @@ export function LoginForm() {
 
       {/* ── Heading ─────────────────────────────── */}
       <div className="mb-9 animate-[fade-up_0.4s_ease-out_both]">
-        <h2 className="
+        <h2
+          className="
           text-3xl xl:text-4xl
           font-bold tracking-tight
           text-slate-900 dark:text-white
           leading-[1.1]
-        ">
+        "
+        >
           Welcome back
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
@@ -156,7 +165,9 @@ export function LoginForm() {
         {/* PIN */}
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Wallet PIN</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Wallet PIN
+            </span>
             <Link
               to="/forgot-pin"
               className="text-xs xl:text-sm font-semibold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
@@ -169,6 +180,7 @@ export function LoginForm() {
             type="password"
             inputMode="numeric"
             placeholder="••••••"
+            maxLength="6"
             leftIcon={<Lock size={16} />}
             inputClassName="tracking-[0.3em] placeholder:tracking-widest"
             error={errors.pin?.message}
@@ -220,37 +232,45 @@ export function LoginForm() {
                 maxLength={6}
                 value={otpValue}
                 onChange={(val) => {
-                  setOtpValue(val)
-                  setOtpError(false)
+                  setOtpValue(val);
+                  setOtpError(false);
                 }}
                 onComplete={(val) => {
-                  verifyOTPMutation.mutate({ otp: val })
+                  verifyOTPMutation.mutate({ otp: val });
                 }}
                 disabled={verifyOTPMutation.isPending}
               >
                 <InputOTPGroup className="gap-2.5">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <InputOTPSlot 
-                      key={i} 
-                      index={i} 
-                      className={`w-11 h-12 text-lg font-bold rounded-lg border ${otpError ? 'border-red-500 bg-red-500/5' : 'border-slate-200 dark:border-white/10'} shadow-sm bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white !ring-0 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 transition-all`} 
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      className={`w-11 h-12 text-lg font-bold rounded-lg border ${otpError ? "border-red-500 bg-red-500/5" : "border-slate-200 dark:border-white/10"} shadow-sm bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white !ring-0 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 transition-all`}
                     />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>
-            {otpError && <p className="text-red-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">{otpErrorMessage || "Invalid OTP code. Please try again."}</p>}
-            {verifyOTPMutation.isPending && <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">Verifying...</p>}
+            {otpError && (
+              <p className="text-red-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+                {otpErrorMessage || "Invalid OTP code. Please try again."}
+              </p>
+            )}
+            {verifyOTPMutation.isPending && (
+              <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+                Verifying...
+              </p>
+            )}
           </div>
 
           <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             <span>Didn't receive code?</span>
-            <button 
+            <button
               type="button"
               className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2 ml-1.5"
               onClick={() => {
-                setOtpValue("")
-                setOtpError(false)
+                setOtpValue("");
+                setOtpError(false);
               }}
             >
               Resend Code
@@ -259,5 +279,5 @@ export function LoginForm() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
