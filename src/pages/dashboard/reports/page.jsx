@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useDashboardContext } from "@/pages/dashboard/context";
+import { useDialog } from "@/components/globals/DialogProvider";
 import {
   transactionHistory,
   generateReportMerchantSettlement,
@@ -371,6 +372,7 @@ function ResultTable({ data, reportTitle, fromDate, toDate, onReset }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ReportsPage() {
   const { accounts, profile } = useDashboardContext();
+  const { openGlobalPopup } = useDialog();
   const [activeTab, setActiveTab] = useState("transaction");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -442,9 +444,29 @@ export default function ReportsPage() {
           activeTab === "settlement"
             ? await generateReportMerchantSettlement(payload)
             : await generateReportMerchantRefund(payload);
+
+        if (blob.type && blob.type.indexOf("application/json") !== -1) {
+          const text = await blob.text();
+          try {
+            const data = JSON.parse(text);
+            if (data && data.message) {
+              openGlobalPopup({
+                type: "error",
+                title: "Error",
+                description: data.message,
+              });
+              return;
+            }
+          } catch (e) {}
+        }
+
         downloadBlob(blob, `${activeTab}_report.csv`);
       } catch (err) {
-        alert("Failed to generate report.");
+        openGlobalPopup({
+          type: "error",
+          title: "Error",
+          description: "Failed to generate report.",
+        });
       } finally {
         setIsDownloading(false);
       }
@@ -489,12 +511,34 @@ export default function ReportsPage() {
               if (!merchantId) return;
               setIsDownloading(true);
               try {
-                downloadBlob(
-                  await generateReportBalanceStatement({ merchantId }),
-                  "statement.pdf",
-                );
+                const blob = await generateReportBalanceStatement({
+                  merchantId,
+                });
+
+                if (blob.type && blob.type.indexOf("application/json") !== -1) {
+                  const text = await blob.text();
+                  try {
+                    const data = JSON.parse(text);
+                    if (data && data.message) {
+                      openGlobalPopup({
+                        type: "error",
+                        title: "Error",
+                        description: data.message,
+                      });
+                      return;
+                    }
+                  } catch (e) {
+                    // Not JSON, continue to download
+                  }
+                }
+
+                downloadBlob(blob, "balance_statement.csv");
               } catch (e) {
-                alert("Failed to generate statement.");
+                openGlobalPopup({
+                  type: "error",
+                  title: "Error",
+                  description: "Failed to generate statement.",
+                });
               } finally {
                 setIsDownloading(false);
               }
