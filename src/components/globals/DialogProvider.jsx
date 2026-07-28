@@ -33,16 +33,16 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import GlobalInput from "@/components/globals/GlobalInput";
-import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalUpload from "@/components/globals/GlobalUpload";
+import PreconfirmDialogContent from "@/components/globals/PreconfirmDialogContent";
+import SuccessDialogContent from "@/components/globals/SuccessDialogContent";
+import BranchFormFields from "@/components/branches/BranchFormFields";
 
-const COUNTRY_CODES = [
-  { code: "+880", flag: "🇧🇩", country: "Bangladesh" },
+const countryDialCodes = [
   { code: "+1", flag: "🇺🇸", country: "USA" },
-  { code: "+63", flag: "🇵🇭", country: "Philippines" },
-  { code: "+44", flag: "🇬🇧", country: "UK" },
   { code: "+91", flag: "🇮🇳", country: "India" },
 ];
 
@@ -91,6 +91,18 @@ export function DialogProvider({ children }) {
     setIsOpen(true);
   };
 
+  const openPreconfirmDialog = (props) => {
+    setDialogProps(props);
+    setDialogType("preconfirm");
+    setIsOpen(true);
+  };
+
+  const openSuccessDialog = (props) => {
+    setDialogProps(props);
+    setDialogType("success");
+    setIsOpen(true);
+  };
+
   const closeDialog = () => {
     setIsOpen(false);
     // Clear props after close animation completes
@@ -111,6 +123,8 @@ export function DialogProvider({ children }) {
       if (dialogProps.iconType === "danger") return "sm:max-w-sm";
       return "sm:max-w-md";
     }
+    if (dialogType === "preconfirm") return "sm:max-w-lg";
+    if (dialogType === "success") return "sm:max-w-sm";
     if (dialogType === "globalPopup") return "sm:max-w-sm";
     if (dialogType === "pay") return "sm:max-w-md";
     return "sm:max-w-md";
@@ -124,6 +138,8 @@ export function DialogProvider({ children }) {
         openDetailDialog,
         openPayBillDialog,
         openGlobalPopup,
+        openPreconfirmDialog,
+        openSuccessDialog,
         closeDialog,
       }}
     >
@@ -146,8 +162,14 @@ export function DialogProvider({ children }) {
           {dialogType === "pay" && (
             <PayBillDialogContent {...dialogProps} onClose={closeDialog} />
           )}
+          {dialogType === "preconfirm" && (
+            <PreconfirmDialogContent {...dialogProps} onClose={closeDialog} />
+          )}
+          {dialogType === "success" && (
+            <SuccessDialogContent {...dialogProps} onClose={closeDialog} />
+          )}
           {dialogType === "globalPopup" && (
-            <GlobalPopupContent {...dialogProps} onClose={closeDialog} />
+            <GlobalPopupContent {...dialogProps} onClose={dialogProps.onClose || closeDialog} />
           )}
         </DialogContent>
       </Dialog>
@@ -167,10 +189,10 @@ function FormDialogContent({ type, mode, data, onSave, onClose }) {
   const [openMobileCountryBox, setOpenMobileCountryBox] = useState(false);
   const [openBusinessCountryBox, setOpenBusinessCountryBox] = useState(false);
   const [subsidiary, setSubsidiary] = useState(data?.subsidiary || "branch1");
-  const [category, setCategory] = useState(data?.category || "network");
-  const [idType, setIdType] = useState(data?.idType || "corp");
-  const [country, setCountry] = useState(data?.country || "usa");
-  const [status, setStatus] = useState(data?.status || "Active");
+  const [category, setCategory] = useState(data?.subCategory || data?.category || "");
+  const [idType, setIdType] = useState(data?.businessIdType || data?.idType || "");
+  const [country, setCountry] = useState(data?.subCountry || data?.country || "");
+  const [status, setStatus] = useState(data?.subStatus || data?.status || "A");
 
   // Upload states
   const [profilePic, setProfilePic] = useState(data?.profilePic || null);
@@ -182,29 +204,78 @@ function FormDialogContent({ type, mode, data, onSave, onClose }) {
   );
   const [currency, setCurrency] = useState(data?.currency || "xcg");
 
+  // Form errors state
+  const [formErrors, setFormErrors] = useState({});
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const form = e.target;
+    
+    // Manual validation
+    const errors = {};
+    let firstErrorField = null;
+
+    const fieldNames = {
+      loginId: "User Login ID",
+      name: "Cashier Name",
+      phone: "Phone Number",
+      mobilePhone: "Mobile phone number",
+      businessPhone: "Business phone number",
+      subName: "Branch Name",
+      emailAddr: "Branch Email Address",
+      subCountry: "Country",
+      subCity: "City",
+      streetName: "Street Name",
+      streetNum: "Street No",
+      unitName: "Unit Name",
+      subZip: "Zip Code",
+      subCategory: "Branch Category",
+      businessIdType: "Business ID Type",
+      businessIdNum: "Business ID Number"
+    };
+
+    Array.from(form.elements).forEach((el) => {
+      if (el.name && (el.required || el.dataset?.required === "true") && !el.value) {
+        const label = fieldNames[el.name] || el.name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        errors[el.name] = `${label} is required.`;
+        if (!firstErrorField) firstErrorField = el;
+      } else if (el.name && el.type === "email" && el.value && !/^\S+@\S+\.\S+$/.test(el.value)) {
+        errors[el.name] = "Please enter a valid email address.";
+        if (!firstErrorField) firstErrorField = el;
+      }
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      firstErrorField?.focus();
+      return;
+    }
+    
+    setFormErrors({});
+
+    const formData = new FormData(form);
     const values = Object.fromEntries(formData.entries());
 
     // Merge select values
-    if (type !== "biller-template") {
+    if (type === "cashier") {
       values.mobileDial = mobileDial;
       values.businessDial = businessDial;
-      values.subsidiary = subsidiary;
-      values.category = category;
-      values.idType = idType;
       values.country = country;
       values.status = status;
       values.profilePic = profilePic;
       values.docPic = docPic;
-    } else {
+    } else if (type === "biller-template") {
       values.billerName = billerName;
       values.currency = currency;
     }
 
-    if (onSave) onSave(values);
-    onClose();
+    let shouldClose = true;
+    if (onSave) {
+      shouldClose = onSave(values);
+    }
+    if (shouldClose !== false) {
+      onClose();
+    }
   };
 
   const getTitle = () => {
@@ -218,8 +289,20 @@ function FormDialogContent({ type, mode, data, onSave, onClose }) {
     return "";
   };
 
+  const handleFormChange = (e) => {
+    if (e.target.name && formErrors[e.target.name]) {
+      setFormErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+    }
+  };
+
+  const clearError = (name) => {
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
+    <form onSubmit={handleSubmit} onChange={handleFormChange} className="flex flex-col max-h-[90vh]" noValidate>
       {/* Header */}
       <div className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 px-6 py-5 flex items-center justify-between shrink-0">
         <h3 className="text-slate-900 dark:text-white text-base font-bold uppercase tracking-wider">
@@ -289,6 +372,7 @@ function FormDialogContent({ type, mode, data, onSave, onClose }) {
                   required
                   defaultValue={data?.loginId || ""}
                   disabled={isView}
+                  error={formErrors.loginId}
                   placeholder="e.g. cashier_john"
                 />
                 <GlobalInput
@@ -297,320 +381,82 @@ function FormDialogContent({ type, mode, data, onSave, onClose }) {
                   required
                   defaultValue={data?.name || ""}
                   disabled={isView}
+                  error={formErrors.name}
                   placeholder="e.g. John Doe"
                 />
+                {/* Mobile Phone (Cashier) */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
+                    Mobile Phone
+                  </label>
+                  <div className="flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden">
+                    <Popover open={openMobileCountryBox} onOpenChange={setOpenMobileCountryBox}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={isView}
+                          aria-expanded={openMobileCountryBox}
+                          className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span>{countryDialCodes.find((c) => c.code === mobileDial)?.flag}</span>
+                            <span>{mobileDial}</span>
+                          </span>
+                          <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[240px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search country..." />
+                          <CommandList>
+                            <CommandEmpty>No country found.</CommandEmpty>
+                            <CommandGroup>
+                              {countryDialCodes.map((country) => (
+                                <CommandItem
+                                  key={country.code}
+                                  value={country.country + " " + country.code}
+                                  onSelect={() => {
+                                    setMobileDial(country.code);
+                                    setOpenMobileCountryBox(false);
+                                  }}
+                                >
+                                  <Check className={cn("mr-2 h-4 w-4", mobileDial === country.code ? "opacity-100" : "opacity-0")} />
+                                  <span className="flex items-center gap-2">
+                                    <span>{country.flag}</span>
+                                    <span>{country.country} ({country.code})</span>
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <div className="relative flex-1 flex items-center">
+                      <Phone size={14} className="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        placeholder="Enter phone number"
+                        defaultValue={data?.phone || ""}
+                        disabled={isView}
+                        className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
+                      />
+                    </div>
+                  </div>
+                  {formErrors.phone && (
+                    <p className="mt-1.5 text-xs font-semibold flex items-center gap-1.5 text-red-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                      {formErrors.phone}
+                    </p>
+                  )}
+                </div>
               </>
             ) : (
-              <>
-                <GlobalInput
-                  name="name"
-                  label="Branch Name"
-                  required
-                  defaultValue={data?.name || ""}
-                  disabled={isView}
-                  placeholder="e.g. Silicon Valley Branch"
-                />
-                <GlobalInput
-                  name="email"
-                  label="Branch Email Address"
-                  required
-                  type="email"
-                  defaultValue={data?.email || ""}
-                  disabled={isView}
-                  placeholder="e.g. branch@example.com"
-                />
-              </>
+              <BranchFormFields data={data} isView={isView} errors={formErrors} clearError={clearError} />
             )}
-
-            {/* Mobile Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                Mobile Phone
-              </label>
-              <div className="flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden">
-                <Popover
-                  open={openMobileCountryBox}
-                  onOpenChange={setOpenMobileCountryBox}
-                >
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      disabled={isView}
-                      aria-expanded={openMobileCountryBox}
-                      className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <span>
-                          {
-                            COUNTRY_CODES.find((c) => c.code === mobileDial)
-                              ?.flag
-                          }
-                        </span>
-                        <span>{mobileDial}</span>
-                      </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[240px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search country..." />
-                      <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
-                        <CommandGroup>
-                          {COUNTRY_CODES.map((country) => (
-                            <CommandItem
-                              key={country.code}
-                              value={country.country + " " + country.code}
-                              onSelect={() => {
-                                setMobileDial(country.code);
-                                setOpenMobileCountryBox(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  mobileDial === country.code
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <span className="flex items-center gap-2">
-                                <span>{country.flag}</span>
-                                <span>
-                                  {country.country} ({country.code})
-                                </span>
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-
-                <div className="relative flex-1 flex items-center">
-                  <Phone
-                    size={14}
-                    className="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none"
-                  />
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="Enter phone number"
-                    defaultValue={data?.phone || ""}
-                    disabled={isView}
-                    className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Business Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                Business Phone
-              </label>
-              <div className="flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden">
-                <Popover
-                  open={openBusinessCountryBox}
-                  onOpenChange={setOpenBusinessCountryBox}
-                >
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      disabled={isView}
-                      aria-expanded={openBusinessCountryBox}
-                      className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <span>
-                          {
-                            COUNTRY_CODES.find((c) => c.code === businessDial)
-                              ?.flag
-                          }
-                        </span>
-                        <span>{businessDial}</span>
-                      </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[240px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search country..." />
-                      <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
-                        <CommandGroup>
-                          {COUNTRY_CODES.map((country) => (
-                            <CommandItem
-                              key={country.code}
-                              value={country.country + " " + country.code}
-                              onSelect={() => {
-                                setBusinessDial(country.code);
-                                setOpenBusinessCountryBox(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  businessDial === country.code
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <span className="flex items-center gap-2">
-                                <span>{country.flag}</span>
-                                <span>
-                                  {country.country} ({country.code})
-                                </span>
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-
-                <div className="relative flex-1 flex items-center">
-                  <Phone
-                    size={14}
-                    className="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none"
-                  />
-                  <input
-                    id="businessPhone"
-                    name="businessPhone"
-                    type="tel"
-                    placeholder="Enter business phone"
-                    defaultValue={data?.businessPhone || ""}
-                    disabled={isView}
-                    className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <GlobalSelect
-              label="Subsidiary / Parent Branch"
-              value={subsidiary}
-              onChange={setSubsidiary}
-              disabled={isView}
-              options={[
-                { value: "branch1", label: "Silicon Valley" },
-                { value: "branch2", label: "Pangalawang Branch" },
-              ]}
-              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            />
-
-            {type === "branch" && (
-              <GlobalSelect
-                label="Subsidiary / Branch Category"
-                value={category}
-                onChange={setCategory}
-                disabled={isView}
-                options={[
-                  { value: "network", label: "Network Group" },
-                  { value: "hq", label: "Headquarters" },
-                ]}
-                labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-              />
-            )}
-
-            <GlobalSelect
-              label="Subsidiary Identity Document Type"
-              value={idType}
-              onChange={setIdType}
-              disabled={isView}
-              options={[
-                { value: "corp", label: "Articles of Incorporation" },
-                { value: "national_id", label: "National ID Card" },
-              ]}
-              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            />
-
-            <GlobalInput
-              name="idNo"
-              label="Subsidiary Identity Document Identification Number"
-              defaultValue={data?.idNo || ""}
-              disabled={isView}
-              placeholder="e.g. Corp-ID-12345"
-            />
-
-            <GlobalSelect
-              label="Country"
-              value={country}
-              onChange={setCountry}
-              disabled={isView}
-              options={[
-                { value: "usa", label: "United States" },
-                { value: "ph", label: "Philippines" },
-              ]}
-              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            />
-
-            <GlobalInput
-              name="state"
-              label="State"
-              defaultValue={data?.state || ""}
-              disabled={isView}
-              placeholder="e.g. Metro Manila"
-            />
-            <GlobalInput
-              name="city"
-              label="City"
-              defaultValue={data?.city || ""}
-              disabled={isView}
-              placeholder="e.g. Manila"
-            />
-            <GlobalInput
-              name="zip"
-              label="Zip Code"
-              defaultValue={data?.zip || ""}
-              disabled={isView}
-              placeholder="e.g. 1234"
-            />
-            <GlobalInput
-              name="streetNo"
-              label="Street No"
-              defaultValue={data?.streetNo || ""}
-              disabled={isView}
-              placeholder="e.g. 123"
-            />
-            <GlobalInput
-              name="streetName"
-              label="Street Name"
-              defaultValue={data?.streetName || ""}
-              disabled={isView}
-              placeholder="e.g. Taft Avenue"
-            />
-
-            <GlobalSelect
-              label="Status"
-              value={status}
-              onChange={setStatus}
-              disabled={isView}
-              options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
-              ]}
-              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            />
-
-            {/* Profile Image & Doc Image */}
-            <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <GlobalUpload
-                label="Upload Subsidiary Profile Picture"
-                value={profilePic}
-                onChange={setProfilePic}
-                disabled={isView}
-              />
-              <GlobalUpload
-                label="Upload Subsidiary Identity Document Picture"
-                value={docPic}
-                onChange={setDocPic}
-                disabled={isView}
-              />
-            </div>
           </div>
         )}
       </div>

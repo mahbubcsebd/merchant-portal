@@ -48,6 +48,14 @@ export async function getSubsidiaries(payload = {}) {
   return post("/getSubsidiaries", payload);
 }
 
+export async function createSubsidiary(payload = {}) {
+  return post("/createSubsidiary", payload);
+}
+
+export async function uploadDocument(payload = {}) {
+  return post("/uploadDocument", payload);
+}
+
 export async function getCashierList(payload = {}) {
   return post("/getCashierList", payload);
 }

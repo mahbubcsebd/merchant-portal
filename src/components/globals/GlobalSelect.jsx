@@ -63,6 +63,16 @@ const GlobalSelect = forwardRef(
 
     return (
       <div className={cn("w-full relative", containerClassName, className)}>
+        {/* Hidden Inputs for Form Data */}
+        {props.name && (
+          <>
+            <input type="hidden" name={props.name} value={value || ""} data-required={required ? "true" : undefined} />
+            {selectedOption && (
+              <input type="hidden" name={`${props.name}Label`} value={selectedOption.label} />
+            )}
+          </>
+        )}
+
         {/* Label */}
         {label && (
           <label
