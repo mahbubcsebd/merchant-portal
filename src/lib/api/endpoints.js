@@ -44,6 +44,18 @@ export async function transactionHistory(payload = {}) {
   return post("/transactionHistory", payload);
 }
 
+export async function getSubsidiaries(payload = {}) {
+  return post("/getSubsidiaries", payload);
+}
+
+export async function getCashierList(payload = {}) {
+  return post("/getCashierList", payload);
+}
+
+export async function listOfTerminal(payload = {}) {
+  return post("/listOfTerminal", payload);
+}
+
 // Get Document Content
 export async function getDocumentContent(payload = {}) {
   return post("/getDocumentContent", payload);
