@@ -2,7 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import GlobalButton from "./GlobalButton";
 
-export default function PreconfirmDialogContent({ title = "Confirm Details", details = {}, onSubmit, onChange, onClose }) {
+export default function PreconfirmationDialog({ title = "Confirm Details", details = {}, onSubmit, onChange, onClose }) {
   return (
     <div className="flex flex-col max-h-[85vh]">
       <div className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 px-6 py-5 flex items-center justify-between shrink-0">

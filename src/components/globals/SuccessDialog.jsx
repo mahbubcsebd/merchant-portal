@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import GlobalButton from "./GlobalButton";
 
-export default function SuccessDialogContent({ title = "Success", message = "Operation completed successfully.", details = {}, onClose }) {
+export default function SuccessDialog({ title = "Success", message = "Operation completed successfully.", details = {}, onClose }) {
   return (
     <div className="p-8 text-center flex flex-col items-center">
       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400">

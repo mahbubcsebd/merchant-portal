@@ -1,9 +1,10 @@
 import { Eye, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { useDialog } from "@/components/globals/DialogProvider";
 import GlobalInput from "@/components/globals/GlobalInput";
-import GlobalButton from "@/components/globals/GlobalButton";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSubsidiaries, createSubsidiary } from "@/lib/api/endpoints";
+import GlobalButton from "@/components/globals/GlobalButton"
+import BranchFormFields from "@/components/branches/BranchFormFields"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getSubsidiaries, createSubsidiary } from "@/lib/api/endpoints"
 
 export default function BranchesPage() {
   const {
@@ -82,10 +83,15 @@ export default function BranchesPage() {
     },
   });
 
-  // 3. Handle Add Flow (Form -> Preconfirm -> Submit)
   const handleAddClick = (initialValues = null) => {
-    openFormDialog("branch", "add", initialValues, (values) => {
-      // Show preconfirm screen
+    openFormDialog({
+      title: "Add Branch",
+      isView: false,
+      submitText: "Create",
+      size: "sm:max-w-4xl",
+      content: <BranchFormFields data={initialValues} isView={false} />,
+      onSave: (values) => {
+        // Show preconfirm screen
       openPreconfirmDialog({
         title: "Confirm Branch Details",
         details: {
@@ -127,6 +133,7 @@ export default function BranchesPage() {
         },
       });
       return false; // Prevent DialogProvider from auto-closing
+      }
     });
   };
 
@@ -231,7 +238,12 @@ export default function BranchesPage() {
                       <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() =>
-                            openFormDialog("branch", "view", branch)
+                            openFormDialog({
+                              title: "View Branch",
+                              isView: true,
+                              size: "sm:max-w-4xl",
+                              content: <BranchFormFields data={branch} isView={true} />,
+                            })
                           }
                           className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                           title="View"
@@ -240,14 +252,16 @@ export default function BranchesPage() {
                         </button>
                         <button
                           onClick={() => {
-                            openFormDialog(
-                              "branch",
-                              "edit",
-                              branch,
-                              (values) => {
+                            openFormDialog({
+                              title: "Edit Branch",
+                              isView: false,
+                              submitText: "Save",
+                              size: "sm:max-w-4xl",
+                              content: <BranchFormFields data={branch} isView={false} />,
+                              onSave: (values) => {
                                 console.log("Branch to update:", values);
                               },
-                            );
+                            });
                           }}
                           className="text-slate-400 hover:text-emerald-500 transition-colors"
                           title="Edit"
@@ -323,7 +337,14 @@ export default function BranchesPage() {
                 {/* Row 2: Action Buttons */}
                 <div className="flex items-center justify-start gap-4 pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
                   <button
-                    onClick={() => openFormDialog("branch", "view", branch)}
+                    onClick={() => 
+                      openFormDialog({
+                        title: "View Branch",
+                        isView: true,
+                        size: "sm:max-w-4xl",
+                        content: <BranchFormFields data={branch} isView={true} />,
+                      })
+                    }
                     className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                     title="View"
                   >
@@ -331,8 +352,15 @@ export default function BranchesPage() {
                   </button>
                   <button
                     onClick={() => {
-                      openFormDialog("branch", "edit", branch, (values) => {
-                        console.log("Branch to update:", values);
+                      openFormDialog({
+                        title: "Edit Branch",
+                        isView: false,
+                        submitText: "Save",
+                        size: "sm:max-w-4xl",
+                        content: <BranchFormFields data={branch} isView={false} />,
+                        onSave: (values) => {
+                          console.log("Branch to update:", values);
+                        },
                       });
                     }}
                     className="text-slate-400 hover:text-emerald-500 transition-colors"

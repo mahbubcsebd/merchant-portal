@@ -45,7 +45,8 @@ export default function BranchFormFields({ data, isView, errors = {}, clearError
       <input type="hidden" name="proImgId" value={profilePic || ""} />
       <input type="hidden" name="businessIdImg" value={docPic || ""} />
 
-      <GlobalInput
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-left w-full">
+        <GlobalInput
         name="subName"
         label="Branch Name"
         required
@@ -368,6 +369,7 @@ export default function BranchFormFields({ data, isView, errors = {}, clearError
           }}
           disabled={isView}
         />
+      </div>
       </div>
     </>
   );
