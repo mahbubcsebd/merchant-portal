@@ -10,8 +10,15 @@ export default function ViewDetailDialog({
   doneText = "Done",
   onClose,
 }) {
+  const validDetails = details.filter(detail => 
+    detail.value !== null && 
+    detail.value !== undefined && 
+    detail.value !== "" && 
+    detail.value !== "N/A"
+  );
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col max-h-[85vh]">
       {/* Header */}
       <div className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 px-6 py-5 flex items-center justify-between">
         <h3 className="text-slate-900 dark:text-white text-base font-bold uppercase tracking-wider">
@@ -26,7 +33,7 @@ export default function ViewDetailDialog({
       </div>
 
       {/* Body */}
-      <div className="p-6 overflow-y-auto space-y-6">
+      <div className="p-6 overflow-y-auto space-y-6 max-h-[60vh]">
         {accentHeader && (
           <div className="flex flex-col items-center justify-center py-6 bg-gradient-to-b from-blue-50 to-transparent dark:from-[#2563eb]/10 dark:to-transparent rounded-xl border border-blue-100 dark:border-blue-500/20">
             {accentHeader}
@@ -34,10 +41,10 @@ export default function ViewDetailDialog({
         )}
 
         <div className="space-y-1">
-          {details.map((detail, idx) => (
+          {validDetails.map((detail, idx) => (
             <div
               key={idx}
-              className={`flex justify-between items-center py-3 ${idx < details.length - 1 ? "border-b border-slate-100 dark:border-white/5" : ""}`}
+              className={`flex justify-between items-center py-3 ${idx < validDetails.length - 1 ? "border-b border-slate-100 dark:border-white/5" : ""}`}
             >
               <span className="text-sm text-slate-500 dark:text-white/50">
                 {detail.label}

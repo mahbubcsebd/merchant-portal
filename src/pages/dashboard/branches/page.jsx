@@ -1,4 +1,5 @@
 import { Eye, Pencil, Trash2, Search, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useDialog } from "@/components/globals/DialogProvider";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalButton from "@/components/globals/GlobalButton"
@@ -10,12 +11,20 @@ export default function BranchesPage() {
   const {
     openFormDialog,
     openConfirmDialog,
+    openDetailDialog,
     openPreconfirmDialog,
     openSuccessDialog,
     openGlobalPopup,
     closeDialog,
   } = useDialog();
   const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
+
+  const getLabel = (type, value) => {
+    if (!welcomeData?.metaData || !welcomeData.metaData[type]) return value;
+    const option = welcomeData.metaData[type].find((item) => String(item.id) === String(value));
+    return option ? option.title : value;
+  };
 
   // 1. Fetch Branches
   const { data: subsidiariesRes, isLoading } = useQuery({
@@ -24,6 +33,19 @@ export default function BranchesPage() {
   });
 
   const branches = subsidiariesRes?.data || [];
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredBranches = branches.filter((branch) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (branch.SUBNAME || "").toLowerCase().includes(term) ||
+      (branch.EMAILADDR || "").toLowerCase().includes(term) ||
+      (branch.MOBILEPHONE || "").toLowerCase().includes(term) ||
+      (branch.CITY || "").toLowerCase().includes(term)
+    );
+  });
 
   // 2. Add Branch Mutation
   const addMutation = useMutation({
@@ -158,6 +180,8 @@ export default function BranchesPage() {
             placeholder="Search Branches"
             leftIcon={<Search size={16} />}
             containerClassName="w-full sm:w-80"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
 
           <GlobalButton
@@ -203,17 +227,17 @@ export default function BranchesPage() {
                     Loading branches...
                   </td>
                 </tr>
-              ) : branches.length === 0 ? (
+              ) : filteredBranches.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
                     className="px-5 py-10 text-center text-slate-500 font-medium"
                   >
-                    No branches available.
+                    No branches found.
                   </td>
                 </tr>
               ) : (
-                branches.map((branch, idx) => (
+                filteredBranches.map((branch, idx) => (
                   <tr
                     key={branch.CORPCUSTSUBID || idx}
                     className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
@@ -237,14 +261,30 @@ export default function BranchesPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() =>
-                            openFormDialog({
+                          onClick={() => {
+                            openDetailDialog({
                               title: "View Branch",
-                              isView: true,
-                              size: "sm:max-w-4xl",
-                              content: <BranchFormFields data={branch} isView={true} />,
+                              details: [
+                                { label: "Branch Name", value: branch.SUBNAME || "N/A" },
+                                { label: "Email Address", value: branch.EMAILADDR || "N/A" },
+                                { label: "Mobile Phone", value: branch.MOBILEPHONE || "N/A" },
+                                { label: "Business Phone", value: branch.BUSINESSPHONE || "N/A" },
+                                { label: "Country", value: getLabel("COUNTRYCODE", branch.SUBCOUNTRY) || "N/A" },
+                                { label: "State", value: branch.SUBSTATE || "N/A" },
+                                { label: "City", value: branch.SUBCITY || branch.CITY || "N/A" },
+                                { label: "Street Name", value: branch.STREETNAME || "N/A" },
+                                { label: "Street No", value: branch.STREETNUM || "N/A" },
+                                { label: "Unit Name", value: branch.UNITNAME || "N/A" },
+                                { label: "Zip Code", value: branch.SUBZIP || "N/A" },
+                                { label: "Branch Category", value: getLabel("SUBCATEGORY", branch.SUBCATEGORY) || "N/A" },
+                                { label: "Business ID Type", value: getLabel("BUSINESSIDTYPE", branch.BUSINESSIDTYPE) || "N/A" },
+                                { label: "Business ID Number", value: branch.BUSINESSIDNUM || "N/A" },
+                                { label: "Website", value: branch.WEBSITE || "N/A" },
+                                { label: "Status", value: branch.SUBSTATUS === "A" ? "Active" : "Inactive" },
+                              ],
+                              doneText: "Close"
                             })
-                          }
+                          }}
                           className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                           title="View"
                         >
@@ -304,12 +344,12 @@ export default function BranchesPage() {
               <Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />
               Loading branches...
             </div>
-          ) : branches.length === 0 ? (
+          ) : filteredBranches.length === 0 ? (
             <div className="text-center py-10 text-slate-500 font-medium">
               No branches available.
             </div>
           ) : (
-            branches.map((branch, idx) => (
+            filteredBranches.map((branch, idx) => (
               <div
                 key={branch.CORPCUSTSUBID || idx}
                 className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
@@ -337,14 +377,30 @@ export default function BranchesPage() {
                 {/* Row 2: Action Buttons */}
                 <div className="flex items-center justify-start gap-4 pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
                   <button
-                    onClick={() => 
-                      openFormDialog({
+                    onClick={() => {
+                      openDetailDialog({
                         title: "View Branch",
-                        isView: true,
-                        size: "sm:max-w-4xl",
-                        content: <BranchFormFields data={branch} isView={true} />,
+                        details: [
+                          { label: "Branch Name", value: branch.SUBNAME || "N/A" },
+                          { label: "Email Address", value: branch.EMAILADDR || "N/A" },
+                          { label: "Mobile Phone", value: branch.MOBILEPHONE || "N/A" },
+                          { label: "Business Phone", value: branch.BUSINESSPHONE || "N/A" },
+                          { label: "Country", value: getLabel("COUNTRYCODE", branch.SUBCOUNTRY) || "N/A" },
+                          { label: "State", value: branch.SUBSTATE || "N/A" },
+                          { label: "City", value: branch.SUBCITY || branch.CITY || "N/A" },
+                          { label: "Street Name", value: branch.STREETNAME || "N/A" },
+                          { label: "Street No", value: branch.STREETNUM || "N/A" },
+                          { label: "Unit Name", value: branch.UNITNAME || "N/A" },
+                          { label: "Zip Code", value: branch.SUBZIP || "N/A" },
+                          { label: "Branch Category", value: getLabel("SUBCATEGORY", branch.SUBCATEGORY) || "N/A" },
+                          { label: "Business ID Type", value: getLabel("BUSINESSIDTYPE", branch.BUSINESSIDTYPE) || "N/A" },
+                          { label: "Business ID Number", value: branch.BUSINESSIDNUM || "N/A" },
+                          { label: "Website", value: branch.WEBSITE || "N/A" },
+                          { label: "Status", value: branch.SUBSTATUS === "A" ? "Active" : "Inactive" },
+                        ],
+                        doneText: "Close"
                       })
-                    }
+                    }}
                     className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                     title="View"
                   >

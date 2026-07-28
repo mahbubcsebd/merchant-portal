@@ -25,7 +25,7 @@ export default function PreconfirmationDialog({ title = "Confirm Details", detai
         <div className="rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden divide-y divide-slate-100 dark:divide-white/5">
           {Object.entries(details).map(([key, value], idx) => {
             // Exclude empty or internal fields if needed
-            if (value === undefined || value === null) return null;
+            if (value === undefined || value === null || value === "" || value === "N/A") return null;
             return (
               <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 bg-white dark:bg-transparent">
                 <span className="text-xs font-semibold text-slate-500 dark:text-white/50 w-1/3 uppercase tracking-wider mb-1 sm:mb-0">
