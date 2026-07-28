@@ -52,11 +52,8 @@ export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
   const queryClient = useQueryClient();
 
-  // Get country codes
-  const { data: welcomeData } = useQuery({
-    queryKey: ["welcome"],
-    staleTime: Infinity,
-  });
+  // Get welcome API data (COUNTRYCODE)
+  const welcomeData = queryClient.getQueryData(["welcome"]);
   const countryOptions = useMemo(() => {
     const countries = welcomeData?.metaData?.COUNTRYCODE || [];
     return countries.map((c) => ({
