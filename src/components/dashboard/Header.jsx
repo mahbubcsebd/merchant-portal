@@ -31,7 +31,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
           <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">
             {title}
           </h1>
-          <p className="hidden sm:block text-[10px] sm:text-xs text-slate-400 dark:text-white/30 font-medium">
+          <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 dark:text-white/70 font-semibold">
             Welcome back, {userName}
           </p>
         </div>
