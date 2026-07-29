@@ -94,63 +94,61 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] aspect-square rounded-full bg-[#e65625]/10 blur-[70px]" />
       </div>
 
-      {/* Logo Section / Toggle Section */}
-      {isMobile ? (
-        <div className="relative z-20 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 flex-shrink-0 bg-white dark:bg-[#0f1829]">
-          <img
-            src="/images/logo.svg"
-            alt="mPay Network"
-            width={110}
-            height={42}
-            className="h-auto dark:invert-0"
-          />
-          <button 
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-            title="Close Menu"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      ) : isCollapsed ? (
-        <div className="relative z-20 flex items-center justify-center h-16 border-b border-slate-200 dark:border-white/5 flex-shrink-0 bg-white dark:bg-[#0f1829]">
-          <button 
-            onClick={() => setIsCollapsed(false)}
-            className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-            title="Expand Sidebar"
-          >
-            <PanelLeft size={18} />
-          </button>
-        </div>
-      ) : (
-        <div className="relative z-20 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 flex-shrink-0 bg-white dark:bg-[#0f1829]">
-          <img
-            src="/images/logo.svg"
-            alt="mPay Network"
-            width={110}
-            height={42}
-            className="h-auto dark:invert-0"
-          />
-          <button 
-            onClick={() => setIsCollapsed(true)}
-            className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-            title="Collapse Sidebar"
-          >
-            <PanelLeftClose size={18} />
-          </button>
-        </div>
-      )}
+      {/* FIXED TOP HEADER & PROFILE CARD SECTION */}
+      <div className="relative z-20 flex-shrink-0 bg-white dark:bg-[#0f1829] pb-3 border-b border-slate-100 dark:border-white/5">
+        {/* Logo Section / Toggle Section */}
+        {isMobile ? (
+          <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
+            <img
+              src="/images/logo.svg"
+              alt="mPay Network"
+              width={110}
+              height={42}
+              className="h-auto dark:invert-0"
+            />
+            <button 
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              title="Close Menu"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        ) : isCollapsed ? (
+          <div className="flex items-center justify-center h-16 border-b border-slate-200 dark:border-white/5">
+            <button 
+              onClick={() => setIsCollapsed(false)}
+              className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              title="Expand Sidebar"
+            >
+              <PanelLeft size={18} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
+            <img
+              src="/images/logo.svg"
+              alt="mPay Network"
+              width={110}
+              height={42}
+              className="h-auto dark:invert-0"
+            />
+            <button 
+              onClick={() => setIsCollapsed(true)}
+              className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              title="Collapse Sidebar"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          </div>
+        )}
 
-      {/* Main Nav (Scrollable Area including User Info) */}
-      <div className={cn(
-        "relative z-10 flex-1 overflow-y-auto no-scrollbar py-3 space-y-0.5 transition-all duration-300",
-        isCollapsed ? "px-2" : "px-3"
-      )}>
-        {/* User Info Card inside scroll container */}
+        {/* User Info Profile Card (Fixed at Top) */}
         <div
           className={cn(
-            "flex items-center transition-all duration-300 mb-2",
-            isCollapsed ? "justify-center my-2 mx-auto" : "gap-3 px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/8"
+            "flex items-center transition-all duration-300",
+            isCollapsed ? "justify-center mt-3 mx-auto" : "gap-3 px-4 py-3 mx-3 mt-3",
+            (!isCollapsed && !isMobile) && "rounded-xl bg-slate-100 dark:bg-[#152035] border border-slate-200 dark:border-white/10"
           )}
         >
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm shrink-0">
@@ -167,7 +165,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
             </div>
           )}
         </div>
+      </div>
 
+      {/* Main Nav (ONLY Menu items scroll here) */}
+      <div className={cn(
+        "relative z-10 flex-1 overflow-y-auto no-scrollbar py-3 space-y-0.5 transition-all duration-300",
+        isCollapsed ? "px-2" : "px-3"
+      )}>
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
