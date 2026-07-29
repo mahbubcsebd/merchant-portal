@@ -312,7 +312,7 @@ const accountTypeMap = {
 
 function SettlementSettingsView() {
   const queryClient = useQueryClient();
-  const { openConfirmDialog } = useDialog();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
 
   const { data: accountsData, isLoading } = useQuery({
     queryKey: ["userSetAccounts"],
@@ -409,12 +409,9 @@ function SettlementSettingsView() {
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
-        openConfirmDialog({
+        openSuccessDialog({
           title: "Deleted",
-          description: data.message || "Settlement account deleted successfully.",
-          confirmText: "Close",
-          iconType: "success",
-          hideCancel: true
+          message: data.message || "Settlement account deleted successfully.",
         });
       } else {
         openConfirmDialog({
@@ -808,7 +805,7 @@ function SettlementSettingsView() {
 
 function ManageNotificationsView() {
   const queryClient = useQueryClient();
-  const { openConfirmDialog } = useDialog();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
 
   const { data: settingsData, isLoading } = useQuery({
     queryKey: ["alertNotificationSetting"],
@@ -841,12 +838,9 @@ function ManageNotificationsView() {
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["alertNotificationSetting"] });
-        openConfirmDialog({
+        openSuccessDialog({
           title: "Success",
-          description: data.message || "Alert notification updated successfully.",
-          confirmText: "Close",
-          iconType: "success",
-          hideCancel: true,
+          message: data.message || "Alert notification updated successfully.",
         });
       } else {
         openConfirmDialog({
@@ -930,7 +924,7 @@ function ManageNotificationsView() {
 
 function ChangeLanguageView() {
   const queryClient = useQueryClient();
-  const { openConfirmDialog } = useDialog();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
   const { profile } = useDashboardContext();
   const { setLanguage } = useLanguage();
 
@@ -965,12 +959,9 @@ function ChangeLanguageView() {
         const languageCode = reverseLangMap[selectedLang] || "en";
         setLanguage(languageCode);
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-        openConfirmDialog({
+        openSuccessDialog({
           title: "Success",
-          description: data.message || "Preferred language updated successfully.",
-          confirmText: "Close",
-          iconType: "success",
-          hideCancel: true,
+          message: data.message || "Preferred language updated successfully.",
         });
       } else {
         openConfirmDialog({
