@@ -158,3 +158,23 @@ export async function getLangPack(payload = {}) {
 export async function changePIN(payload = {}) {
   return post("/changePIN", payload);
 }
+
+// -------------------------------------------------------
+// Pay Bills / Transfers APIs
+// -------------------------------------------------------
+
+export async function getUserBiller(payload = {}) {
+  return post("/getUserBiller", payload);
+}
+
+export async function getBillerByBillId(payload = {}) {
+  return post("/getBillerByBillId", payload);
+}
+
+export async function calculateFees(payload = {}) {
+  return post("/calculateFees", payload);
+}
+
+export async function payBills(payload = {}) {
+  return post("/payBills", payload);
+}

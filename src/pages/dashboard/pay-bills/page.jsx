@@ -1,20 +1,224 @@
-
-import { useState } from "react"
-import { Link } from 'react-router-dom';
-import GlobalInput from "@/components/globals/GlobalInput"
-import GlobalSelect from "@/components/globals/GlobalSelect"
-import GlobalButton from "@/components/globals/GlobalButton"
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import GlobalInput from "@/components/globals/GlobalInput";
+import GlobalSelect from "@/components/globals/GlobalSelect";
+import GlobalButton from "@/components/globals/GlobalButton";
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { usePayBills } from "@/hooks/usePayBills";
+import { useCalculateFees } from "@/hooks/useCalculateFees";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { useDialog } from "@/components/globals/DialogProvider";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PayBillsPage() {
-  const [biller, setBiller] = useState("")
-  const [fromAccount, setFromAccount] = useState("")
-  const [when, setWhen] = useState("")
+  const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
+
+  const { accounts } = useDashboardContext();
+  const { userBillersQuery, getBillerDetailsMutation, payBillsMutation } =
+    usePayBills();
+  const { calculateFeesMutation } = useCalculateFees();
+  const {
+    openPreconfirmDialog,
+    openSuccessDialog,
+    openGlobalPopup,
+    closeDialog,
+  } = useDialog();
+
+  const { errors, validate, clearError, clearAllErrors } = useFormValidation();
+
+  const [biller, setBiller] = useState("");
+  const [billerDetails, setBillerDetails] = useState(null);
+  const [fromAccount, setFromAccount] = useState("");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [when, setWhen] = useState("immediate");
+
+  // Format accounts for dropdown
+  const accountOptions = (accounts || []).map((acc) => ({
+    value: acc.ACCOUNTNUMBER,
+    label: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(acc.AVBALANCE || "0"))} ${acc.CURSHRTNAME || acc.CURCODE}`,
+    raw: acc,
+  }));
+
+  // Format billers for dropdown
+  const billerOptions = (userBillersQuery.data || []).map((b) => ({
+    value: String(b.BILLID),
+    label: b.BILLNAME,
+  }));
+
+  // Fetch biller details when biller changes
+  useEffect(() => {
+    if (biller) {
+      getBillerDetailsMutation.mutate(biller, {
+        onSuccess: (data) => {
+          setBillerDetails(data);
+        },
+        onError: () => {
+          setBillerDetails(null);
+        },
+      });
+    } else {
+      setBillerDetails(null);
+    }
+  }, [biller]);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log("Pay Bills Form Submitted")
-  }
+    e.preventDefault();
+
+    const isValid = validate([
+      {
+        name: "biller",
+        value: biller,
+        label: "a valid biller",
+        type: "select",
+        required: true,
+      },
+      {
+        name: "fromAccount",
+        value: fromAccount,
+        label: "an Acount",
+        type: "select",
+        required: true,
+      },
+      {
+        name: "amount",
+        value: amount,
+        label: "a valid amount",
+        type: "input",
+        required: true,
+        customValidation: (val) =>
+          parseFloat(val) <= 0
+            ? "Please enter a valid amount greater than 0."
+            : null,
+      },
+      {
+        name: "when",
+        value: when,
+        label: "when to pay",
+        type: "select",
+        required: true,
+      },
+    ]);
+
+    if (!isValid) return;
+
+    const selectedAccount = accounts?.find(
+      (a) => a.ACCOUNTNUMBER === fromAccount,
+    );
+    if (!selectedAccount) return;
+
+    // Call calculateFees API
+    const feePayload = {
+      functionalityID: "P7",
+      fromCurrencyCode: selectedAccount.CURCODE,
+      toCurrencyCode: billerDetails.currency,
+      sendingAmount: amount,
+      transactionCode: "PAYBILL",
+    };
+
+    calculateFeesMutation.mutate(feePayload, {
+      onSuccess: (data) => {
+        // Build details for preconfirmation
+        const isSameCurrency =
+          selectedAccount.CURCODE == billerDetails.currency;
+        const exchangeRateText = isSameCurrency ? "N/A" : data.exchangeRate;
+        const totalFeesText =
+          data.totalFees != null
+            ? `${data.totalFees} ${data.fromCurrencyName || selectedAccount.CURSHRTNAME}`
+            : "0.00";
+
+        const selectedBillerLabel = billerOptions.find(
+          (o) => o.value === biller,
+        )?.label;
+        const fromWalletLabel = accountOptions.find(
+          (o) => o.value === fromAccount,
+        )?.label;
+
+        const currencyLabel =
+          welcomeData?.metaData?.CURRENCY?.find(
+            (c) => String(c.id) === String(billerDetails.currency),
+          )?.title ||
+          billerDetails.currencyName ||
+          "XCG";
+
+        const details = {
+          "From Wallet": fromWalletLabel,
+          "To Biller": selectedBillerLabel,
+          "Biller Name": billerDetails.billerName,
+          "Reference No": billerDetails.referenceNo,
+          Amount: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(amount))} ${currencyLabel}`,
+          "Exchange Rate": exchangeRateText,
+          "Total Fees": totalFeesText,
+          Description: description || "N/A",
+        };
+
+        openPreconfirmDialog({
+          title: "Confirm Bill Payment",
+          details: details,
+          onChange: () => {
+            closeDialog();
+          },
+          onSubmit: () => {
+            // Call payBills API
+            const payPayload = {
+              accountNumber: fromAccount,
+              amount: amount,
+              billId: biller,
+              coordLat: "1.1",
+              coordLong: "1.1",
+              currency: selectedAccount.CURCODE,
+              custType: "C",
+              description: description,
+              endDate: "",
+              fromAccNum: fromAccount,
+              fromCurrencyCode: selectedAccount.CURCODE,
+              howOften: "",
+              referenceNumber: billerDetails.referenceNo,
+              startDate: new Date().toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }),
+              toCurrencyCode: billerDetails.currency,
+              until: "",
+              when: "Y",
+            };
+
+            payBillsMutation.mutate(payPayload, {
+              onSuccess: () => {
+                openSuccessDialog({
+                  title: "Payment Successful",
+                  message: "Your bill payment has been successfully processed.",
+                  details: details,
+                });
+                // Reset form
+                setAmount("");
+                setDescription("");
+                setBiller("");
+              },
+              onError: (err) => {
+                openGlobalPopup({
+                  title: "Error",
+                  description: err.message || "Failed to process bill payment.",
+                  type: "error",
+                });
+              },
+            });
+          },
+        });
+      },
+      onError: (err) => {
+        openGlobalPopup({
+          title: "Error calculating fees",
+          description:
+            err.message ||
+            "An error occurred while calculating transaction fees.",
+          type: "error",
+        });
+      },
+    });
+  };
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
@@ -28,42 +232,60 @@ export default function PayBillsPage() {
       {/* Main card */}
       <div className="max-w-lg mx-auto rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm p-4 sm:p-8">
         <div className="flex justify-start mb-4">
-          <Link to="/dashboard/pay-bills/templates" className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider">
+          <Link
+            to="/dashboard/pay-bills/templates"
+            className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
+          >
             Manage Bill Template
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* To (Biller) */}
           <GlobalSelect
             label="To"
             required
             value={biller}
-            onChange={setBiller}
+            onChange={(val) => {
+              setBiller(val);
+              clearError("biller");
+            }}
+            error={errors.biller}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[
-              { value: "14186", label: "Bill Template 001" },
-              { value: "14187", label: "Electricity Board" },
-              { value: "14188", label: "Internet Provider" }
-            ]}
+            options={billerOptions}
+            disabled={userBillersQuery.isLoading}
           />
 
           {/* Biller Details (Shows when a biller is selected) */}
-          {biller && (
+          {billerDetails && (
             <div className="bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex justify-between text-sm">
-                <span className="font-semibold text-slate-700 dark:text-white/80">Biller Name</span>
+                <span className="font-semibold text-slate-700 dark:text-white/80">
+                  Biller Name
+                </span>
                 <span className="text-slate-600 dark:text-white/60">
-                  {biller === "14186" ? "Bill Template 001" : biller === "14187" ? "Electricity Board" : "Internet Provider"}
+                  {billerDetails.billerName}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="font-semibold text-slate-700 dark:text-white/80">Reference No</span>
-                <span className="text-slate-600 dark:text-white/60">REF-{biller}-9921</span>
+                <span className="font-semibold text-slate-700 dark:text-white/80">
+                  Reference No
+                </span>
+                <span className="text-slate-600 dark:text-white/60">
+                  {billerDetails.referenceNo}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="font-semibold text-slate-700 dark:text-white/80">Currency</span>
-                <span className="text-slate-600 dark:text-white/60">XCG</span>
+                <span className="font-semibold text-slate-700 dark:text-white/80">
+                  Currency
+                </span>
+                <span className="text-slate-600 dark:text-white/60">
+                  {welcomeData?.metaData?.CURRENCY?.find(
+                    (c) => String(c.id) === String(billerDetails.currency),
+                  )?.title ||
+                    billerDetails.currencyName ||
+                    billerDetails.currency}
+                </span>
               </div>
             </div>
           )}
@@ -73,12 +295,13 @@ export default function PayBillsPage() {
             label="From"
             required
             value={fromAccount}
-            onChange={setFromAccount}
+            onChange={(val) => {
+              setFromAccount(val);
+              clearError("fromAccount");
+            }}
+            error={errors.fromAccount}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[
-              { value: "1000025963", label: "2,497.63 XCG" },
-              { value: "1000028042", label: "0.00 JMD" }
-            ]}
+            options={accountOptions}
           />
 
           {/* Amount */}
@@ -89,7 +312,24 @@ export default function PayBillsPage() {
             inputMode="decimal"
             maxLength={18}
             placeholder="0.00"
-            rightElement={<span className="text-sm font-medium text-slate-400 select-none">XCG</span>}
+            value={amount}
+            error={errors.amount}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, "");
+              setAmount(val);
+              clearError("amount");
+            }}
+            rightElement={
+              <span className="text-sm font-medium text-slate-400 select-none">
+                {welcomeData?.metaData?.CURRENCY?.find(
+                  (c) => String(c.id) === String(billerDetails?.currency),
+                )?.title ||
+                  billerDetails?.currencyName ||
+                  accounts?.find((a) => a.ACCOUNTNUMBER === fromAccount)
+                    ?.CURSHRTNAME ||
+                  "XCG"}
+              </span>
+            }
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
           />
 
@@ -99,6 +339,8 @@ export default function PayBillsPage() {
             type="text"
             maxLength={30}
             placeholder="Payment description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
           />
 
@@ -107,20 +349,24 @@ export default function PayBillsPage() {
             label="When"
             required
             value={when}
-            onChange={setWhen}
+            onChange={(val) => {
+              setWhen(val);
+              clearError("when");
+            }}
+            error={errors.when}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[
-              { value: "immediate", label: "Immediate" },
-              { value: "scheduled", label: "Scheduled" }
-            ]}
+            options={[{ value: "immediate", label: "Immediate" }]}
           />
 
           {/* Submit */}
           <div className="flex justify-center pt-4 border-t border-dashed border-slate-200 dark:border-white/10 mt-6">
-            <GlobalButton 
+            <GlobalButton
               type="submit"
               variant="primary"
               className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
+              isLoading={
+                calculateFeesMutation.isPending || payBillsMutation.isPending
+              }
             >
               Submit
             </GlobalButton>
@@ -128,5 +374,5 @@ export default function PayBillsPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }
