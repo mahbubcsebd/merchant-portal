@@ -602,7 +602,7 @@ export default function ReportsPage() {
                   onChange={setTxType}
                   labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                   options={[
-                    { value: "selected", label: "Select Type" },
+                    { value: "selected", label: "All Types" },
                     { value: "SCANTOPAY", label: "Scan to Pay" },
                     { value: "PAYQRCODE", label: "Pay by QR Code" },
                     { value: "PAYTOBANK", label: "Transfer To Bank" },
@@ -621,7 +621,7 @@ export default function ReportsPage() {
                   onChange={setStatus}
                   labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                   options={[
-                    { value: "selected", label: "Select Status" },
+                    { value: "selected", label: "All Statuses" },
                     { value: "P", label: "Processed" },
                     { value: "R", label: "Rejected" },
                   ]}
