@@ -198,7 +198,7 @@ export default function BusinessProfilePage() {
       {/* ── Page Header ─────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
             Settings
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">

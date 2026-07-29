@@ -1220,12 +1220,14 @@ export default function AdminPage() {
       
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 pb-4 border-b border-slate-200 dark:border-white/10 gap-2">
-        <h1 className="text-2xl font-bold text-[#1b55ad] dark:text-blue-400">
-          Administration
-        </h1>
-        <h2 className="text-lg font-semibold text-slate-700 dark:text-white/80">
-          {getHeaderTitle()}
-        </h2>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
+            Administration
+          </p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {getHeaderTitle()}
+          </h1>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
