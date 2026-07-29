@@ -125,3 +125,13 @@ export async function updateUserSetAccount(payload = {}) {
 export async function deleteUserSetAccount(payload = {}) {
   return post("/deleteUserSetAccount", payload);
 }
+
+// Load Alert Notification Settings
+export async function loadAlertNotificationSetting(payload = {}) {
+  return post("/loadAlertNotificationSetting", payload);
+}
+
+// Update Alert Notification Settings
+export async function updateAlertNotification(payload = {}) {
+  return post("/updateAlertNotification", payload);
+}
