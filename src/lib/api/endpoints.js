@@ -100,3 +100,8 @@ export async function loadUserProfile(payload = {}) {
 export async function getBeneficiaries(payload = {}) {
   return post("/getBeneficiaries", payload);
 }
+
+// Get Transaction Limits
+export async function getTransactionLimits(payload = {}) {
+  return post("/getTransactionLimits", payload);
+}

@@ -3,7 +3,7 @@ import QRCodeStyling from "qr-code-styling"
 import { useDashboardContext } from "@/pages/dashboard/context"
 import { useSearchParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import { getBeneficiaries } from "@/lib/api/endpoints"
+import { getBeneficiaries, getTransactionLimits } from "@/lib/api/endpoints"
 import { 
   QrCode, 
   Wallet, 
@@ -130,55 +130,140 @@ function MyQrView() {
 }
 
 function PaymentLimitsView() {
-  const limitCategories = ["Daily Limits", "Monthly Limit", "Annual Limit"]
-  
-  const generateCards = (multiplier) => [
-    { title: "Pay to Mobile", remaining: 9987.00 * multiplier, used: 13.00, max: 10000.00 * multiplier },
-    { title: "Scan to Pay", remaining: 11111.00 * multiplier, used: 0.00, max: 11111.00 * multiplier },
-    { title: "Pay Bills", remaining: 22222.00 * multiplier, used: 0.00, max: 22222.00 * multiplier },
-  ]
+  const { data: limitsData, isLoading } = useQuery({
+    queryKey: ["transactionLimits"],
+    queryFn: () => getTransactionLimits(),
+  });
+
+  const limitsList = limitsData?.txnLimitUsers || [];
+
+  // Extract unique currency names
+  const currencies = Array.from(new Set(limitsList.map((item) => item.CURRNAME))).filter(Boolean);
+  const currencyOptions = currencies.map((curr) => ({
+    value: curr,
+    label: `${curr} Limits`,
+  }));
+
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+
+  // Initialize selected currency
+  useEffect(() => {
+    if (currencyOptions.length > 0 && !selectedCurrency) {
+      setSelectedCurrency(currencyOptions[0].value);
+    }
+  }, [currencyOptions, selectedCurrency]);
+
+  if (isLoading && limitsList.length === 0) {
+    return (
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading Wallet Limits...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter limits based on selected currency
+  const activeCurrency = selectedCurrency || (currencyOptions[0]?.value || "XCG");
+  const filteredLimits = limitsList.filter((item) => item.CURRNAME === activeCurrency);
+
+  // Map limits into columns
+  const mapCard = (item, limitType) => {
+    let max = 0;
+    let used = 0;
+    let remaining = 0;
+
+    if (limitType === "daily") {
+      max = parseFloat(item.USERTXNDAILYLIMIT || 0);
+      used = parseFloat(item.USERTXNDAILYUSED || 0);
+      remaining = parseFloat(item.USERTXNDAILYREMAIN || 0);
+    } else if (limitType === "monthly") {
+      max = parseFloat(item.USERTXNMONTHLYLIMIT || 0);
+      used = parseFloat(item.USERTXNMONTHLYUSED || 0);
+      remaining = parseFloat(item.USERTXNMONTHLYREMAIN || 0);
+    } else if (limitType === "annual") {
+      max = parseFloat(item.USERTXNANNUALLIMIT || 0);
+      used = parseFloat(item.USERTXNANNUALUSED || 0);
+      remaining = parseFloat(item.USERTXNANNUALREMAIN || 0);
+    }
+
+    return {
+      title: item.TXNNAME || item.TXNID,
+      remaining,
+      used,
+      max,
+    };
+  };
 
   const columns = [
-    { title: "Daily Limits", cards: generateCards(1) },
-    { title: "Monthly Limit", cards: generateCards(10) },
-    { title: "Annual Limit", cards: generateCards(100) },
-  ]
+    {
+      title: "Daily Limits",
+      cards: filteredLimits.map((item) => mapCard(item, "daily")),
+    },
+    {
+      title: "Monthly Limit",
+      cards: filteredLimits.map((item) => mapCard(item, "monthly")),
+    },
+    {
+      title: "Annual Limit",
+      cards: filteredLimits.map((item) => mapCard(item, "annual")),
+    },
+  ];
 
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">My Wallet Limits</h2>
+        {currencyOptions.length > 1 && (
+          <div className="w-full sm:w-48 shrink-0">
+            <GlobalSelect
+              value={selectedCurrency}
+              onChange={(val) => setSelectedCurrency(val)}
+              options={currencyOptions}
+              placeholder="Select Currency"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {columns.map((col, colIdx) => (
           <div key={colIdx} className="flex flex-col gap-4">
             <h3 className="font-bold text-slate-800 dark:text-white mb-2">{col.title}</h3>
-            {col.cards.map((card, cardIdx) => {
-              const progressPercentage = (card.used / card.max) * 100;
-              return (
-                <div key={cardIdx} className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm">
-                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">{card.title}</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
-                  
-                  <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
-                    XCG {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+            {col.cards.length === 0 ? (
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 p-4 text-center">
+                No limits configured
+              </p>
+            ) : (
+              col.cards.map((card, cardIdx) => {
+                const progressPercentage = card.max > 0 ? (card.used / card.max) * 100 : 0;
+                return (
+                  <div key={cardIdx} className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">{card.title}</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
+                    
+                    <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
+                      {activeCurrency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mb-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                      />
+                    </div>
+                    
+                    <p className="text-[11px] text-slate-500 dark:text-white/50">
+                      {activeCurrency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} used (max: {activeCurrency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
+                    </p>
                   </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mb-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full" 
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                  
-                  <p className="text-[11px] text-slate-500 dark:text-white/50">
-                    XCG {card.used.toFixed(2)} used (max: XCG {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
-                  </p>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         ))}
       </div>
