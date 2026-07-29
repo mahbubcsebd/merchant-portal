@@ -276,6 +276,36 @@ function PaymentLimitsView() {
   )
 }
 
+const bankNamesMap = {
+  "ALSDCWC1": "ACU Credit Union",
+  "BDCCCWCU": "BDC Curacao NV",
+  "CBCSCWCU": "CBCS Curacao",
+  "MCBKCWCU": "Maduro & Curiel's Bank",
+  "ORBACWCU": "ORCO Bank Curacao",
+  "PBBPCWC1": "PSB Bank NV Curacao",
+  "RBTTCWCU": "RBC Bank Curacao",
+  "CITCCWCC": "Vidanova Bank",
+  "HGHYS85DHT1": "HGHYS85DHT1"
+};
+
+const currencyMap = {
+  "0": "XCG",
+  "1": "USD",
+  "2": "CAD",
+  "3": "EUR",
+  "4": "GBP",
+  "22": "BZD",
+  "23": "XCD",
+  "125": "PHP",
+  "388": "JMD",
+  "971": "DDT"
+};
+
+const accountTypeMap = {
+  "6": "Checking",
+  "1": "Savings"
+};
+
 function SettlementSettingsView() {
   const queryClient = useQueryClient();
   const { openConfirmDialog } = useDialog();
@@ -301,7 +331,7 @@ function SettlementSettingsView() {
     if (accountsData?.records) {
       const formattedBanks = accountsData.records.map((record, index) => ({
         id: index,
-        name: record.bankId || "Bank Account",
+        name: bankNamesMap[record.bankId] || record.bankId || "Bank Account",
         account: record.bankAccount ? `**** ${record.bankAccount.slice(-4)}` : "****",
         rawAccount: record.bankAccount || "",
         bic: record.bankId || "",
@@ -412,7 +442,7 @@ function SettlementSettingsView() {
 
   const handleEdit = (bank, idx) => {
     setFormData({
-      bankName: bank.name,
+      bankName: bank.bic,
       accountNumber: bank.rawAccount,
       currency: bank.currency,
       accountType: bank.accountType
@@ -468,8 +498,12 @@ function SettlementSettingsView() {
     
     if (!formData.accountNumber) {
       newErrors.accountNumber = "Account Number is required";
-    } else if (formData.accountNumber.length < 9) {
-      newErrors.accountNumber = "Account Number must be at least 9 digits";
+    } else {
+      if (/^0/.test(formData.accountNumber)) {
+        newErrors.accountNumber = "Account number cannot start with zero";
+      } else if (formData.accountNumber.length < 8) {
+        newErrors.accountNumber = "Account number must be at least 8 digits";
+      }
     }
 
     if (!formData.currency) newErrors.currency = "Currency is required";
@@ -534,17 +568,14 @@ function SettlementSettingsView() {
               error={errors.bankName}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "ACU Credit Union", label: "ACU Credit Union" },
-                { value: "BDC Curacao NV", label: "BDC Curacao NV" },
-                { value: "CBCS Curacao", label: "CBCS Curacao" },
-                { value: "Maduro & Curiel's Bank", label: "Maduro & Curiel's Bank" },
-                { value: "ORCO Bank Curacao", label: "ORCO Bank Curacao" },
-                { value: "PSB Bank NV Curacao", label: "PSB Bank NV Curacao" },
-                { value: "RBC Bank Curacao", label: "RBC Bank Curacao" },
-                { value: "Vidanova Bank", label: "Vidanova Bank" },
-                { value: "ALSDCWC1", label: "ALSDCWC1" },
-                { value: "CITCCWCC", label: "CITCCWCC" },
-                { value: "HGHYS85DHT1", label: "HGHYS85DHT1" }
+                { value: "ALSDCWC1", label: "ACU Credit Union" },
+                { value: "BDCCCWCU", label: "BDC Curacao NV" },
+                { value: "CBCSCWCU", label: "CBCS Curacao" },
+                { value: "MCBKCWCU", label: "Maduro & Curiel's Bank" },
+                { value: "ORBACWCU", label: "ORCO Bank Curacao" },
+                { value: "PBBPCWC1", label: "PSB Bank NV Curacao" },
+                { value: "RBTTCWCU", label: "RBC Bank Curacao" },
+                { value: "CITCCWCC", label: "Vidanova Bank" }
               ]}
             />
 
@@ -567,21 +598,16 @@ function SettlementSettingsView() {
               error={errors.currency}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "0", label: "0" },
-                { value: "1", label: "1" },
-                { value: "2", label: "2" },
-                { value: "6", label: "6" },
-                { value: "22", label: "22" },
-                { value: "BZD", label: "BZD" },
-                { value: "CAD", label: "CAD" },
-                { value: "DDT", label: "DDT" },
-                { value: "EUR", label: "EUR" },
-                { value: "GBP", label: "GBP" },
-                { value: "JMD", label: "JMD" },
-                { value: "PHP", label: "PHP" },
-                { value: "USD", label: "USD" },
-                { value: "XCD", label: "XCD" },
-                { value: "XCG", label: "XCG" }
+                { value: "22", label: "BZD" },
+                { value: "2", label: "CAD" },
+                { value: "971", label: "DDT" },
+                { value: "3", label: "EUR" },
+                { value: "4", label: "GBP" },
+                { value: "388", label: "JMD" },
+                { value: "125", label: "PHP" },
+                { value: "1", label: "USD" },
+                { value: "23", label: "XCD" },
+                { value: "0", label: "XCG" }
               ]}
             />
 
@@ -593,9 +619,8 @@ function SettlementSettingsView() {
               error={errors.accountType}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "6", label: "6" },
-                { value: "Checking", label: "Checking" },
-                { value: "Savings", label: "Savings" }
+                { value: "6", label: "Checking" },
+                { value: "1", label: "Savings" }
               ]}
             />
           </div>
@@ -630,7 +655,9 @@ function SettlementSettingsView() {
           <div className="flex flex-col gap-0 text-sm">
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-t-lg border-b border-white/40 dark:border-white/5">
               <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.bankName}</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {bankNamesMap[formData.bankName] || formData.bankName}
+              </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] border-b border-slate-100 dark:border-white/5">
               <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
@@ -638,11 +665,15 @@ function SettlementSettingsView() {
             </div>
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
               <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.currency}</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {currencyMap[formData.currency] || formData.currency}
+              </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] rounded-b-lg">
               <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.accountType}</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {accountTypeMap[formData.accountType] || formData.accountType}
+              </span>
             </div>
           </div>
 
@@ -685,7 +716,9 @@ function SettlementSettingsView() {
           <div className="flex flex-col gap-0 text-sm max-w-md mx-auto">
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
               <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.bankName}</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {bankNamesMap[formData.bankName] || formData.bankName}
+              </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
               <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
@@ -693,11 +726,15 @@ function SettlementSettingsView() {
             </div>
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
               <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.currency}</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {currencyMap[formData.currency] || formData.currency}
+              </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-b-lg">
               <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.accountType}</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {accountTypeMap[formData.accountType] || formData.accountType}
+              </span>
             </div>
           </div>
 
