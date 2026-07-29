@@ -13,7 +13,8 @@ import {
   deleteUserSetAccount,
   loadAlertNotificationSetting,
   updateAlertNotification,
-  updateLanguage
+  updateLanguage,
+  changePIN
 } from "@/lib/api/endpoints"
 import { 
   QrCode, 
@@ -1008,6 +1009,93 @@ function ChangeLanguageView() {
 }
 
 function ChangePinView() {
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
+
+  const [formData, setFormData] = useState({
+    oldPin: "",
+    newPin: "",
+    confirmPin: "",
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    // Only allow numeric input
+    const numericValue = value.replace(/[^0-9]/g, '');
+    if (numericValue.length <= 6) {
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: null }));
+      }
+    }
+  };
+
+  const changePinMutation = useMutation({
+    mutationFn: (payload) => changePIN(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        openSuccessDialog({
+          title: "Success",
+          message: data.message || "PIN changed successfully.",
+        });
+        setFormData({
+          oldPin: "",
+          newPin: "",
+          confirmPin: "",
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to change PIN.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    const newErrors = {};
+    if (!formData.oldPin) {
+      newErrors.oldPin = "Old PIN is required";
+    } else if (formData.oldPin.length < 6) {
+      newErrors.oldPin = "Old PIN must be 6 digits";
+    }
+
+    if (!formData.newPin) {
+      newErrors.newPin = "New PIN is required";
+    } else if (formData.newPin.length < 6) {
+      newErrors.newPin = "New PIN must be 6 digits";
+    }
+
+    if (!formData.confirmPin) {
+      newErrors.confirmPin = "Confirm PIN is required";
+    } else if (formData.confirmPin !== formData.newPin) {
+      newErrors.confirmPin = "Confirm PIN does not match New PIN";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+    } else {
+      changePinMutation.mutate({
+        oldPin: formData.oldPin,
+        newPin: formData.newPin,
+        confirmPin: formData.confirmPin,
+        custType: "C",
+      });
+    }
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
@@ -1017,6 +1105,13 @@ function ChangePinView() {
             label="Old Wallet PIN"
             required
             type="password"
+            name="oldPin"
+            value={formData.oldPin}
+            onChange={handleChange}
+            error={errors.oldPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
@@ -1024,6 +1119,13 @@ function ChangePinView() {
             label="New Wallet PIN"
             required
             type="password"
+            name="newPin"
+            value={formData.newPin}
+            onChange={handleChange}
+            error={errors.newPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
@@ -1031,14 +1133,23 @@ function ChangePinView() {
             label="Confirm PIN"
             required
             type="password"
+            name="confirmPin"
+            value={formData.confirmPin}
+            onChange={handleChange}
+            error={errors.confirmPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
         </div>
         <div className="flex justify-center mt-4">
           <GlobalButton 
+            onClick={handleSubmit}
             variant="primary"
             className="px-8 text-xs font-bold uppercase tracking-wider"
+            isLoading={changePinMutation.isPending}
           >
             Change PIN
           </GlobalButton>

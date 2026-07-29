@@ -145,3 +145,8 @@ export async function updateLanguage(payload = {}) {
 export async function getLangPack(payload = {}) {
   return post("/getLangPack", payload);
 }
+
+// Change User Wallet PIN
+export async function changePIN(payload = {}) {
+  return post("/changePIN", payload);
+}
