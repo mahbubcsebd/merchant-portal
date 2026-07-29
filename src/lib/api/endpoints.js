@@ -135,3 +135,8 @@ export async function loadAlertNotificationSetting(payload = {}) {
 export async function updateAlertNotification(payload = {}) {
   return post("/updateAlertNotification", payload);
 }
+
+// Update User Preferred Language
+export async function updateLanguage(payload = {}) {
+  return post("/updateLanguage", payload);
+}

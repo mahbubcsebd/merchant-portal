@@ -11,7 +11,8 @@ import {
   updateUserSetAccount, 
   deleteUserSetAccount,
   loadAlertNotificationSetting,
-  updateAlertNotification
+  updateAlertNotification,
+  updateLanguage
 } from "@/lib/api/endpoints"
 import { 
   QrCode, 
@@ -927,18 +928,83 @@ function ManageNotificationsView() {
 }
 
 function ChangeLanguageView() {
-  const languages = ['Dutch', 'English', 'French', 'Spanish']
-  const [selectedLang, setSelectedLang] = useState('English')
-  
+  const queryClient = useQueryClient();
+  const { openConfirmDialog } = useDialog();
+  const { profile } = useDashboardContext();
+
+  const langMap = {
+    "nl": "Dutch",
+    "en": "English",
+    "fr": "French",
+    "es": "Spanish"
+  };
+
+  const reverseLangMap = {
+    "Dutch": "nl",
+    "English": "en",
+    "French": "fr",
+    "Spanish": "es"
+  };
+
+  const languages = ['Dutch', 'English', 'French', 'Spanish'];
+  const [selectedLang, setSelectedLang] = useState('English');
+
+  // Initialize selected language from user profile
+  useEffect(() => {
+    if (profile?.languageId && langMap[profile.languageId]) {
+      setSelectedLang(langMap[profile.languageId]);
+    }
+  }, [profile]);
+
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateLanguage(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        openConfirmDialog({
+          title: "Success",
+          description: data.message || "Preferred language updated successfully.",
+          confirmText: "Close",
+          iconType: "success",
+          hideCancel: true,
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to update language.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  const handleUpdate = () => {
+    const languageCode = reverseLangMap[selectedLang] || "en";
+    updateMutation.mutate({ languageId: languageCode });
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
         <div className="flex flex-col gap-2 mb-8">
           {languages.map((item, idx) => (
-            <div 
+            <button 
               key={idx} 
+              type="button"
               onClick={() => setSelectedLang(item)}
-              className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors"
+              disabled={updateMutation.isPending}
+              className="w-full flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors text-left"
             >
               <span className={`font-semibold text-sm ${selectedLang === item ? 'text-[#1b55ad] dark:text-blue-400' : 'text-slate-800 dark:text-white/90'}`}>{item}</span>
               {selectedLang === item && (
@@ -946,13 +1012,15 @@ function ChangeLanguageView() {
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               )}
-            </div>
+            </button>
           ))}
         </div>
         <div className="flex justify-center mt-2">
           <GlobalButton 
+            onClick={handleUpdate}
             variant="primary"
             className="px-8 text-xs font-bold uppercase tracking-wider"
+            isLoading={updateMutation.isPending}
           >
             Update
           </GlobalButton>
