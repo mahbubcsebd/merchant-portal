@@ -48,17 +48,17 @@ export default function LiveTransactionsPage() {
   })
 
   const subOptions = useMemo(() => [
-    { value: "selected", label: "Select Subsidiary" },
+    { value: "selected", label: "All Subsidiaries" },
     ...(subData?.data || []).map(s => ({ value: s.CORPCUSTSUBID, label: s.SUBNAME }))
   ], [subData])
 
   const cashierOptions = useMemo(() => [
-    { value: "selected", label: "Select Cashiers" },
+    { value: "selected", label: "All Cashiers" },
     ...(cashierData?.records || []).map(c => ({ value: c.merCashierID, label: `${c.cashierFName} ${c.cashierLName}` }))
   ], [cashierData])
 
   const terminalOptions = useMemo(() => [
-    { value: "selected", label: "Select Terminal" },
+    { value: "selected", label: "All Terminals" },
     ...(terminalData?.listOfTerminal || []).map(t => ({ value: t.terminalId, label: t.terminalName }))
   ], [terminalData])
 
@@ -148,7 +148,7 @@ export default function LiveTransactionsPage() {
       {/* ── Page Header ─────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
             Activity
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
@@ -182,7 +182,7 @@ export default function LiveTransactionsPage() {
             containerClassName="flex-1 min-w-[180px]"
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={[
-              { value: "selected", label: "Select Status" },
+              { value: "selected", label: "All Statuses" },
               { value: "P", label: "Success" },
               { value: "R", label: "Failed" },
               { value: "C", label: "Pending" }

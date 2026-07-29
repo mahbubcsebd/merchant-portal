@@ -95,3 +95,58 @@ export async function updateProfile(payload = {}) {
 export async function loadUserProfile(payload = {}) {
   return post("/loadUserProfile", payload);
 }
+
+// Get Beneficiaries
+export async function getBeneficiaries(payload = {}) {
+  return post("/getBeneficiaries", payload);
+}
+
+// Get Transaction Limits
+export async function getTransactionLimits(payload = {}) {
+  return post("/getTransactionLimits", payload);
+}
+
+// Get User Settlement Accounts
+export async function getUserSetAccounts(payload = {}) {
+  return post("/getUserSetAccounts", payload);
+}
+
+// Create User Settlement Account
+export async function createUserSetAccount(payload = {}) {
+  return post("/createUserSetAccount", payload);
+}
+
+// Update User Settlement Account
+export async function updateUserSetAccount(payload = {}) {
+  return post("/updateUserSetAccount", payload);
+}
+
+// Delete User Settlement Account
+export async function deleteUserSetAccount(payload = {}) {
+  return post("/deleteUserSetAccount", payload);
+}
+
+// Load Alert Notification Settings
+export async function loadAlertNotificationSetting(payload = {}) {
+  return post("/loadAlertNotificationSetting", payload);
+}
+
+// Update Alert Notification Settings
+export async function updateAlertNotification(payload = {}) {
+  return post("/updateAlertNotification", payload);
+}
+
+// Update User Preferred Language
+export async function updateLanguage(payload = {}) {
+  return post("/updateLanguage", payload);
+}
+
+// Get Translation Language Packs
+export async function getLangPack(payload = {}) {
+  return post("/getLangPack", payload);
+}
+
+// Change User Wallet PIN
+export async function changePIN(payload = {}) {
+  return post("/changePIN", payload);
+}

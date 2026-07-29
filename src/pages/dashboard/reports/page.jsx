@@ -476,13 +476,13 @@ export default function ReportsPage() {
   return (
     <div className="w-full max-w-5xl mx-auto pb-10">
       <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-0.5">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">
           Reports
-        </h2>
-        <h3 className="text-sm sm:text-lg font-semibold text-slate-800 dark:text-white/80 leading-snug">
+        </h1>
+        <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white leading-snug">
           Generate Reports By Transaction And Status
-        </h3>
-        <p className="text-[10px] sm:text-xs text-slate-400 dark:text-white/30 italic mt-0.5">
+        </h2>
+        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/50 italic mt-0.5">
           Generate Sales Report By Transaction Types And Status
         </p>
       </div>
@@ -592,7 +592,7 @@ export default function ReportsPage() {
           </div>
           {activeTab === "transaction" && (
             <div className="border-t border-dashed border-slate-200 dark:border-white/10 pt-4 max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-4">
                 Filter By
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -602,7 +602,7 @@ export default function ReportsPage() {
                   onChange={setTxType}
                   labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                   options={[
-                    { value: "selected", label: "Select Type" },
+                    { value: "selected", label: "All Types" },
                     { value: "SCANTOPAY", label: "Scan to Pay" },
                     { value: "PAYQRCODE", label: "Pay by QR Code" },
                     { value: "PAYTOBANK", label: "Transfer To Bank" },
@@ -621,7 +621,7 @@ export default function ReportsPage() {
                   onChange={setStatus}
                   labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                   options={[
-                    { value: "selected", label: "Select Status" },
+                    { value: "selected", label: "All Statuses" },
                     { value: "P", label: "Processed" },
                     { value: "R", label: "Rejected" },
                   ]}

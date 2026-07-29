@@ -40,6 +40,15 @@ export default function DashboardLayout() {
     }
   }, [defaultAccountId, currency]);
 
+  useEffect(() => {
+    if (profile) {
+      console.log("Logged In User Profile Details:", profile);
+    }
+    if (accounts && accounts.length > 0) {
+      console.log("Logged In User Accounts Details:", accounts);
+    }
+  }, [profile, accounts]);
+
   const { data: dashboardInfoResponse, isLoading: isLoadingDashboardInfo } =
     useQuery({
       queryKey: ["dashboardInfo", activeAccountId, period],

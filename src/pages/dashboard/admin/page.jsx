@@ -1,5 +1,21 @@
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import QRCodeStyling from "qr-code-styling"
+import { useDashboardContext } from "@/pages/dashboard/context"
+import { useSearchParams } from "react-router-dom"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useDialog } from "@/components/globals/DialogProvider"
+import { useLanguage } from "@/components/globals/LanguageProvider"
+import { 
+  getTransactionLimits, 
+  getUserSetAccounts, 
+  createUserSetAccount, 
+  updateUserSetAccount, 
+  deleteUserSetAccount,
+  loadAlertNotificationSetting,
+  updateAlertNotification,
+  updateLanguage,
+  changePIN
+} from "@/lib/api/endpoints"
 import { 
   QrCode, 
   Wallet, 
@@ -22,26 +38,102 @@ import GlobalButton from "@/components/globals/GlobalButton"
 // ----------------------------------------------------------------------
 
 function MyQrView() {
+  const { profile } = useDashboardContext();
+  const p = profile || {};
+  const qrList = p.qrcode || [];
+
+  // Populate options from profile qrcode list
+  const qrOptions = qrList.map((q) => ({
+    value: q.currency,
+    label: `${q.currency} Wallet QR`,
+  }));
+
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+
+  // Initialize selected currency
+  useEffect(() => {
+    if (qrOptions.length > 0 && !selectedCurrency) {
+      setSelectedCurrency(qrOptions[0].value);
+    }
+  }, [qrOptions, selectedCurrency]);
+
+  const selectedQr = qrList.find((q) => q.currency === selectedCurrency);
+  // If we have a qrcode string from the profile, use it; otherwise fallback
+  const qrValue = selectedQr?.qrcode || (p.custName ? `${p.custName}#${p.userName}` : "mPay");
+
+  const qrRef = useRef(null);
+  const qrCodeInstance = useRef(null);
+
+  useEffect(() => {
+    if (!qrValue) return;
+
+    if (!qrCodeInstance.current) {
+      qrCodeInstance.current = new QRCodeStyling({
+        width: 220,
+        height: 220,
+        data: qrValue,
+        margin: 0,
+        qrOptions: {
+          typeNumber: 0,
+          mode: "Byte",
+          errorCorrectionLevel: "Q",
+        },
+        imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
+        dotsOptions: { type: "extra-rounded", color: "#000" },
+        backgroundOptions: { color: "#ffffff" },
+        image: "/images/logo.svg",
+      });
+      if (qrRef.current) {
+        qrRef.current.innerHTML = "";
+        qrCodeInstance.current.append(qrRef.current);
+      }
+    } else {
+      qrCodeInstance.current.update({ data: qrValue });
+    }
+  }, [qrValue]);
+
+  const handleDownloadQR = () => {
+    if (qrCodeInstance.current) {
+      qrCodeInstance.current.download({ 
+        name: `store-qr-${selectedCurrency || "wallet"}`, 
+        extension: "png" 
+      });
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Huawei Corp</h3>
-        <p className="text-sm font-medium text-slate-500 dark:text-white/60">@Huawei</p>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+          {p.custName || "Merchant Store"}
+        </h3>
+        <p className="text-sm font-medium text-slate-500 dark:text-white/60">
+          {p.userName ? `@${p.userName}` : ""}
+        </p>
       </div>
 
-      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
-        {/* Placeholder for actual QR code, using QrCode icon for structure */}
-        <QrCode size={220} className="text-slate-900" strokeWidth={1} />
-        {/* Logo in the center of QR */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-1 rounded-md">
-          <img src="/images/logo.svg" alt="mPay" width={50} height={20} className="dark:invert-0" />
+      {qrOptions.length > 1 && (
+        <div className="w-full max-w-[260px] mb-6">
+          <GlobalSelect
+            value={selectedCurrency}
+            onChange={(val) => setSelectedCurrency(val)}
+            options={qrOptions}
+            placeholder="Select Currency"
+          />
         </div>
+      )}
+
+      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
+        {/* Render QR code here */}
+        <div ref={qrRef} className="w-[220px] h-[220px] flex items-center justify-center" />
       </div>
 
       <GlobalButton 
         variant="primary"
         leftIcon={<Download size={18} />}
         className="px-6 text-xs font-bold uppercase tracking-wider"
+        onClick={handleDownloadQR}
+        disabled={!qrValue}
       >
         Download QR
       </GlobalButton>
@@ -50,55 +142,138 @@ function MyQrView() {
 }
 
 function PaymentLimitsView() {
-  const limitCategories = ["Daily Limits", "Monthly Limit", "Annual Limit"]
-  
-  const generateCards = (multiplier) => [
-    { title: "Pay to Mobile", remaining: 9987.00 * multiplier, used: 13.00, max: 10000.00 * multiplier },
-    { title: "Scan to Pay", remaining: 11111.00 * multiplier, used: 0.00, max: 11111.00 * multiplier },
-    { title: "Pay Bills", remaining: 22222.00 * multiplier, used: 0.00, max: 22222.00 * multiplier },
-  ]
+  const { data: limitsData, isLoading } = useQuery({
+    queryKey: ["transactionLimits"],
+    queryFn: () => getTransactionLimits(),
+  });
+
+  const limitsList = limitsData?.txnLimitUsers || [];
+
+  // Extract unique currency names
+  const currencies = Array.from(new Set(limitsList.map((item) => item.CURRNAME))).filter(Boolean);
+  const currencyOptions = [
+    { value: "all", label: "All Currencies" },
+    ...currencies.map((curr) => ({
+      value: curr,
+      label: `${curr} Limits`,
+    })),
+  ];
+
+  const [selectedCurrency, setSelectedCurrency] = useState("all");
+
+  if (isLoading && limitsList.length === 0) {
+    return (
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading Wallet Limits...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter limits based on selected currency
+  const filteredLimits = selectedCurrency === "all"
+    ? limitsList
+    : limitsList.filter((item) => item.CURRNAME === selectedCurrency);
+
+  // Map limits into columns
+  const mapCard = (item, limitType) => {
+    let max = 0;
+    let used = 0;
+    let remaining = 0;
+
+    if (limitType === "daily") {
+      max = parseFloat(item.USERTXNDAILYLIMIT || 0);
+      used = parseFloat(item.USERTXNDAILYUSED || 0);
+      remaining = parseFloat(item.USERTXNDAILYREMAIN || 0);
+    } else if (limitType === "monthly") {
+      max = parseFloat(item.USERTXNMONTHLYLIMIT || 0);
+      used = parseFloat(item.USERTXNMONTHLYUSED || 0);
+      remaining = parseFloat(item.USERTXNMONTHLYREMAIN || 0);
+    } else if (limitType === "annual") {
+      max = parseFloat(item.USERTXNANNUALLIMIT || 0);
+      used = parseFloat(item.USERTXNANNUALUSED || 0);
+      remaining = parseFloat(item.USERTXNANNUALREMAIN || 0);
+    }
+
+    return {
+      title: item.TXNNAME || item.TXNID,
+      remaining,
+      used,
+      max,
+      currency: item.CURRNAME || "XCG",
+    };
+  };
 
   const columns = [
-    { title: "Daily Limits", cards: generateCards(1) },
-    { title: "Monthly Limit", cards: generateCards(10) },
-    { title: "Annual Limit", cards: generateCards(100) },
-  ]
+    {
+      title: "Daily Limits",
+      cards: filteredLimits.map((item) => mapCard(item, "daily")),
+    },
+    {
+      title: "Monthly Limit",
+      cards: filteredLimits.map((item) => mapCard(item, "monthly")),
+    },
+    {
+      title: "Annual Limit",
+      cards: filteredLimits.map((item) => mapCard(item, "annual")),
+    },
+  ];
 
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">My Wallet Limits</h2>
+        {currencyOptions.length > 1 && (
+          <div className="w-full sm:w-48 shrink-0">
+            <GlobalSelect
+              value={selectedCurrency}
+              onChange={(val) => setSelectedCurrency(val)}
+              options={currencyOptions}
+              placeholder="Select Currency"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {columns.map((col, colIdx) => (
           <div key={colIdx} className="flex flex-col gap-4">
             <h3 className="font-bold text-slate-800 dark:text-white mb-2">{col.title}</h3>
-            {col.cards.map((card, cardIdx) => {
-              const progressPercentage = (card.used / card.max) * 100;
-              return (
-                <div key={cardIdx} className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm">
-                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">{card.title}</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
-                  
-                  <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
-                    XCG {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+            {col.cards.length === 0 ? (
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 p-4 text-center">
+                No limits configured
+              </p>
+            ) : (
+              col.cards.map((card, cardIdx) => {
+                const progressPercentage = card.max > 0 ? (card.used / card.max) * 100 : 0;
+                return (
+                  <div key={cardIdx} className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">{card.title}</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
+                    
+                    <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
+                      {card.currency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mb-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                      />
+                    </div>
+                    
+                    <p className="text-[11px] text-slate-500 dark:text-white/50">
+                      {card.currency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} used (max: {card.currency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
+                    </p>
                   </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mb-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full" 
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                  
-                  <p className="text-[11px] text-slate-500 dark:text-white/50">
-                    XCG {card.used.toFixed(2)} used (max: XCG {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
-                  </p>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         ))}
       </div>
@@ -106,15 +281,159 @@ function PaymentLimitsView() {
   )
 }
 
+const bankNamesMap = {
+  "ALSDCWC1": "ACU Credit Union",
+  "BDCCCWCU": "BDC Curacao NV",
+  "CBCSCWCU": "CBCS Curacao",
+  "MCBKCWCU": "Maduro & Curiel's Bank",
+  "ORBACWCU": "ORCO Bank Curacao",
+  "PBBPCWC1": "PSB Bank NV Curacao",
+  "RBTTCWCU": "RBC Bank Curacao",
+  "CITCCWCC": "Vidanova Bank",
+  "HGHYS85DHT1": "HGHYS85DHT1"
+};
+
+const currencyMap = {
+  "0": "XCG",
+  "1": "USD",
+  "2": "CAD",
+  "3": "EUR",
+  "4": "GBP",
+  "22": "BZD",
+  "23": "XCD",
+  "125": "PHP",
+  "388": "JMD",
+  "971": "DDT"
+};
+
+const accountTypeMap = {
+  "6": "Checking",
+  "1": "Savings"
+};
+
 function SettlementSettingsView() {
+  const queryClient = useQueryClient();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
+
+  const { data: accountsData, isLoading } = useQuery({
+    queryKey: ["userSetAccounts"],
+    queryFn: () => getUserSetAccounts(),
+  });
+
   const [view, setView] = useState('list'); // 'list', 'form', 'confirm', 'success'
   const [formData, setFormData] = useState({
     bankName: '',
     accountNumber: '',
-    currency: '',
-    accountType: ''
+    currency: '0',
+    accountType: '6'
   });
   const [errors, setErrors] = useState({});
+  const [editIndex, setEditIndex] = useState(null);
+
+  const [banks, setBanks] = useState([]);
+
+  useEffect(() => {
+    if (accountsData?.records) {
+      const formattedBanks = accountsData.records.map((record, index) => ({
+        id: index,
+        name: bankNamesMap[record.bankId] || record.bankId || "Bank Account",
+        account: record.bankAccount ? `**** ${record.bankAccount.slice(-4)}` : "****",
+        rawAccount: record.bankAccount || "",
+        bic: record.bankId || "",
+        routing: record.bankRouting || null,
+        currency: record.bankAcctCurr || "0",
+        accountType: record.bankAcctType || "6"
+      }));
+      setBanks(formattedBanks);
+    }
+  }, [accountsData]);
+
+  // Create Mutation
+  const createMutation = useMutation({
+    mutationFn: (payload) => createUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        setView('success');
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to add bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
+
+  // Update Mutation
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        setView('success');
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to update bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (payload) => deleteUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        openSuccessDialog({
+          title: "Deleted",
+          message: data.message || "Settlement account deleted successfully.",
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to delete bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
 
   const handleSelectChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -123,18 +442,12 @@ function SettlementSettingsView() {
     }
   };
 
-  const [banks, setBanks] = useState([
-    { name: "ACU Credit Union", account: "**** 5435" },
-    { name: "BDC Curacao NV", account: "**** 2424" },
-  ]);
-  const [editIndex, setEditIndex] = useState(null);
-
   const handleEdit = (bank, idx) => {
     setFormData({
-      bankName: bank.name,
-      accountNumber: '324325435435', // Mocking full account number
-      currency: 'BZD',
-      accountType: 'Savings'
+      bankName: bank.bic,
+      accountNumber: bank.rawAccount,
+      currency: bank.currency,
+      accountType: bank.accountType
     });
     setEditIndex(idx);
     setErrors({});
@@ -145,8 +458,8 @@ function SettlementSettingsView() {
     setFormData({
       bankName: '',
       accountNumber: '',
-      currency: '',
-      accountType: ''
+      currency: '0',
+      accountType: '6'
     });
     setEditIndex(null);
     setErrors({});
@@ -155,7 +468,6 @@ function SettlementSettingsView() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // Allow only digits for account number (max length 12)
     if (name === 'accountNumber') {
       const numericValue = value.replace(/[^0-9]/g, '');
       if (numericValue.length <= 12) {
@@ -164,10 +476,22 @@ function SettlementSettingsView() {
     } else {
       setFormData({ ...formData, [name]: value });
     }
-    // Clear error when user types
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
+  };
+
+  const handleDelete = (bank) => {
+    openConfirmDialog({
+      title: "Confirm Delete",
+      description: `Are you sure you want to delete account ending in ${bank.account.slice(-4)}?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      iconType: "danger",
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync({ bankAccount: bank.rawAccount });
+      }
+    });
   };
 
   const handleSubmit = () => {
@@ -176,8 +500,12 @@ function SettlementSettingsView() {
     
     if (!formData.accountNumber) {
       newErrors.accountNumber = "Account Number is required";
-    } else if (formData.accountNumber.length < 9) {
-      newErrors.accountNumber = "Account Number must be at least 9 digits";
+    } else {
+      if (/^0/.test(formData.accountNumber)) {
+        newErrors.accountNumber = "Account number cannot start with zero";
+      } else if (formData.accountNumber.length < 8) {
+        newErrors.accountNumber = "Account number must be at least 8 digits";
+      }
     }
 
     if (!formData.currency) newErrors.currency = "Currency is required";
@@ -191,24 +519,47 @@ function SettlementSettingsView() {
   };
 
   const handleConfirm = () => {
-    const last4 = formData.accountNumber.slice(-4);
-    const accountStr = `**** ${last4}`;
-    
     if (editIndex !== null) {
-      const updatedBanks = [...banks];
-      updatedBanks[editIndex] = { ...updatedBanks[editIndex], name: formData.bankName, account: accountStr };
-      setBanks(updatedBanks);
+      const originalBank = banks[editIndex];
+      updateMutation.mutate({
+        bankId: formData.bankName,
+        bankRouting: null,
+        bankAccount: originalBank.rawAccount,
+        bankAcctCurr: formData.currency,
+        bankAcctType: formData.accountType,
+        bankAccountUpd: formData.accountNumber
+      });
     } else {
-      setBanks([...banks, { name: formData.bankName, account: accountStr }]);
+      createMutation.mutate({
+        bankId: formData.bankName,
+        bankRouting: null,
+        bankAccount: formData.accountNumber,
+        bankAcctCurr: formData.currency,
+        bankAcctType: formData.accountType
+      });
     }
-    setView('success');
   };
+
+  if (isLoading && banks.length === 0) {
+    return (
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading Bank Accounts...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (view === 'form') {
     return (
       <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
         <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 max-w-xl mx-auto w-full">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Edit Bank Account</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+            {editIndex !== null ? "Edit Bank Account" : "Add Bank Account"}
+          </h2>
           
           <div className="flex flex-col gap-5">
             <GlobalSelect
@@ -219,14 +570,14 @@ function SettlementSettingsView() {
               error={errors.bankName}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "ACU Credit Union", label: "ACU Credit Union" },
-                { value: "BDC Curacao NV", label: "BDC Curacao NV" },
-                { value: "CBCS Curacao", label: "CBCS Curacao" },
-                { value: "Maduro & Curiel's Bank", label: "Maduro & Curiel's Bank" },
-                { value: "ORCO Bank Curacao", label: "ORCO Bank Curacao" },
-                { value: "PSB Bank NV Curacao", label: "PSB Bank NV Curacao" },
-                { value: "RBC Bank Curacao", label: "RBC Bank Curacao" },
-                { value: "Vidanova Bank", label: "Vidanova Bank" }
+                { value: "ALSDCWC1", label: "ACU Credit Union" },
+                { value: "BDCCCWCU", label: "BDC Curacao NV" },
+                { value: "CBCSCWCU", label: "CBCS Curacao" },
+                { value: "MCBKCWCU", label: "Maduro & Curiel's Bank" },
+                { value: "ORBACWCU", label: "ORCO Bank Curacao" },
+                { value: "PBBPCWC1", label: "PSB Bank NV Curacao" },
+                { value: "RBTTCWCU", label: "RBC Bank Curacao" },
+                { value: "CITCCWCC", label: "Vidanova Bank" }
               ]}
             />
 
@@ -249,16 +600,16 @@ function SettlementSettingsView() {
               error={errors.currency}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "BZD", label: "BZD" },
-                { value: "CAD", label: "CAD" },
-                { value: "DDT", label: "DDT" },
-                { value: "EUR", label: "EUR" },
-                { value: "GBP", label: "GBP" },
-                { value: "JMD", label: "JMD" },
-                { value: "PHP", label: "PHP" },
-                { value: "USD", label: "USD" },
-                { value: "XCD", label: "XCD" },
-                { value: "XCG", label: "XCG" }
+                { value: "22", label: "BZD" },
+                { value: "2", label: "CAD" },
+                { value: "971", label: "DDT" },
+                { value: "3", label: "EUR" },
+                { value: "4", label: "GBP" },
+                { value: "388", label: "JMD" },
+                { value: "125", label: "PHP" },
+                { value: "1", label: "USD" },
+                { value: "23", label: "XCD" },
+                { value: "0", label: "XCG" }
               ]}
             />
 
@@ -270,8 +621,8 @@ function SettlementSettingsView() {
               error={errors.accountType}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
-                { value: "Checking", label: "Checking" },
-                { value: "Savings", label: "Savings" }
+                { value: "6", label: "Checking" },
+                { value: "1", label: "Savings" }
               ]}
             />
           </div>
@@ -305,20 +656,26 @@ function SettlementSettingsView() {
           
           <div className="flex flex-col gap-0 text-sm">
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-t-lg border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.bankName}</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {bankNamesMap[formData.bankName] || formData.bankName}
+              </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.currency}</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {currencyMap[formData.currency] || formData.currency}
+              </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] rounded-b-lg">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
-              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.accountType}</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
+              <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
+                {accountTypeMap[formData.accountType] || formData.accountType}
+              </span>
             </div>
           </div>
 
@@ -327,6 +684,7 @@ function SettlementSettingsView() {
               onClick={() => setView('form')} 
               variant="secondary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
+              disabled={createMutation.isPending || updateMutation.isPending}
             >
               Change
             </GlobalButton>
@@ -334,6 +692,7 @@ function SettlementSettingsView() {
               onClick={handleConfirm} 
               variant="primary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
+              isLoading={createMutation.isPending || updateMutation.isPending}
             >
               Confirm
             </GlobalButton>
@@ -358,20 +717,26 @@ function SettlementSettingsView() {
           
           <div className="flex flex-col gap-0 text-sm max-w-md mx-auto">
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.bankName}</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {bankNamesMap[formData.bankName] || formData.bankName}
+              </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.currency}</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {currencyMap[formData.currency] || formData.currency}
+              </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-b-lg">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
-              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.accountType}</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
+              <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
+                {accountTypeMap[formData.accountType] || formData.accountType}
+              </span>
             </div>
           </div>
 
@@ -413,7 +778,7 @@ function SettlementSettingsView() {
                       <button onClick={() => handleEdit(bank, idx)} className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors">
                         <Pencil size={18} />
                       </button>
-                      <button className="text-slate-400 hover:text-red-500 transition-colors">
+                      <button onClick={() => handleDelete(bank)} className="text-slate-400 hover:text-red-500 transition-colors" disabled={deleteMutation.isPending}>
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -440,20 +805,93 @@ function SettlementSettingsView() {
 }
 
 function ManageNotificationsView() {
-  const [notifications, setNotifications] = useState({
-    sms: true,
-    email: true,
-    whatsapp: true
+  const queryClient = useQueryClient();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
+
+  const { data: settingsData, isLoading } = useQuery({
+    queryKey: ["alertNotificationSetting"],
+    queryFn: () => loadAlertNotificationSetting(),
   });
 
+  const [notifications, setNotifications] = useState({
+    sms: false,
+    email: false,
+    whatsapp: false,
+  });
+
+  // Populate state when settings are loaded
+  useEffect(() => {
+    if (settingsData?.alertNotiFlag) {
+      setNotifications({
+        sms: !!settingsData.alertNotiFlag.smsFlag,
+        email: !!settingsData.alertNotiFlag.emailFlag,
+        whatsapp: !!settingsData.alertNotiFlag.whtFlag,
+      });
+    }
+  }, [settingsData]);
+
   const toggle = (key) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+    const updated = {
+      ...notifications,
+      [key]: !notifications[key]
+    };
+    setNotifications(updated);
+    
+    updateMutation.mutate({
+      smsFlag: updated.sms,
+      emailFlag: updated.email,
+      pushFlag: true,
+      whtFlag: updated.whatsapp,
+    });
   };
+
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateAlertNotification(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["alertNotificationSetting"] });
+        openSuccessDialog({
+          title: "Success",
+          message: data.message || "Alert notification updated successfully.",
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to update notification settings.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading Notification Settings...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col gap-4 mb-2">
           {[
             { id: 'sms', label: 'SMS Notifications' }, 
             { id: 'email', label: 'Email Notifications' }, 
@@ -461,22 +899,16 @@ function ManageNotificationsView() {
           ].map((item) => (
             <div key={item.id} className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0">
               <span className="font-semibold text-[#1b55ad] dark:text-blue-400 text-sm">{item.label}</span>
-              <div 
+              <button 
+                type="button"
                 onClick={() => toggle(item.id)}
+                disabled={updateMutation.isPending}
                 className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors duration-200 ${notifications[item.id] ? 'bg-[#1b55ad]' : 'bg-slate-300 dark:bg-slate-600'}`}
               >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200 ${notifications[item.id] ? 'right-1' : 'left-1'}`}></div>
-              </div>
+              </button>
             </div>
           ))}
-        </div>
-        <div className="flex justify-center mt-2">
-          <GlobalButton 
-            variant="primary"
-            className="px-8 text-xs font-bold uppercase tracking-wider"
-          >
-            Update
-          </GlobalButton>
         </div>
       </div>
     </div>
@@ -484,18 +916,83 @@ function ManageNotificationsView() {
 }
 
 function ChangeLanguageView() {
-  const languages = ['Dutch', 'English', 'French', 'Spanish']
-  const [selectedLang, setSelectedLang] = useState('English')
-  
+  const queryClient = useQueryClient();
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
+  const { profile } = useDashboardContext();
+  const { setLanguage } = useLanguage();
+
+  const langMap = {
+    "nl": "Dutch",
+    "en": "English",
+    "fr": "French",
+    "es": "Spanish"
+  };
+
+  const reverseLangMap = {
+    "Dutch": "nl",
+    "English": "en",
+    "French": "fr",
+    "Spanish": "es"
+  };
+
+  const languages = ['Dutch', 'English', 'French', 'Spanish'];
+  const [selectedLang, setSelectedLang] = useState('English');
+
+  // Initialize selected language from user profile
+  useEffect(() => {
+    if (profile?.languageId && langMap[profile.languageId]) {
+      setSelectedLang(langMap[profile.languageId]);
+    }
+  }, [profile]);
+
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateLanguage(payload),
+    onSuccess: (data, variables) => {
+      if (data.status === "success") {
+        setLanguage(variables.languageId);
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        openSuccessDialog({
+          title: "Success",
+          message: data.message || "Preferred language updated successfully.",
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to update language.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  const handleSelectLanguage = (item) => {
+    setSelectedLang(item);
+    const languageCode = reverseLangMap[item] || "en";
+    updateMutation.mutate({ languageId: languageCode });
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-2">
           {languages.map((item, idx) => (
-            <div 
+            <button 
               key={idx} 
-              onClick={() => setSelectedLang(item)}
-              className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors"
+              type="button"
+              onClick={() => handleSelectLanguage(item)}
+              disabled={updateMutation.isPending}
+              className="w-full flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors text-left"
             >
               <span className={`font-semibold text-sm ${selectedLang === item ? 'text-[#1b55ad] dark:text-blue-400' : 'text-slate-800 dark:text-white/90'}`}>{item}</span>
               {selectedLang === item && (
@@ -503,16 +1000,8 @@ function ChangeLanguageView() {
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               )}
-            </div>
+            </button>
           ))}
-        </div>
-        <div className="flex justify-center mt-2">
-          <GlobalButton 
-            variant="primary"
-            className="px-8 text-xs font-bold uppercase tracking-wider"
-          >
-            Update
-          </GlobalButton>
         </div>
       </div>
     </div>
@@ -520,6 +1009,93 @@ function ChangeLanguageView() {
 }
 
 function ChangePinView() {
+  const { openConfirmDialog, openSuccessDialog } = useDialog();
+
+  const [formData, setFormData] = useState({
+    oldPin: "",
+    newPin: "",
+    confirmPin: "",
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    // Only allow numeric input
+    const numericValue = value.replace(/[^0-9]/g, '');
+    if (numericValue.length <= 6) {
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: null }));
+      }
+    }
+  };
+
+  const changePinMutation = useMutation({
+    mutationFn: (payload) => changePIN(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        openSuccessDialog({
+          title: "Success",
+          message: data.message || "PIN changed successfully.",
+        });
+        setFormData({
+          oldPin: "",
+          newPin: "",
+          confirmPin: "",
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to change PIN.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    const newErrors = {};
+    if (!formData.oldPin) {
+      newErrors.oldPin = "Old PIN is required";
+    } else if (formData.oldPin.length < 6) {
+      newErrors.oldPin = "Old PIN must be 6 digits";
+    }
+
+    if (!formData.newPin) {
+      newErrors.newPin = "New PIN is required";
+    } else if (formData.newPin.length < 6) {
+      newErrors.newPin = "New PIN must be 6 digits";
+    }
+
+    if (!formData.confirmPin) {
+      newErrors.confirmPin = "Confirm PIN is required";
+    } else if (formData.confirmPin !== formData.newPin) {
+      newErrors.confirmPin = "Confirm PIN does not match New PIN";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+    } else {
+      changePinMutation.mutate({
+        oldPin: formData.oldPin,
+        newPin: formData.newPin,
+        confirmPin: formData.confirmPin,
+        custType: "C",
+      });
+    }
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
@@ -529,6 +1105,13 @@ function ChangePinView() {
             label="Old Wallet PIN"
             required
             type="password"
+            name="oldPin"
+            value={formData.oldPin}
+            onChange={handleChange}
+            error={errors.oldPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
@@ -536,6 +1119,13 @@ function ChangePinView() {
             label="New Wallet PIN"
             required
             type="password"
+            name="newPin"
+            value={formData.newPin}
+            onChange={handleChange}
+            error={errors.newPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
@@ -543,14 +1133,23 @@ function ChangePinView() {
             label="Confirm PIN"
             required
             type="password"
+            name="confirmPin"
+            value={formData.confirmPin}
+            onChange={handleChange}
+            error={errors.confirmPin}
+            maxLength={6}
+            inputMode="numeric"
+            placeholder="••••••"
             labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-2"
           />
 
         </div>
         <div className="flex justify-center mt-4">
           <GlobalButton 
+            onClick={handleSubmit}
             variant="primary"
             className="px-8 text-xs font-bold uppercase tracking-wider"
+            isLoading={changePinMutation.isPending}
           >
             Change PIN
           </GlobalButton>
@@ -565,7 +1164,12 @@ function ChangePinView() {
 // ----------------------------------------------------------------------
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('my_qr');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "my_qr";
+
+  const setActiveTab = (tabId) => {
+    setSearchParams({ tab: tabId });
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -616,12 +1220,14 @@ export default function AdminPage() {
       
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 pb-4 border-b border-slate-200 dark:border-white/10 gap-2">
-        <h1 className="text-2xl font-bold text-[#1b55ad] dark:text-blue-400">
-          Administration
-        </h1>
-        <h2 className="text-lg font-semibold text-slate-700 dark:text-white/80">
-          {getHeaderTitle()}
-        </h2>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
+            Administration
+          </p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {getHeaderTitle()}
+          </h1>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
