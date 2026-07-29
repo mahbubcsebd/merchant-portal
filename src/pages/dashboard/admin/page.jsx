@@ -139,19 +139,15 @@ function PaymentLimitsView() {
 
   // Extract unique currency names
   const currencies = Array.from(new Set(limitsList.map((item) => item.CURRNAME))).filter(Boolean);
-  const currencyOptions = currencies.map((curr) => ({
-    value: curr,
-    label: `${curr} Limits`,
-  }));
+  const currencyOptions = [
+    { value: "all", label: "All Currencies" },
+    ...currencies.map((curr) => ({
+      value: curr,
+      label: `${curr} Limits`,
+    })),
+  ];
 
-  const [selectedCurrency, setSelectedCurrency] = useState("");
-
-  // Initialize selected currency
-  useEffect(() => {
-    if (currencyOptions.length > 0 && !selectedCurrency) {
-      setSelectedCurrency(currencyOptions[0].value);
-    }
-  }, [currencyOptions, selectedCurrency]);
+  const [selectedCurrency, setSelectedCurrency] = useState("all");
 
   if (isLoading && limitsList.length === 0) {
     return (
@@ -167,8 +163,9 @@ function PaymentLimitsView() {
   }
 
   // Filter limits based on selected currency
-  const activeCurrency = selectedCurrency || (currencyOptions[0]?.value || "XCG");
-  const filteredLimits = limitsList.filter((item) => item.CURRNAME === activeCurrency);
+  const filteredLimits = selectedCurrency === "all"
+    ? limitsList
+    : limitsList.filter((item) => item.CURRNAME === selectedCurrency);
 
   // Map limits into columns
   const mapCard = (item, limitType) => {
@@ -195,6 +192,7 @@ function PaymentLimitsView() {
       remaining,
       used,
       max,
+      currency: item.CURRNAME || "XCG",
     };
   };
 
@@ -246,7 +244,7 @@ function PaymentLimitsView() {
                     <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
                     
                     <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
-                      {activeCurrency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+                      {card.currency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
                     </div>
                     
                     {/* Progress Bar */}
@@ -258,7 +256,7 @@ function PaymentLimitsView() {
                     </div>
                     
                     <p className="text-[11px] text-slate-500 dark:text-white/50">
-                      {activeCurrency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} used (max: {activeCurrency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
+                      {card.currency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} used (max: {card.currency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
                     </p>
                   </div>
                 )
