@@ -52,6 +52,10 @@ export async function createSubsidiary(payload = {}) {
   return post("/createSubsidiary", payload);
 }
 
+export async function deleteSubsidiary(payload = {}) {
+  return post(`/deleteSubsidiary?subId=${payload.subId}`, payload);
+}
+
 export async function uploadDocument(payload = {}) {
   return post("/uploadDocument", payload);
 }

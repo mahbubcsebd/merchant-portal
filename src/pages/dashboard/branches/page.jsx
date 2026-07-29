@@ -18,7 +18,7 @@ export default function BranchesPage() {
     openGlobalPopup,
   } = useDialog();
 
-  const { branches, isLoading, addMutation, queryClient } = useBranches();
+  const { branches, isLoading, addMutation, deleteMutation, queryClient } = useBranches();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,10 +194,40 @@ export default function BranchesPage() {
     openConfirmDialog({
       title: "Delete Branch?",
       description: `Are you sure you want to delete ${branch.SUBNAME}? This action cannot be undone.`,
-      confirmText: "Delete",
+      confirmText: deleteMutation.isPending ? "Deleting..." : "Delete",
       iconType: "danger",
-      onConfirm: () => {
-        console.log("Delete branch:", branch.CORPCUSTSUBID);
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(
+          { subId: branch.CORPCUSTSUBID },
+          {
+            onSuccess: (res) => {
+              if (
+                res.status === "success" &&
+                (res.statusCode === "0" || res.statusCode === 0)
+              ) {
+                queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
+                openGlobalPopup({
+                  title: "Branch Deleted",
+                  description: res.message || `The branch ${branch.SUBNAME} has been successfully deleted.`,
+                  type: "success",
+                });
+              } else {
+                openGlobalPopup({
+                  title: "Error",
+                  description: res.message || "Failed to delete branch",
+                  type: "error",
+                });
+              }
+            },
+            onError: (err) => {
+              openGlobalPopup({
+                title: "Error",
+                description: err.message || "An unexpected error occurred",
+                type: "error",
+              });
+            },
+          }
+        );
       },
     });
   };
