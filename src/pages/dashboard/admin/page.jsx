@@ -2,8 +2,15 @@ import { useState, useEffect, useRef } from "react"
 import QRCodeStyling from "qr-code-styling"
 import { useDashboardContext } from "@/pages/dashboard/context"
 import { useSearchParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { getBeneficiaries, getTransactionLimits } from "@/lib/api/endpoints"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useDialog } from "@/components/globals/DialogProvider"
+import { 
+  getTransactionLimits, 
+  getUserSetAccounts, 
+  createUserSetAccount, 
+  updateUserSetAccount, 
+  deleteUserSetAccount 
+} from "@/lib/api/endpoints"
 import { 
   QrCode, 
   Wallet, 
@@ -270,19 +277,131 @@ function PaymentLimitsView() {
 }
 
 function SettlementSettingsView() {
-  const { data: beneficiariesData, isLoading } = useQuery({
-    queryKey: ["beneficiaries"],
-    queryFn: () => getBeneficiaries(),
+  const queryClient = useQueryClient();
+  const { openConfirmDialog } = useDialog();
+
+  const { data: accountsData, isLoading } = useQuery({
+    queryKey: ["userSetAccounts"],
+    queryFn: () => getUserSetAccounts(),
   });
 
   const [view, setView] = useState('list'); // 'list', 'form', 'confirm', 'success'
   const [formData, setFormData] = useState({
     bankName: '',
     accountNumber: '',
-    currency: '',
-    accountType: ''
+    currency: '0',
+    accountType: '6'
   });
   const [errors, setErrors] = useState({});
+  const [editIndex, setEditIndex] = useState(null);
+
+  const [banks, setBanks] = useState([]);
+
+  useEffect(() => {
+    if (accountsData?.records) {
+      const formattedBanks = accountsData.records.map((record, index) => ({
+        id: index,
+        name: record.bankId || "Bank Account",
+        account: record.bankAccount ? `**** ${record.bankAccount.slice(-4)}` : "****",
+        rawAccount: record.bankAccount || "",
+        bic: record.bankId || "",
+        routing: record.bankRouting || null,
+        currency: record.bankAcctCurr || "0",
+        accountType: record.bankAcctType || "6"
+      }));
+      setBanks(formattedBanks);
+    }
+  }, [accountsData]);
+
+  // Create Mutation
+  const createMutation = useMutation({
+    mutationFn: (payload) => createUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        setView('success');
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to add bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
+
+  // Update Mutation
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        setView('success');
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to update bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (payload) => deleteUserSetAccount(payload),
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
+        openConfirmDialog({
+          title: "Deleted",
+          description: data.message || "Settlement account deleted successfully.",
+          confirmText: "Close",
+          iconType: "success",
+          hideCancel: true
+        });
+      } else {
+        openConfirmDialog({
+          title: "Error",
+          description: data.message || "Failed to delete bank account.",
+          confirmText: "Close",
+          iconType: "danger",
+          hideCancel: true
+        });
+      }
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true
+      });
+    }
+  });
 
   const handleSelectChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -291,32 +410,12 @@ function SettlementSettingsView() {
     }
   };
 
-  const [banks, setBanks] = useState([]);
-
-  useEffect(() => {
-    if (beneficiariesData?.records) {
-      const formattedBanks = beneficiariesData.records.map((record, index) => ({
-        id: index,
-        name: record.payeeName || record.payeeBankBIC || "Bank Account",
-        account: record.payeeBankAccount ? `**** ${record.payeeBankAccount.slice(-4)}` : "****",
-        rawAccount: record.payeeBankAccount || "",
-        nickname: record.payeeNickName || "",
-        bic: record.payeeBankBIC || "",
-        routing: record.payeeBankRouting || "",
-        currency: record.payeeAcctCurr === "0" ? "USD" : "XCG"
-      }));
-      setBanks(formattedBanks);
-    }
-  }, [beneficiariesData]);
-
-  const [editIndex, setEditIndex] = useState(null);
-
   const handleEdit = (bank, idx) => {
     setFormData({
       bankName: bank.name,
-      accountNumber: bank.rawAccount || '324325435435',
-      currency: bank.currency || 'BZD',
-      accountType: 'Savings'
+      accountNumber: bank.rawAccount,
+      currency: bank.currency,
+      accountType: bank.accountType
     });
     setEditIndex(idx);
     setErrors({});
@@ -327,8 +426,8 @@ function SettlementSettingsView() {
     setFormData({
       bankName: '',
       accountNumber: '',
-      currency: '',
-      accountType: ''
+      currency: '0',
+      accountType: '6'
     });
     setEditIndex(null);
     setErrors({});
@@ -337,7 +436,6 @@ function SettlementSettingsView() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // Allow only digits for account number (max length 12)
     if (name === 'accountNumber') {
       const numericValue = value.replace(/[^0-9]/g, '');
       if (numericValue.length <= 12) {
@@ -346,10 +444,22 @@ function SettlementSettingsView() {
     } else {
       setFormData({ ...formData, [name]: value });
     }
-    // Clear error when user types
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
+  };
+
+  const handleDelete = (bank) => {
+    openConfirmDialog({
+      title: "Confirm Delete",
+      description: `Are you sure you want to delete account ending in ${bank.account.slice(-4)}?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      iconType: "danger",
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync({ bankAccount: bank.rawAccount });
+      }
+    });
   };
 
   const handleSubmit = () => {
@@ -373,17 +483,25 @@ function SettlementSettingsView() {
   };
 
   const handleConfirm = () => {
-    const last4 = formData.accountNumber.slice(-4);
-    const accountStr = `**** ${last4}`;
-    
     if (editIndex !== null) {
-      const updatedBanks = [...banks];
-      updatedBanks[editIndex] = { ...updatedBanks[editIndex], name: formData.bankName, account: accountStr };
-      setBanks(updatedBanks);
+      const originalBank = banks[editIndex];
+      updateMutation.mutate({
+        bankId: formData.bankName,
+        bankRouting: null,
+        bankAccount: originalBank.rawAccount,
+        bankAcctCurr: formData.currency,
+        bankAcctType: formData.accountType,
+        bankAccountUpd: formData.accountNumber
+      });
     } else {
-      setBanks([...banks, { name: formData.bankName, account: accountStr }]);
+      createMutation.mutate({
+        bankId: formData.bankName,
+        bankRouting: null,
+        bankAccount: formData.accountNumber,
+        bankAcctCurr: formData.currency,
+        bankAcctType: formData.accountType
+      });
     }
-    setView('success');
   };
 
   if (isLoading && banks.length === 0) {
@@ -403,7 +521,9 @@ function SettlementSettingsView() {
     return (
       <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
         <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 max-w-xl mx-auto w-full">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Edit Bank Account</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+            {editIndex !== null ? "Edit Bank Account" : "Add Bank Account"}
+          </h2>
           
           <div className="flex flex-col gap-5">
             <GlobalSelect
@@ -421,7 +541,10 @@ function SettlementSettingsView() {
                 { value: "ORCO Bank Curacao", label: "ORCO Bank Curacao" },
                 { value: "PSB Bank NV Curacao", label: "PSB Bank NV Curacao" },
                 { value: "RBC Bank Curacao", label: "RBC Bank Curacao" },
-                { value: "Vidanova Bank", label: "Vidanova Bank" }
+                { value: "Vidanova Bank", label: "Vidanova Bank" },
+                { value: "ALSDCWC1", label: "ALSDCWC1" },
+                { value: "CITCCWCC", label: "CITCCWCC" },
+                { value: "HGHYS85DHT1", label: "HGHYS85DHT1" }
               ]}
             />
 
@@ -444,6 +567,11 @@ function SettlementSettingsView() {
               error={errors.currency}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
+                { value: "0", label: "0" },
+                { value: "1", label: "1" },
+                { value: "2", label: "2" },
+                { value: "6", label: "6" },
+                { value: "22", label: "22" },
                 { value: "BZD", label: "BZD" },
                 { value: "CAD", label: "CAD" },
                 { value: "DDT", label: "DDT" },
@@ -465,6 +593,7 @@ function SettlementSettingsView() {
               error={errors.accountType}
               labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
               options={[
+                { value: "6", label: "6" },
                 { value: "Checking", label: "Checking" },
                 { value: "Savings", label: "Savings" }
               ]}
@@ -522,6 +651,7 @@ function SettlementSettingsView() {
               onClick={() => setView('form')} 
               variant="secondary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
+              disabled={createMutation.isPending || updateMutation.isPending}
             >
               Change
             </GlobalButton>
@@ -529,6 +659,7 @@ function SettlementSettingsView() {
               onClick={handleConfirm} 
               variant="primary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
+              isLoading={createMutation.isPending || updateMutation.isPending}
             >
               Confirm
             </GlobalButton>
@@ -608,7 +739,7 @@ function SettlementSettingsView() {
                       <button onClick={() => handleEdit(bank, idx)} className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors">
                         <Pencil size={18} />
                       </button>
-                      <button className="text-slate-400 hover:text-red-500 transition-colors">
+                      <button onClick={() => handleDelete(bank)} className="text-slate-400 hover:text-red-500 transition-colors" disabled={deleteMutation.isPending}>
                         <Trash2 size={18} />
                       </button>
                     </div>

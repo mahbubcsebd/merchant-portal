@@ -105,3 +105,23 @@ export async function getBeneficiaries(payload = {}) {
 export async function getTransactionLimits(payload = {}) {
   return post("/getTransactionLimits", payload);
 }
+
+// Get User Settlement Accounts
+export async function getUserSetAccounts(payload = {}) {
+  return post("/getUserSetAccounts", payload);
+}
+
+// Create User Settlement Account
+export async function createUserSetAccount(payload = {}) {
+  return post("/createUserSetAccount", payload);
+}
+
+// Update User Settlement Account
+export async function updateUserSetAccount(payload = {}) {
+  return post("/updateUserSetAccount", payload);
+}
+
+// Delete User Settlement Account
+export async function deleteUserSetAccount(payload = {}) {
+  return post("/deleteUserSetAccount", payload);
+}
