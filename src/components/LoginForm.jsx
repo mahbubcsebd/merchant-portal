@@ -43,7 +43,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", pin: "" },
+    defaultValues: { email: "kyeontan154@gmail.com", pin: "444444" },
   });
 
   const loginMutation = useMutation({
@@ -52,6 +52,7 @@ export function LoginForm() {
     onSuccess: (data) => {
       // Based on portal-old logic
       if (data.status === "success") {
+        console.log("Login Success Data:", data);
         if (data.show_otp) {
           setShowOtpDialog(true);
         } else {
@@ -79,6 +80,7 @@ export function LoginForm() {
     mutationFn: (values) => verifyOTP({ otp: values.otp }),
     onSuccess: (data) => {
       if (data.status === "success" && data.statusCode === 0) {
+        console.log("OTP Verification Success Data:", data);
         setShowOtpDialog(false);
         router("/dashboard");
       } else {
