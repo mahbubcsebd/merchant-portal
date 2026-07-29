@@ -14,6 +14,7 @@ export default function ConfirmationDialog({
   cancelText = "Cancel",
   onConfirm,
   iconType,
+  hideCancel = false,
   onClose,
 }) {
   const [loading, setLoading] = useState(false);
@@ -64,19 +65,21 @@ export default function ConfirmationDialog({
       </DialogHeader>
 
       <div className="mt-8 flex items-center justify-center gap-3 w-full border-t border-slate-200 dark:border-white/10 pt-5">
-        <GlobalButton
-          variant="outline"
-          onClick={onClose}
-          disabled={loading}
-          className="flex-1 max-w-[150px] uppercase font-bold h-10 text-xs"
-        >
-          {cancelText}
-        </GlobalButton>
+        {!hideCancel && (
+          <GlobalButton
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 max-w-[150px] uppercase font-bold h-10 text-xs"
+          >
+            {cancelText}
+          </GlobalButton>
+        )}
         <GlobalButton
           variant={iconType === "danger" ? "danger" : "primary"}
           onClick={handleConfirm}
           isLoading={loading}
-          className="flex-1 max-w-[150px] uppercase font-bold h-10 text-xs"
+          className={`uppercase font-bold h-10 text-xs ${hideCancel ? 'px-10' : 'flex-1 max-w-[150px]'}`}
         >
           {confirmText}
         </GlobalButton>

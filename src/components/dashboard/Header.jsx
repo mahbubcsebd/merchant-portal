@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useDashboardContext } from '@/pages/dashboard/context';
 import { useQuery } from '@tanstack/react-query';
 import { getPortalNotifications } from '@/lib/api/endpoints';
+import { useDialog } from '@/components/globals/DialogProvider';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -33,6 +34,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
 
   const userName = profile?.custName || profile?.FIRSTNAME || 'Merchant';
   const userInitials = userName.substring(0, 2).toUpperCase();
+  const { openConfirmDialog } = useDialog();
 
   useEffect(() => setMounted(true), []);
   const isDark = theme === 'dark';
@@ -131,7 +133,15 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
                     return (
                       <li
                         key={notif.msgId}
-                        className="flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                        onClick={() => {
+                          openConfirmDialog({
+                            title: notif.notificationTypeName || 'Notification',
+                            description: notif.notificationMsg,
+                            confirmText: 'OK',
+                            hideCancel: true,
+                          });
+                        }}
+                        className="flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer"
                       >
                         <div className={`shrink-0 mt-0.5 w-8 h-8 rounded-full flex items-center justify-center ${meta.bg}`}>
                           <IconComponent size={14} className={meta.color} />
