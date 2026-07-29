@@ -60,4 +60,11 @@ export const postFile = async (url, data = {}) => {
   });
 };
 
+export const postBlob = async (url, data = {}) => {
+  const mergedData = { ...globalDefaultParams, ...data };
+  return apiClient.post(url, mergedData, {
+    responseType: "blob",
+  });
+};
+
 export default apiClient;

@@ -3,6 +3,7 @@ import { Eye, Pencil, Trash2 } from "lucide-react"
 import { Link } from 'react-router-dom';
 import { useDialog } from "@/components/globals/DialogProvider"
 import GlobalButton from "@/components/globals/GlobalButton"
+import BillerTemplateFormFields from "@/components/pay-bills/BillerTemplateFormFields"
 
 const MOCK_TEMPLATES = [
   { 
@@ -32,8 +33,15 @@ export default function ManageBillTemplatesPage() {
         <div className="flex justify-end mb-6">
           <GlobalButton 
             onClick={() => {
-              openFormDialog("biller-template", "add", null, (values) => {
-                console.log("Create bill template:", values)
+              openFormDialog({
+                title: "Create Bill Template",
+                isView: false,
+                submitText: "Create",
+                size: "sm:max-w-md",
+                content: <BillerTemplateFormFields data={null} isView={false} />,
+                onSave: (values) => {
+                  console.log("Create bill template:", values)
+                }
               })
             }}
             variant="primary"
@@ -78,8 +86,15 @@ export default function ManageBillTemplatesPage() {
                       </button>
                       <button 
                         onClick={() => {
-                          openFormDialog("biller-template", "edit", template, (values) => {
-                            console.log("Update bill template:", values)
+                          openFormDialog({
+                            title: "Edit Bill Template",
+                            isView: false,
+                            submitText: "Save",
+                            size: "sm:max-w-md",
+                            content: <BillerTemplateFormFields data={template} isView={false} />,
+                            onSave: (values) => {
+                              console.log("Update bill template:", values)
+                            }
                           })
                         }} 
                         className="text-slate-400 hover:text-emerald-500 transition-colors" 
@@ -155,8 +170,15 @@ export default function ManageBillTemplatesPage() {
                 </button>
                 <button 
                   onClick={() => {
-                    openFormDialog("biller-template", "edit", template, (values) => {
-                      console.log("Update bill template:", values)
+                    openFormDialog({
+                      title: "Edit Bill Template",
+                      isView: false,
+                      submitText: "Save",
+                      size: "sm:max-w-md",
+                      content: <BillerTemplateFormFields data={template} isView={false} />,
+                      onSave: (values) => {
+                        console.log("Update bill template:", values)
+                      }
                     })
                   }} 
                   className="text-slate-400 hover:text-emerald-500 transition-colors" 

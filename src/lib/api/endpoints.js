@@ -1,4 +1,4 @@
-import { post, get } from "./api";
+import { post, get, postBlob } from "./api";
 
 // -------------------------------------------------------
 // API Endpoints
@@ -42,6 +42,38 @@ export async function getPortalNotifications(payload = {}) {
 // Get Transaction History
 export async function transactionHistory(payload = {}) {
   return post("/transactionHistory", payload);
+}
+
+export async function getSubsidiaries(payload = {}) {
+  return post("/getSubsidiaries", payload);
+}
+
+export async function createSubsidiary(payload = {}) {
+  return post("/createSubsidiary", payload);
+}
+
+export async function uploadDocument(payload = {}) {
+  return post("/uploadDocument", payload);
+}
+
+export async function getCashierList(payload = {}) {
+  return post("/getCashierList", payload);
+}
+
+export async function listOfTerminal(payload = {}) {
+  return post("/listOfTerminal", payload);
+}
+
+export async function generateReportMerchantSettlement(payload = {}) {
+  return postBlob("/generateReportMerchantSettlement", payload);
+}
+
+export async function generateReportMerchantRefund(payload = {}) {
+  return postBlob("/generateReportMerchantRefund", payload);
+}
+
+export async function generateReportBalanceStatement(payload = {}) {
+  return postBlob("/generateReportBalanceStatement", payload);
 }
 
 // Get Document Content

@@ -3,6 +3,7 @@ import { Eye, Pencil, Trash2, Lock, Search } from "lucide-react"
 import { useDialog } from "@/components/globals/DialogProvider"
 import GlobalInput from "@/components/globals/GlobalInput"
 import GlobalButton from "@/components/globals/GlobalButton"
+import CashierFormFields from "@/components/cashiers/CashierFormFields"
 
 const MOCK_CASHIERS = [
   { id: 1, loginId: "Terchik", name: "lou marie", status: "Active" },
@@ -41,8 +42,14 @@ export default function ManageCashiersPage() {
           
           <GlobalButton 
             onClick={() => {
-              openFormDialog("cashier", "add", null, (values) => {
-                console.log("Cashier to add:", values)
+              openFormDialog({
+                title: "Add Cashier",
+                isView: false,
+                submitText: "Create",
+                content: <CashierFormFields data={null} isView={false} />,
+                onSave: (values) => {
+                  console.log("Cashier to add:", values)
+                }
               })
             }}
             variant="primary"
@@ -76,7 +83,13 @@ export default function ManageCashiersPage() {
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-3">
                       <button 
-                        onClick={() => openFormDialog("cashier", "view", cashier)} 
+                        onClick={() => 
+                          openFormDialog({
+                            title: "View Cashier",
+                            isView: true,
+                            content: <CashierFormFields data={cashier} isView={true} />,
+                          })
+                        } 
                         className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors" 
                         title="View"
                       >
@@ -84,8 +97,14 @@ export default function ManageCashiersPage() {
                       </button>
                       <button 
                         onClick={() => {
-                          openFormDialog("cashier", "edit", cashier, (values) => {
-                            console.log("Cashier to update:", values)
+                          openFormDialog({
+                            title: "Edit Cashier",
+                            isView: false,
+                            submitText: "Save",
+                            content: <CashierFormFields data={cashier} isView={false} />,
+                            onSave: (values) => {
+                              console.log("Cashier to update:", values)
+                            }
                           })
                         }} 
                         className="text-slate-400 hover:text-emerald-500 transition-colors" 
@@ -164,7 +183,13 @@ export default function ManageCashiersPage() {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-4">
                   <button 
-                    onClick={() => openFormDialog("cashier", "view", cashier)} 
+                    onClick={() => 
+                      openFormDialog({
+                        title: "View Cashier",
+                        isView: true,
+                        content: <CashierFormFields data={cashier} isView={true} />,
+                      })
+                    } 
                     className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors" 
                     title="View"
                   >
@@ -172,8 +197,14 @@ export default function ManageCashiersPage() {
                   </button>
                   <button 
                     onClick={() => {
-                      openFormDialog("cashier", "edit", cashier, (values) => {
-                        console.log("Cashier to update:", values)
+                      openFormDialog({
+                        title: "Edit Cashier",
+                        isView: false,
+                        submitText: "Save",
+                        content: <CashierFormFields data={cashier} isView={false} />,
+                        onSave: (values) => {
+                          console.log("Cashier to update:", values)
+                        }
                       })
                     }} 
                     className="text-slate-400 hover:text-emerald-500 transition-colors" 
