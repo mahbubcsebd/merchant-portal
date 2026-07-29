@@ -20,17 +20,20 @@ export default function ConfirmationDialog({
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
+    let shouldClose = true;
     if (onConfirm) {
       setLoading(true);
       try {
-        await onConfirm();
+        shouldClose = await onConfirm();
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     }
-    onClose();
+    if (shouldClose !== false) {
+      onClose();
+    }
   };
 
   const getIcon = () => {

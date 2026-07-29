@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSubsidiaries, createSubsidiary, deleteSubsidiary } from "@/lib/api/endpoints";
+import { getSubsidiaries, createSubsidiary, deleteSubsidiary, modifySubsidiary } from "@/lib/api/endpoints";
 
 export function useBranches() {
   const queryClient = useQueryClient();
@@ -22,11 +22,17 @@ export function useBranches() {
     mutationFn: (values) => deleteSubsidiary(values),
   });
 
+  // 4. Edit Branch Mutation
+  const editMutation = useMutation({
+    mutationFn: (values) => modifySubsidiary(values),
+  });
+
   return {
     branches,
     isLoading,
     addMutation,
     deleteMutation,
+    editMutation,
     queryClient,
   };
 }
