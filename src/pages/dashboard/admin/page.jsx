@@ -654,23 +654,23 @@ function SettlementSettingsView() {
           
           <div className="flex flex-col gap-0 text-sm">
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-t-lg border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {bankNamesMap[formData.bankName] || formData.bankName}
               </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {currencyMap[formData.currency] || formData.currency}
               </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] rounded-b-lg">
-              <span className="w-1/3 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {accountTypeMap[formData.accountType] || formData.accountType}
               </span>
@@ -715,23 +715,23 @@ function SettlementSettingsView() {
           
           <div className="flex flex-col gap-0 text-sm max-w-md mx-auto">
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {bankNamesMap[formData.bankName] || formData.bankName}
               </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Currency</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {currencyMap[formData.currency] || formData.currency}
               </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-b-lg">
-              <span className="w-1/2 text-[#1b55ad] font-semibold text-right pr-6">Account Type</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {accountTypeMap[formData.accountType] || formData.accountType}
               </span>
