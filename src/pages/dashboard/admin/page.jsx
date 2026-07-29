@@ -4,6 +4,7 @@ import { useDashboardContext } from "@/pages/dashboard/context"
 import { useSearchParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useDialog } from "@/components/globals/DialogProvider"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 import { 
   getTransactionLimits, 
   getUserSetAccounts, 
@@ -931,6 +932,7 @@ function ChangeLanguageView() {
   const queryClient = useQueryClient();
   const { openConfirmDialog } = useDialog();
   const { profile } = useDashboardContext();
+  const { setLanguage } = useLanguage();
 
   const langMap = {
     "nl": "Dutch",
@@ -960,6 +962,8 @@ function ChangeLanguageView() {
     mutationFn: (payload) => updateLanguage(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
+        const languageCode = reverseLangMap[selectedLang] || "en";
+        setLanguage(languageCode);
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         openConfirmDialog({
           title: "Success",

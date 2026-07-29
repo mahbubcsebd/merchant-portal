@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { welcomeApi } from '@/lib/api/endpoints';
 import { globalDefaultParams } from '@/lib/api/api';
 
+import { LanguageProvider } from '@/components/globals/LanguageProvider';
+
 // Layouts
 import RootAuthLayout from './pages/(root)/layout';
 import DashboardLayout from './pages/dashboard/layout';
@@ -65,36 +67,38 @@ function BootLoader({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <BootLoader>
-        <Routes>
-        {/* Auth routes */}
-        <Route element={<RootAuthLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/enroll" element={<Enroll />} />
-          <Route path="/forgot-pin" element={<ForgotPin />} />
-        </Route>
+      <LanguageProvider>
+        <BootLoader>
+          <Routes>
+            {/* Auth routes */}
+            <Route element={<RootAuthLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/enroll" element={<Enroll />} />
+              <Route path="/forgot-pin" element={<ForgotPin />} />
+            </Route>
 
-        {/* Other Root routes without auth layout */}
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/help" element={<Help />} />
+            {/* Other Root routes without auth layout */}
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<Help />} />
 
-        {/* Dashboard routes */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardIndex />} />
-          <Route path="admin" element={<DashboardAdmin />} />
-          <Route path="branches" element={<DashboardBranches />} />
-          <Route path="business-profile" element={<DashboardBusinessProfile />} />
-          <Route path="contact" element={<DashboardContact />} />
-          <Route path="help" element={<DashboardHelp />} />
-          <Route path="live-transactions" element={<DashboardLiveTransactions />} />
-          <Route path="manage-cashiers" element={<DashboardManageCashiers />} />
-          <Route path="pay-bills" element={<DashboardPayBills />} />
-          <Route path="pay-bills/templates" element={<DashboardPayBillsTemplates />} />
-          <Route path="reports" element={<DashboardReports />} />
-          <Route path="transfer" element={<DashboardTransfer />} />
-        </Route>
-        </Routes>
-      </BootLoader>
+            {/* Dashboard routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardIndex />} />
+              <Route path="admin" element={<DashboardAdmin />} />
+              <Route path="branches" element={<DashboardBranches />} />
+              <Route path="business-profile" element={<DashboardBusinessProfile />} />
+              <Route path="contact" element={<DashboardContact />} />
+              <Route path="help" element={<DashboardHelp />} />
+              <Route path="live-transactions" element={<DashboardLiveTransactions />} />
+              <Route path="manage-cashiers" element={<DashboardManageCashiers />} />
+              <Route path="pay-bills" element={<DashboardPayBills />} />
+              <Route path="pay-bills/templates" element={<DashboardPayBillsTemplates />} />
+              <Route path="reports" element={<DashboardReports />} />
+              <Route path="transfer" element={<DashboardTransfer />} />
+            </Route>
+          </Routes>
+        </BootLoader>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

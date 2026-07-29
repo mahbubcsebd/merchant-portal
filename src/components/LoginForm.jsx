@@ -3,10 +3,10 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Lock, Mail } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { loginWithPin, verifyOTP } from "@/lib/api/endpoints";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalInput from "@/components/globals/GlobalInput";
@@ -30,6 +30,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useNavigate();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpValue, setOtpValue] = useState("");
@@ -132,10 +133,10 @@ export function LoginForm() {
           leading-[1.1]
         "
         >
-          Welcome back
+          {t("login_welcome_back", "Welcome back")}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-          Sign in to your Merchant Portal
+          {t("login_subtitle", "Sign in to your Merchant Portal")}
         </p>
       </div>
 
@@ -155,8 +156,8 @@ export function LoginForm() {
         <GlobalInput
           id="email"
           type="email"
-          label="Email Address"
-          placeholder="merchant@example.com"
+          label={t("email_address", "Email Address")}
+          placeholder={t("ph_email", "merchant@example.com")}
           leftIcon={<Mail size={16} />}
           error={errors.email?.message}
           aria-invalid={!!errors.email}
@@ -168,20 +169,20 @@ export function LoginForm() {
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Wallet PIN
+              {t("wallet_pin_login", "Wallet PIN")}
             </span>
             <Link
               to="/forgot-pin"
               className="text-xs xl:text-sm font-semibold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
             >
-              Forgot PIN?
+              {t("beforeLoginForgotPIN", "Forgot PIN?")}
             </Link>
           </div>
           <GlobalInput
             id="pin"
             type="password"
             inputMode="numeric"
-            placeholder="••••••"
+            placeholder={t("pin_use", "••••••")}
             maxLength="6"
             leftIcon={<Lock size={16} />}
             inputClassName="tracking-[0.3em] placeholder:tracking-widest"
@@ -198,21 +199,21 @@ export function LoginForm() {
           variant="primary"
           fullWidth
           isLoading={loginMutation.isPending}
-          loadingText="Signing in…"
+          loadingText={t("signing_in", "Signing in…")}
           className="mt-2"
         >
-          Sign In
+          {t("login", "Sign In")}
         </GlobalButton>
       </form>
 
       {/* ── Bottom link ─────────────────────────── */}
       <p className="mt-8 xl:mt-10 text-center text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 animate-[fade-up_0.6s_ease-out_0.2s_both]">
-        Don&apos;t have an account?{" "}
+        {t("dont_have_account", "Don't have an account?")}{" "}
         <Link
           to="/enroll"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
         >
-          Enroll as Merchant
+          {t("enroll_as_merchant", "Enroll as Merchant")}
         </Link>
       </p>
 
@@ -221,10 +222,10 @@ export function LoginForm() {
         <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-[#0f1829] border border-slate-200 dark:border-white/5 shadow-2xl rounded-2xl overflow-hidden">
           <DialogHeader className="flex flex-col items-center">
             <DialogTitle className="text-xl font-bold text-[#2563eb] dark:text-blue-400 mb-2">
-              Confirmation OTP
+              {t("otp_confirm_title", "Confirmation OTP")}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-[300px] leading-relaxed">
-              We have just sent you a One-time PIN via SMS and to your email.
+              {t("otp_confirm_desc", "We have just sent you a One-time PIN via SMS and to your email.")}
             </DialogDescription>
           </DialogHeader>
 
@@ -260,13 +261,13 @@ export function LoginForm() {
             )}
             {verifyOTPMutation.isPending && (
               <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
-                Verifying...
+                {t("verifying", "Verifying...")}
               </p>
             )}
           </div>
 
           <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            <span>Didn't receive code?</span>
+            <span>{t("didnt_receive_code", "Didn't receive code?")}</span>
             <button
               type="button"
               className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2 ml-1.5"
@@ -275,7 +276,7 @@ export function LoginForm() {
                 setOtpError(false);
               }}
             >
-              Resend Code
+              {t("resend_code", "Resend Code")}
             </button>
           </div>
         </DialogContent>

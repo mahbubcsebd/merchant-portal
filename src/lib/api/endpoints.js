@@ -140,3 +140,8 @@ export async function updateAlertNotification(payload = {}) {
 export async function updateLanguage(payload = {}) {
   return post("/updateLanguage", payload);
 }
+
+// Get Translation Language Packs
+export async function getLangPack(payload = {}) {
+  return post("/getLangPack", payload);
+}
