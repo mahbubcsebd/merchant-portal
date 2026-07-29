@@ -1,5 +1,9 @@
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import QRCodeStyling from "qr-code-styling"
+import { useDashboardContext } from "@/pages/dashboard/context"
+import { useSearchParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { getBeneficiaries } from "@/lib/api/endpoints"
 import { 
   QrCode, 
   Wallet, 
@@ -22,26 +26,102 @@ import GlobalButton from "@/components/globals/GlobalButton"
 // ----------------------------------------------------------------------
 
 function MyQrView() {
+  const { profile } = useDashboardContext();
+  const p = profile || {};
+  const qrList = p.qrcode || [];
+
+  // Populate options from profile qrcode list
+  const qrOptions = qrList.map((q) => ({
+    value: q.currency,
+    label: `${q.currency} Wallet QR`,
+  }));
+
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+
+  // Initialize selected currency
+  useEffect(() => {
+    if (qrOptions.length > 0 && !selectedCurrency) {
+      setSelectedCurrency(qrOptions[0].value);
+    }
+  }, [qrOptions, selectedCurrency]);
+
+  const selectedQr = qrList.find((q) => q.currency === selectedCurrency);
+  // If we have a qrcode string from the profile, use it; otherwise fallback
+  const qrValue = selectedQr?.qrcode || (p.custName ? `${p.custName}#${p.userName}` : "mPay");
+
+  const qrRef = useRef(null);
+  const qrCodeInstance = useRef(null);
+
+  useEffect(() => {
+    if (!qrValue) return;
+
+    if (!qrCodeInstance.current) {
+      qrCodeInstance.current = new QRCodeStyling({
+        width: 220,
+        height: 220,
+        data: qrValue,
+        margin: 0,
+        qrOptions: {
+          typeNumber: 0,
+          mode: "Byte",
+          errorCorrectionLevel: "Q",
+        },
+        imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
+        dotsOptions: { type: "extra-rounded", color: "#000" },
+        backgroundOptions: { color: "#ffffff" },
+        image: "/images/logo.svg",
+      });
+      if (qrRef.current) {
+        qrRef.current.innerHTML = "";
+        qrCodeInstance.current.append(qrRef.current);
+      }
+    } else {
+      qrCodeInstance.current.update({ data: qrValue });
+    }
+  }, [qrValue]);
+
+  const handleDownloadQR = () => {
+    if (qrCodeInstance.current) {
+      qrCodeInstance.current.download({ 
+        name: `store-qr-${selectedCurrency || "wallet"}`, 
+        extension: "png" 
+      });
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Huawei Corp</h3>
-        <p className="text-sm font-medium text-slate-500 dark:text-white/60">@Huawei</p>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+          {p.custName || "Merchant Store"}
+        </h3>
+        <p className="text-sm font-medium text-slate-500 dark:text-white/60">
+          {p.userName ? `@${p.userName}` : ""}
+        </p>
       </div>
 
-      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
-        {/* Placeholder for actual QR code, using QrCode icon for structure */}
-        <QrCode size={220} className="text-slate-900" strokeWidth={1} />
-        {/* Logo in the center of QR */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-1 rounded-md">
-          <img src="/images/logo.svg" alt="mPay" width={50} height={20} className="dark:invert-0" />
+      {qrOptions.length > 1 && (
+        <div className="w-full max-w-[260px] mb-6">
+          <GlobalSelect
+            value={selectedCurrency}
+            onChange={(val) => setSelectedCurrency(val)}
+            options={qrOptions}
+            placeholder="Select Currency"
+          />
         </div>
+      )}
+
+      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
+        {/* Render QR code here */}
+        <div ref={qrRef} className="w-[220px] h-[220px] flex items-center justify-center" />
       </div>
 
       <GlobalButton 
         variant="primary"
         leftIcon={<Download size={18} />}
         className="px-6 text-xs font-bold uppercase tracking-wider"
+        onClick={handleDownloadQR}
+        disabled={!qrValue}
       >
         Download QR
       </GlobalButton>
@@ -107,6 +187,11 @@ function PaymentLimitsView() {
 }
 
 function SettlementSettingsView() {
+  const { data: beneficiariesData, isLoading } = useQuery({
+    queryKey: ["beneficiaries"],
+    queryFn: () => getBeneficiaries(),
+  });
+
   const [view, setView] = useState('list'); // 'list', 'form', 'confirm', 'success'
   const [formData, setFormData] = useState({
     bankName: '',
@@ -123,17 +208,31 @@ function SettlementSettingsView() {
     }
   };
 
-  const [banks, setBanks] = useState([
-    { name: "ACU Credit Union", account: "**** 5435" },
-    { name: "BDC Curacao NV", account: "**** 2424" },
-  ]);
+  const [banks, setBanks] = useState([]);
+
+  useEffect(() => {
+    if (beneficiariesData?.records) {
+      const formattedBanks = beneficiariesData.records.map((record, index) => ({
+        id: index,
+        name: record.payeeName || record.payeeBankBIC || "Bank Account",
+        account: record.payeeBankAccount ? `**** ${record.payeeBankAccount.slice(-4)}` : "****",
+        rawAccount: record.payeeBankAccount || "",
+        nickname: record.payeeNickName || "",
+        bic: record.payeeBankBIC || "",
+        routing: record.payeeBankRouting || "",
+        currency: record.payeeAcctCurr === "0" ? "USD" : "XCG"
+      }));
+      setBanks(formattedBanks);
+    }
+  }, [beneficiariesData]);
+
   const [editIndex, setEditIndex] = useState(null);
 
   const handleEdit = (bank, idx) => {
     setFormData({
       bankName: bank.name,
-      accountNumber: '324325435435', // Mocking full account number
-      currency: 'BZD',
+      accountNumber: bank.rawAccount || '324325435435',
+      currency: bank.currency || 'BZD',
       accountType: 'Savings'
     });
     setEditIndex(idx);
@@ -203,6 +302,19 @@ function SettlementSettingsView() {
     }
     setView('success');
   };
+
+  if (isLoading && banks.length === 0) {
+    return (
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading Bank Accounts...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (view === 'form') {
     return (
@@ -565,7 +677,12 @@ function ChangePinView() {
 // ----------------------------------------------------------------------
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('my_qr');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "my_qr";
+
+  const setActiveTab = (tabId) => {
+    setSearchParams({ tab: tabId });
+  };
 
   const renderContent = () => {
     switch (activeTab) {

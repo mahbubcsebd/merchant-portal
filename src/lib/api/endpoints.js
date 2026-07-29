@@ -95,3 +95,8 @@ export async function updateProfile(payload = {}) {
 export async function loadUserProfile(payload = {}) {
   return post("/loadUserProfile", payload);
 }
+
+// Get Beneficiaries
+export async function getBeneficiaries(payload = {}) {
+  return post("/getBeneficiaries", payload);
+}
