@@ -830,7 +830,18 @@ function ManageNotificationsView() {
   }, [settingsData]);
 
   const toggle = (key) => {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+    const updated = {
+      ...notifications,
+      [key]: !notifications[key]
+    };
+    setNotifications(updated);
+    
+    updateMutation.mutate({
+      smsFlag: updated.sms,
+      emailFlag: updated.email,
+      pushFlag: true,
+      whtFlag: updated.whatsapp,
+    });
   };
 
   const updateMutation = useMutation({
@@ -863,15 +874,6 @@ function ManageNotificationsView() {
     },
   });
 
-  const handleUpdate = () => {
-    updateMutation.mutate({
-      smsFlag: notifications.sms,
-      emailFlag: notifications.email,
-      pushFlag: true,
-      whtFlag: notifications.whatsapp,
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
@@ -888,7 +890,7 @@ function ManageNotificationsView() {
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col gap-4 mb-2">
           {[
             { id: 'sms', label: 'SMS Notifications' }, 
             { id: 'email', label: 'Email Notifications' }, 
@@ -906,16 +908,6 @@ function ManageNotificationsView() {
               </button>
             </div>
           ))}
-        </div>
-        <div className="flex justify-center mt-2">
-          <GlobalButton 
-            onClick={handleUpdate}
-            variant="primary"
-            className="px-8 text-xs font-bold uppercase tracking-wider"
-            isLoading={updateMutation.isPending}
-          >
-            Update
-          </GlobalButton>
         </div>
       </div>
     </div>
@@ -954,10 +946,9 @@ function ChangeLanguageView() {
 
   const updateMutation = useMutation({
     mutationFn: (payload) => updateLanguage(payload),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.status === "success") {
-        const languageCode = reverseLangMap[selectedLang] || "en";
-        setLanguage(languageCode);
+        setLanguage(variables.languageId);
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         openSuccessDialog({
           title: "Success",
@@ -984,20 +975,21 @@ function ChangeLanguageView() {
     },
   });
 
-  const handleUpdate = () => {
-    const languageCode = reverseLangMap[selectedLang] || "en";
+  const handleSelectLanguage = (item) => {
+    setSelectedLang(item);
+    const languageCode = reverseLangMap[item] || "en";
     updateMutation.mutate({ languageId: languageCode });
   };
 
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-2">
           {languages.map((item, idx) => (
             <button 
               key={idx} 
               type="button"
-              onClick={() => setSelectedLang(item)}
+              onClick={() => handleSelectLanguage(item)}
               disabled={updateMutation.isPending}
               className="w-full flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors text-left"
             >
@@ -1009,16 +1001,6 @@ function ChangeLanguageView() {
               )}
             </button>
           ))}
-        </div>
-        <div className="flex justify-center mt-2">
-          <GlobalButton 
-            onClick={handleUpdate}
-            variant="primary"
-            className="px-8 text-xs font-bold uppercase tracking-wider"
-            isLoading={updateMutation.isPending}
-          >
-            Update
-          </GlobalButton>
         </div>
       </div>
     </div>
