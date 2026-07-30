@@ -159,3 +159,13 @@ export async function changePIN(payload = {}) {
 export async function forgotPin(payload = {}) {
   return post("/forgotPin", payload);
 }
+
+// Register Merchant (Enroll Step 1 / Submit)
+export async function registerMerchant(payload = {}) {
+  return post("/register", payload);
+}
+
+// Verify Merchant OTP (Enroll Step 2)
+export async function verifyMerchantOTP(payload = {}) {
+  return post("/verifyMerchantOTP", payload);
+}
