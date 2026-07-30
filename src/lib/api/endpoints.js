@@ -198,3 +198,14 @@ export async function deleteUserBiller(payload = {}) {
 // -------------------------------------------------------
 // Cashier APIs
 // -------------------------------------------------------
+export async function createCashier(payload = {}) {
+  return post("/createCashier", payload);
+}
+
+export async function getCashierPermssionList(payload = {}) {
+  return post("/getCashierPermssionList", payload);
+}
+
+export async function saveMerchantCashierPermission(payload = {}) {
+  return post("/saveMerchantCashierPermission", payload);
+}

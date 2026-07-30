@@ -21,7 +21,7 @@ export function useFormValidation() {
     });
 
     setErrors(newErrors);
-    return isValid;
+    return { isValid, errors: newErrors };
   };
 
   const clearError = (name) => {
