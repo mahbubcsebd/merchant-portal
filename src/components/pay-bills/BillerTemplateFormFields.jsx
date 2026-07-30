@@ -4,7 +4,12 @@ import GlobalSelect from "@/components/globals/GlobalSelect";
 import { usePayBills } from "@/hooks/usePayBills";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function BillerTemplateFormFields({ data, isView, errors = {}, clearError = () => {} }) {
+export default function BillerTemplateFormFields({
+  data,
+  isView,
+  errors = {},
+  clearError = () => {},
+}) {
   const { allBillersQuery } = usePayBills();
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -12,6 +17,13 @@ export default function BillerTemplateFormFields({ data, isView, errors = {}, cl
   const [billerId, setBillerId] = useState(data?.billerId || "");
   const [billerName, setBillerName] = useState(data?.billerName || "");
   const [currency, setCurrency] = useState(data?.currency || "");
+
+  // If creating new template, try to default to local currency (XCG / "0")
+  useEffect(() => {
+    if (!data && !currency) {
+      setCurrency("0");
+    }
+  }, [data, currency]);
 
   const billerOptions = (allBillersQuery.data || []).map((b) => ({
     value: String(b.BILLERID),
@@ -22,22 +34,23 @@ export default function BillerTemplateFormFields({ data, isView, errors = {}, cl
   // Auto-fill currency when billerId changes
   useEffect(() => {
     if (billerId) {
-      const selectedBiller = billerOptions.find(b => b.value === billerId);
+      const selectedBiller = billerOptions.find((b) => b.value === billerId);
       if (selectedBiller) {
         setCurrency(selectedBiller.currency);
         setBillerName(selectedBiller.label);
       }
-    } else {
-      setCurrency("");
+    } else if (!data) {
+      // If we deselect biller during creation, reset back to local currency (XCG / "0")
+      setCurrency("0");
       setBillerName("");
     }
-  }, [billerId]);
+  }, [billerId, billerOptions, welcomeData, data]);
 
   return (
     <div className="space-y-4 w-full">
       <input type="hidden" name="billerName" value={billerName} />
       <input type="hidden" name="currency" value={currency} />
-      
+
       <GlobalSelect
         name="billerId"
         label="Biller Name"
@@ -71,7 +84,7 @@ export default function BillerTemplateFormFields({ data, isView, errors = {}, cl
         placeholder="e.g. 12345"
         error={errors.refNum}
         onChange={(e) => {
-          e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+          e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
           clearError("refNum");
         }}
       />
@@ -79,11 +92,11 @@ export default function BillerTemplateFormFields({ data, isView, errors = {}, cl
         name="displayCurrency"
         label="Currency"
         required
-        disabled={true} // Always disabled, auto-filled from biller
+        disabled={true}
         value={currency}
-        options={(welcomeData?.metaData?.CURRENCY || []).map(c => ({
+        options={(welcomeData?.metaData?.CURRENCY || []).map((c) => ({
           value: String(c.id),
-          label: c.title
+          label: c.title,
         }))}
         labelClassName="text-sm font-semibold text-slate-700 dark:text-white/70 mb-1.5"
       />

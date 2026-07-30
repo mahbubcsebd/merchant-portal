@@ -186,3 +186,11 @@ export async function createUserBiller(payload = {}) {
 export async function getBillers(payload = {}) {
   return post("/getBillers", payload);
 }
+
+export async function updateUserBiller(payload = {}) {
+  return post("/updateUserBiller", payload);
+}
+
+export async function deleteUserBiller(payload = {}) {
+  return post("/deleteUserBiller", payload);
+}

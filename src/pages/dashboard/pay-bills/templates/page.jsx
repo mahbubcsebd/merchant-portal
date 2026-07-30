@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 export default function ManageBillTemplatesPage() {
   const { openFormDialog, openConfirmDialog, openDetailDialog, openPreconfirmDialog, openSuccessDialog, openGlobalPopup, closeDialog } = useDialog()
-  const { userBillersQuery, createBillTemplateMutation } = usePayBills()
+  const { userBillersQuery, createBillTemplateMutation, updateBillTemplateMutation, deleteBillTemplateMutation } = usePayBills()
   const queryClient = useQueryClient()
   const welcomeData = queryClient.getQueryData(["welcome"])
 
@@ -21,18 +21,20 @@ export default function ManageBillTemplatesPage() {
 
   const templates = (userBillersQuery.data || []).map((b, index) => ({
     id: b.BILLID || index,
-    billerName: b.BILLERNAME || b.BILLNAME || "Unknown",
+    billerId: b.BILLERID,
+    billerName: b.BLRDESC || b.BILLERNAME || "Unknown",
     templateName: b.BILLNAME || "Template",
-    referenceNo: b.REFNO || b.REFERENCE || "N/A",
-    currency: b.CURRENCY || b.BLRWALCUR || "N/A",
+    referenceNo: b.REFNUM || b.REFNO || b.REFERENCE || "",
+    currency: b.CURRENCY || b.BILLCUR || b.BLRWALCUR || "N/A",
     raw: b
   }))
 
   const handleAddClick = (initialValues = null) => {
+    const isEdit = !!initialValues?.id;
     openFormDialog({
-      title: "Create Bill Template",
+      title: isEdit ? "Edit Bill Template" : "Create Bill Template",
       isView: false,
-      submitText: "Create",
+      submitText: isEdit ? "Save Changes" : "Create",
       size: "sm:max-w-md",
       content: <BillerTemplateFormFields data={initialValues} isView={false} />,
       onSave: (values) => {
@@ -56,11 +58,14 @@ export default function ManageBillTemplatesPage() {
               billerName: values.billerName
             };
 
-            createBillTemplateMutation.mutate(payload, {
+            const mutation = isEdit ? updateBillTemplateMutation : createBillTemplateMutation;
+            if (isEdit) payload.billId = initialValues.id;
+
+            mutation.mutate(payload, {
               onSuccess: () => {
                 openSuccessDialog({
-                  title: "Template Created",
-                  message: "Your bill template has been successfully created.",
+                  title: isEdit ? "Template Updated" : "Template Created",
+                  message: `Your bill template has been successfully ${isEdit ? "updated" : "created"}.`,
                   details: {
                     "Bill Template Name": values.billName,
                     "Biller Name": values.billerName,
@@ -72,7 +77,7 @@ export default function ManageBillTemplatesPage() {
               onError: (err) => {
                 openGlobalPopup({
                   title: "Error",
-                  description: err.message || "Failed to create bill template.",
+                  description: err.message || `Failed to ${isEdit ? "update" : "create"} bill template.`,
                   type: "error"
                 });
               }
@@ -132,7 +137,7 @@ export default function ManageBillTemplatesPage() {
                               { label: "Biller Name", value: template.billerName },
                               { label: "Bill Template Name", value: template.templateName },
                               { label: "Reference No", value: template.referenceNo },
-                              { label: "Currency", value: template.currency }
+                              { label: "Currency", value: getCurrencyLabel(template.currency) }
                             ],
                             doneText: "Back"
                           })
@@ -143,18 +148,7 @@ export default function ManageBillTemplatesPage() {
                         <Eye size={18} />
                       </button>
                       <button 
-                        onClick={() => {
-                          openFormDialog({
-                            title: "Edit Bill Template",
-                            isView: false,
-                            submitText: "Save",
-                            size: "sm:max-w-md",
-                            content: <BillerTemplateFormFields data={template} isView={false} />,
-                            onSave: (values) => {
-                              console.log("Update bill template:", values)
-                            }
-                          })
-                        }} 
+                        onClick={() => handleAddClick(template)}
                         className="text-slate-400 hover:text-emerald-500 transition-colors" 
                         title="Edit"
                       >
@@ -162,15 +156,36 @@ export default function ManageBillTemplatesPage() {
                       </button>
                       <button 
                         onClick={() => {
-                          openConfirmDialog({
+                          openPreconfirmDialog({
                             title: "Delete Template?",
                             description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
+                            details: {
+                              "Biller Name": template.billerName,
+                              "Bill Template Name": template.templateName,
+                              "Reference No": template.referenceNo,
+                              "Currency": getCurrencyLabel(template.currency)
+                            },
                             confirmText: "Delete",
                             iconType: "danger",
-                            onConfirm: () => {
-                              console.log("Delete template:", template.id)
+                            onChange: () => closeDialog(),
+                            onSubmit: () => {
+                              deleteBillTemplateMutation.mutate({ billId: template.id }, {
+                                onSuccess: () => {
+                                  openSuccessDialog({
+                                    title: "Template Deleted",
+                                    message: "The bill template has been successfully deleted.",
+                                  });
+                                },
+                                onError: (err) => {
+                                  openGlobalPopup({
+                                    title: "Error",
+                                    description: err.message || "Failed to delete template.",
+                                    type: "error"
+                                  });
+                                }
+                              });
                             }
-                          })
+                          });
                         }} 
                         className="text-slate-400 hover:text-rose-500 transition-colors" 
                         title="Delete"
@@ -216,7 +231,7 @@ export default function ManageBillTemplatesPage() {
                         { label: "Biller Name", value: template.billerName },
                         { label: "Bill Template Name", value: template.templateName },
                         { label: "Reference No", value: template.referenceNo },
-                        { label: "Currency", value: template.currency }
+                        { label: "Currency", value: getCurrencyLabel(template.currency) }
                       ],
                       doneText: "Back"
                     })
@@ -227,18 +242,7 @@ export default function ManageBillTemplatesPage() {
                   <Eye size={18} />
                 </button>
                 <button 
-                  onClick={() => {
-                    openFormDialog({
-                      title: "Edit Bill Template",
-                      isView: false,
-                      submitText: "Save",
-                      size: "sm:max-w-md",
-                      content: <BillerTemplateFormFields data={template} isView={false} />,
-                      onSave: (values) => {
-                        console.log("Update bill template:", values)
-                      }
-                    })
-                  }} 
+                  onClick={() => handleAddClick(template)}
                   className="text-slate-400 hover:text-emerald-500 transition-colors" 
                   title="Edit"
                 >
@@ -246,15 +250,36 @@ export default function ManageBillTemplatesPage() {
                 </button>
                 <button 
                   onClick={() => {
-                    openConfirmDialog({
+                    openPreconfirmDialog({
                       title: "Delete Template?",
                       description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
+                      details: {
+                        "Biller Name": template.billerName,
+                        "Bill Template Name": template.templateName,
+                        "Reference No": template.referenceNo,
+                        "Currency": getCurrencyLabel(template.currency)
+                      },
                       confirmText: "Delete",
                       iconType: "danger",
-                      onConfirm: () => {
-                        console.log("Delete template:", template.id)
+                      onChange: () => closeDialog(),
+                      onSubmit: () => {
+                        deleteBillTemplateMutation.mutate({ billId: template.id }, {
+                          onSuccess: () => {
+                            openSuccessDialog({
+                              title: "Template Deleted",
+                              message: "The bill template has been successfully deleted.",
+                            });
+                          },
+                          onError: (err) => {
+                            openGlobalPopup({
+                              title: "Error",
+                              description: err.message || "Failed to delete template.",
+                              type: "error"
+                            });
+                          }
+                        });
                       }
-                    })
+                    });
                   }} 
                   className="text-slate-400 hover:text-rose-500 transition-colors" 
                   title="Delete"

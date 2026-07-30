@@ -5,6 +5,8 @@ import {
   payBills,
   getBillers,
   createUserBiller,
+  updateUserBiller,
+  deleteUserBiller,
 } from "@/lib/api/endpoints";
 
 export function usePayBills() {
@@ -79,11 +81,47 @@ export function usePayBills() {
     },
   });
 
+  // 6. Update Bill Template
+  const updateBillTemplateMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await updateUserBiller(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to update bill template");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userBillers"] });
+    },
+  });
+
+  // 7. Delete Bill Template
+  const deleteBillTemplateMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await deleteUserBiller(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to delete bill template");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userBillers"] });
+    },
+  });
+
   return {
     userBillersQuery,
     getBillerDetailsMutation,
     payBillsMutation,
     allBillersQuery,
     createBillTemplateMutation,
+    updateBillTemplateMutation,
+    deleteBillTemplateMutation,
   };
 }
