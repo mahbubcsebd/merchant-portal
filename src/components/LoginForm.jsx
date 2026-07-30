@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Lock, Mail } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { loginWithPin, verifyOTP } from "@/lib/api/endpoints";
+import { loginWithPin, verifyOTP, resendOTP } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 
 import GlobalButton from "@/components/globals/GlobalButton";
@@ -31,11 +31,11 @@ const formSchema = z.object({
 export function LoginForm() {
   const router = useNavigate();
   const { t } = useLanguage();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpError, setOtpError] = useState(false);
   const [otpErrorMessage, setOtpErrorMessage] = useState("");
+  const [resendSuccessMsg, setResendSuccessMsg] = useState("");
 
   const {
     register,
@@ -105,11 +105,33 @@ export function LoginForm() {
     },
   });
 
+  const resendOTPMutation = useMutation({
+    mutationFn: () => resendOTP({ custType: "C" }),
+    onSuccess: (data) => {
+      setOtpValue("");
+      setOtpError(false);
+      if (data.status === "success" || data.statusCode === 0) {
+        setResendSuccessMsg(data.message || "The OTP has been successfully resent.");
+        setTimeout(() => setResendSuccessMsg(""), 5000);
+      } else {
+        setOtpError(true);
+        setOtpErrorMessage(data.message || "Failed to resend OTP. Please try again.");
+      }
+    },
+    onError: (error) => {
+      setOtpError(true);
+      setOtpErrorMessage(
+        error?.response?.data?.message || "Failed to resend OTP. Please try again."
+      );
+    },
+  });
+
   async function onSubmit(values) {
     // Clear any previous root errors
     setError("root.serverError", { type: "manual", message: "" });
     loginMutation.mutate(values);
   }
+
   return (
     <div className="w-full">
       <style>{`
@@ -124,74 +146,70 @@ export function LoginForm() {
       `}</style>
 
       {/* ── Heading ─────────────────────────────── */}
-      <div className="mb-9 animate-[fade-up_0.4s_ease-out_both]">
-        <h2
-          className="
-          text-3xl xl:text-4xl
-          font-bold tracking-tight
-          text-slate-900 dark:text-white
-          leading-[1.1]
-        "
-        >
-          {t("login_welcome_back", "Welcome back")}
+      <div className="mb-8 xl:mb-10 animate-[fade-up_0.4s_ease-out_both]">
+        <h2 className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+          {t("welcome_back", "Welcome back")}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-          {t("login_subtitle", "Sign in to your Merchant Portal")}
+          {t("signin_subtitle", "Sign in to your Merchant Portal account")}
         </p>
       </div>
 
       {/* ── Form ────────────────────────────────── */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-5 xl:space-y-6 animate-[fade-up_0.5s_ease-out_0.1s_both]"
+        className="space-y-5 animate-[fade-up_0.5s_ease-out_0.1s_both]"
         noValidate
       >
-        {errors.root?.serverError?.message && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50">
-            {errors.root.serverError.message}
-          </div>
-        )}
-
         {/* Email */}
         <GlobalInput
           id="email"
           type="email"
-          label={t("email_address", "Email Address")}
-          placeholder={t("ph_email", "merchant@example.com")}
+          label={t("email_label", "Email Address")}
+          required
+          placeholder="merchant@example.com"
           leftIcon={<Mail size={16} />}
           error={errors.email?.message}
           aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? "email-error" : undefined}
           {...register("email")}
         />
 
         {/* PIN */}
-        <div className="space-y-2">
+        <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {t("wallet_pin_login", "Wallet PIN")}
-            </span>
+            <label
+              htmlFor="pin"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              {t("wallet_pin", "Wallet PIN")}{" "}
+              <span className="text-[#e65625]">*</span>
+            </label>
             <Link
               to="/forgot-pin"
-              className="text-xs xl:text-sm font-semibold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
+              className="text-xs font-semibold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2"
             >
-              {t("beforeLoginForgotPIN", "Forgot PIN?")}
+              {t("forgot_pin", "Forgot PIN?")}
             </Link>
           </div>
           <GlobalInput
             id="pin"
             type="password"
-            inputMode="numeric"
-            placeholder={t("pin_use", "••••••")}
-            maxLength="6"
+            placeholder="••••••"
+            maxLength={6}
             leftIcon={<Lock size={16} />}
-            inputClassName="tracking-[0.3em] placeholder:tracking-widest"
             error={errors.pin?.message}
             aria-invalid={!!errors.pin}
-            aria-describedby={errors.pin ? "pin-error" : undefined}
             {...register("pin")}
           />
         </div>
+
+        {/* Server Error Alert */}
+        {errors.root?.serverError?.message && (
+          <p className="text-xs font-semibold text-red-500 flex items-center gap-1.5 mt-2 animate-[fade-in_0.2s_ease-out]">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            {errors.root.serverError.message}
+          </p>
+        )}
 
         {/* Submit */}
         <GlobalButton
@@ -241,7 +259,7 @@ export function LoginForm() {
                 onComplete={(val) => {
                   verifyOTPMutation.mutate({ otp: val });
                 }}
-                disabled={verifyOTPMutation.isPending}
+                disabled={verifyOTPMutation.isPending || resendOTPMutation.isPending}
               >
                 <InputOTPGroup className="gap-2.5">
                   {Array.from({ length: 6 }).map((_, i) => (
@@ -259,6 +277,11 @@ export function LoginForm() {
                 {otpErrorMessage || "Invalid OTP code. Please try again."}
               </p>
             )}
+            {resendSuccessMsg && (
+              <p className="text-emerald-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+                {resendSuccessMsg}
+              </p>
+            )}
             {verifyOTPMutation.isPending && (
               <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
                 {t("verifying", "Verifying...")}
@@ -270,13 +293,14 @@ export function LoginForm() {
             <span>{t("didnt_receive_code", "Didn't receive code?")}</span>
             <button
               type="button"
-              className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2 ml-1.5"
+              disabled={resendOTPMutation.isPending}
+              className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2 ml-1.5 cursor-pointer disabled:opacity-50"
               onClick={() => {
-                setOtpValue("");
-                setOtpError(false);
+                setResendSuccessMsg("");
+                resendOTPMutation.mutate();
               }}
             >
-              {t("resend_code", "Resend Code")}
+              {resendOTPMutation.isPending ? t("resending", "Resending...") : t("resend_code", "Resend Code")}
             </button>
           </div>
         </DialogContent>
