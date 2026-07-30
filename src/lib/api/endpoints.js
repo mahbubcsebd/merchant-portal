@@ -154,3 +154,8 @@ export async function getLangPack(payload = {}) {
 export async function changePIN(payload = {}) {
   return post("/changePIN", payload);
 }
+
+// Forgot Wallet PIN
+export async function forgotPin(payload = {}) {
+  return post("/forgotPin", payload);
+}
