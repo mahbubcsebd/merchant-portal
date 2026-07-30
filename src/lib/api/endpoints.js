@@ -194,3 +194,7 @@ export async function updateUserBiller(payload = {}) {
 export async function deleteUserBiller(payload = {}) {
   return post("/deleteUserBiller", payload);
 }
+
+// -------------------------------------------------------
+// Cashier APIs
+// -------------------------------------------------------
