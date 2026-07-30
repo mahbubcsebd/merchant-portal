@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import GlobalButton from '@/components/globals/GlobalButton';
 import GlobalInput from '@/components/globals/GlobalInput';
-import { registerMerchant, verifyMerchantOTP } from '@/lib/api/endpoints';
+import { registerMerchant, verifyMerchantOTP, resendOTP } from '@/lib/api/endpoints';
 import {
   Command,
   CommandEmpty,
@@ -67,6 +67,7 @@ export function EnrollForm() {
   const [step, setStep] = useState('form'); // 'form' | 'confirm' | 'otp' | 'success'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [resendSuccessMsg, setResendSuccessMsg] = useState('');
   const [openCountryBox, setOpenCountryBox] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -96,6 +97,7 @@ export function EnrollForm() {
   // Step 1 Form Submission → Move to Step 2 (Confirm Details)
   function onFormSubmit() {
     setApiError('');
+    setResendSuccessMsg('');
     setStep('confirm');
   }
 
@@ -103,6 +105,7 @@ export function EnrollForm() {
   async function handleRegisterSubmit() {
     setIsSubmitting(true);
     setApiError('');
+    setResendSuccessMsg('');
     try {
       const values = getValues();
       const payload = {
@@ -133,6 +136,34 @@ export function EnrollForm() {
     }
   }
 
+  // Resend OTP → Trigger /walletmc/resendOTP API
+  async function handleResendOTP() {
+    setIsSubmitting(true);
+    setApiError('');
+    setResendSuccessMsg('');
+    try {
+      const values = getValues();
+      const payload = {
+        custType: 'C',
+        emailID: values.email,
+        phoneNumber: `${values.countryCode}${values.phone}`,
+      };
+
+      const res = await resendOTP(payload);
+
+      if (res?.status === 'success' || res?.statusCode === 0) {
+        setResendSuccessMsg(res?.message || 'The OTP has been successfully resent.');
+        setTimeout(() => setResendSuccessMsg(''), 5000);
+      } else {
+        setApiError(res?.message || 'Failed to resend OTP. Please try again.');
+      }
+    } catch (err) {
+      setApiError(err?.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   // Step 3 OTP Verification → Trigger /walletmc/verifyMerchantOTP API
   async function handleVerifyOTP() {
     if (!otpCode || otpCode.length < 6) {
@@ -142,6 +173,7 @@ export function EnrollForm() {
 
     setIsSubmitting(true);
     setApiError('');
+    setResendSuccessMsg('');
     try {
       const values = getValues();
       const payload = {
@@ -179,6 +211,14 @@ export function EnrollForm() {
         <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-3 text-red-600 dark:text-red-400 animate-[fade-up_0.3s_ease-out]">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <p className="text-sm font-medium leading-relaxed">{apiError}</p>
+        </div>
+      )}
+
+      {/* Resend OTP Success Alert */}
+      {resendSuccessMsg && (
+        <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 text-emerald-600 dark:text-emerald-400 animate-[fade-up_0.3s_ease-out]">
+          <Check size={18} className="shrink-0 mt-0.5" />
+          <p className="text-sm font-medium leading-relaxed">{resendSuccessMsg}</p>
         </div>
       )}
 
@@ -567,8 +607,9 @@ export function EnrollForm() {
             Didn't receive code?{' '}
             <button
               type="button"
-              onClick={handleRegisterSubmit}
-              className="font-bold text-[#e65625] hover:underline ml-1 cursor-pointer"
+              onClick={handleResendOTP}
+              disabled={isSubmitting}
+              className="font-bold text-[#e65625] hover:underline ml-1 cursor-pointer disabled:opacity-50"
             >
               Resend Code
             </button>

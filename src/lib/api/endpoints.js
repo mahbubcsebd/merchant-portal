@@ -169,3 +169,8 @@ export async function registerMerchant(payload = {}) {
 export async function verifyMerchantOTP(payload = {}) {
   return post("/verifyMerchantOTP", payload);
 }
+
+// Resend OTP
+export async function resendOTP(payload = {}) {
+  return post("/resendOTP", payload);
+}
