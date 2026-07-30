@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/popover';
 import {
   InputOTP,
-  InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
@@ -144,8 +143,14 @@ export function EnrollForm() {
     setIsSubmitting(true);
     setApiError('');
     try {
+      const values = getValues();
       const payload = {
         otp: otpCode,
+        emailID: values.email,
+        phoneNumber: `${values.countryCode}${values.phone}`,
+        storeName: values.storeName,
+        countryCode: values.countryCode,
+        phCountryCode: values.countryCode,
         custType: 'C',
       };
 
@@ -511,26 +516,27 @@ export function EnrollForm() {
           <h2 className="text-2xl sm:text-3xl font-bold text-[#1b55ad] dark:text-blue-400 mb-3">
             Verify Registration
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-8 max-w-[320px] mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-8 max-w-[340px] mx-auto leading-relaxed">
             We have just sent you a One-time PIN via SMS and to your email.
           </p>
 
-          {/* OTP Input */}
+          {/* 6 Standalone Individual Rounded Boxes for OTP */}
           <div className="flex justify-center mb-8">
             <InputOTP
               maxLength={6}
               value={otpCode}
               onChange={(val) => setOtpCode(val)}
+              containerClassName="justify-center"
             >
-              <InputOTPGroup className="gap-2 sm:gap-3">
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
                 {[0, 1, 2, 3, 4, 5].map((idx) => (
                   <InputOTPSlot
                     key={idx}
                     index={idx}
-                    className="w-10 h-12 sm:w-12 sm:h-14 text-lg font-bold border-2 border-slate-200 dark:border-white/20 rounded-xl focus:border-[#2563eb]"
+                    className="w-10 h-12 sm:w-12 sm:h-14 text-xl font-bold rounded-xl border-2 border-slate-200 dark:border-white/20 focus:border-[#2563eb] dark:focus:border-blue-500 bg-white dark:bg-white/5 text-slate-900 dark:text-white shadow-sm transition-all !rounded-xl !border-l !border-y !border-r"
                   />
                 ))}
-              </InputOTPGroup>
+              </div>
             </InputOTP>
           </div>
 
