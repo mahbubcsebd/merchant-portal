@@ -3,6 +3,8 @@ import {
   getUserBiller,
   getBillerByBillId,
   payBills,
+  getBillers,
+  createUserBiller,
 } from "@/lib/api/endpoints";
 
 export function usePayBills() {
@@ -18,6 +20,7 @@ export function usePayBills() {
       }
       return response.userBillers || [];
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // 2. Fetch Biller Details dynamically
@@ -45,9 +48,42 @@ export function usePayBills() {
     },
   });
 
+  // 4. Fetch All System Billers
+  const allBillersQuery = useQuery({
+    queryKey: ["allBillers"],
+    queryFn: async () => {
+      const response = await getBillers();
+      if (response.status !== "success") {
+        throw new Error(response.message || "Failed to fetch system billers");
+      }
+      return response.billers || [];
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // 5. Create Bill Template (User Biller)
+  const createBillTemplateMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await createUserBiller(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to create bill template");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      // Invalidate to refetch the templates list
+      queryClient.invalidateQueries({ queryKey: ["userBillers"] });
+    },
+  });
+
   return {
     userBillersQuery,
     getBillerDetailsMutation,
     payBillsMutation,
+    allBillersQuery,
+    createBillTemplateMutation,
   };
 }

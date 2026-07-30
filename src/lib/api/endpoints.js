@@ -178,3 +178,11 @@ export async function calculateFees(payload = {}) {
 export async function payBills(payload = {}) {
   return post("/payBills", payload);
 }
+
+export async function createUserBiller(payload = {}) {
+  return post("/createUserBiller", payload);
+}
+
+export async function getBillers(payload = {}) {
+  return post("/getBillers", payload);
+}
