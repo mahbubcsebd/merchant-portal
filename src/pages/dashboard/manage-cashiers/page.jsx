@@ -10,7 +10,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 
 export default function ManageCashiersPage() {
   const { openFormDialog, openConfirmDialog, openGlobalPopup } = useDialog();
-  const { cashiersQuery, createCashierMutation, savePermissionsMutation } =
+  const { cashiersQuery, createCashierMutation, savePermissionsMutation, deleteCashierMutation } =
     useCashiers();
   const { validate } = useFormValidation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,11 +26,157 @@ export default function ManageCashiersPage() {
   const filteredCashiers = cashiers.filter((c) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
-    return (
+  
+  return (
       c.name.toLowerCase().includes(term) ||
       c.loginId.toLowerCase().includes(term)
     );
   });
+
+  // --- Handlers ---
+  const handleAddCashier = (initialData = null) => {
+    openFormDialog({
+      title: "Add Cashier",
+      isView: false,
+      submitText: "Submit",
+      disableAutoValidation: true,
+      content: <CashierFormFields data={initialData} isView={false} />,
+      onSave: async (values, setFormErrors) => {
+        const fields = [
+          { name: 'merCashierID', value: values.merCashierID, label: 'Cashier User ID', required: true },
+          { name: 'cashierFName', value: values.cashierFName, label: 'First Name', required: true },
+          { name: 'cashierLName', value: values.cashierLName, label: 'Last Name', required: true },
+          { name: 'cashierEmail', value: values.cashierEmail, label: 'Email', required: true, type: 'email' },
+          { name: 'cashierMobile', value: values.cashierMobile, label: 'Mobile No.', required: true },
+          { name: 'merSubID', value: values.merSubID, label: 'Branch', required: true, type: 'select' },
+          { name: 'cashierIDType', value: values.cashierIDType, label: 'Cashier ID Type', required: true, type: 'select' },
+          { name: 'cashierIDNum', value: values.cashierIDNum, label: 'Cashier ID Number', required: true }
+        ];
+        
+        const validationResult = validate(fields);
+        if (!validationResult.isValid) {
+          setFormErrors(validationResult.errors);
+          return false;
+        }
+        
+        const countryCode = values.countryCode || "";
+        let rawMobile = values.cashierMobile || "";
+        if (rawMobile && !rawMobile.startsWith(countryCode)) {
+          rawMobile = countryCode + rawMobile;
+        }
+        
+        const payload = { ...values, cashierMobile: rawMobile };
+        
+        const openPermissionsDialog = () => {
+          openFormDialog({
+            title: "Cashier Permissions",
+            submitText: "Save",
+            content: <CashierPermissionsList />,
+            onSave: async (permValues, showPermError) => {
+              try {
+                const functionalityIDs = permValues.functionalityIDs ? JSON.parse(permValues.functionalityIDs) : [];
+                const permPayload = { merCashierID: values.merCashierID, functionalityIDs };
+                const res = await savePermissionsMutation.mutateAsync(permPayload);
+                openGlobalPopup({
+                  title: "Success",
+                  description: res.message || "Permissions saved successfully.",
+                  type: "success"
+                });
+                return false;
+              } catch (err) {
+                openGlobalPopup({
+                  title: "Error",
+                  description: err.message || "Failed to save permissions.",
+                  type: "error",
+                  onClose: () => openPermissionsDialog()
+                });
+                return false;
+              }
+            }
+          });
+        };
+
+        try {
+          const res = await createCashierMutation.mutateAsync(payload);
+          openGlobalPopup({
+            title: "Success",
+            description: res.message || "Cashier created successfully.",
+            type: "success",
+            onClose: () => openPermissionsDialog()
+          });
+          return false;
+        } catch (err) {
+          openGlobalPopup({
+            title: "Error",
+            description: err.message || "Failed to create cashier.",
+            type: "error",
+            onClose: () => handleAddCashier(values)
+          });
+          return false;
+        }
+      },
+    });
+  };
+
+  const handleView = (cashier) => {
+    openFormDialog({
+      title: "View Cashier",
+      isView: true,
+      content: <CashierFormFields data={cashier.raw} isView={true} />,
+    });
+  };
+
+  const handleEdit = (cashier) => {
+    openFormDialog({
+      title: "Edit Cashier",
+      isView: false,
+      submitText: "Save",
+      content: <CashierFormFields data={cashier.raw} isView={false} />,
+      onSave: (values) => {
+        console.log("Cashier to update:", values);
+      },
+    });
+  };
+
+  const handleResetPin = (cashier) => {
+    openConfirmDialog({
+      title: "Reset PIN?",
+      description: `Are you sure you want to reset PIN for cashier ${cashier.name}?`,
+      confirmText: "Reset",
+      iconType: "warning",
+      onConfirm: () => {
+        console.log("Reset PIN for cashier:", cashier.id);
+      },
+    });
+  };
+
+  const handleDelete = (cashier) => {
+    openConfirmDialog({
+      title: "Delete Cashier?",
+      description: `Are you sure you want to delete ${cashier.name}? This action cannot be undone.`,
+      confirmText: "Delete",
+      iconType: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await deleteCashierMutation.mutateAsync({ merCashierID: cashier.id });
+          openGlobalPopup({
+            title: "Success",
+            description: res.message || "Cashier deleted successfully.",
+            type: "success"
+          });
+          return false;
+        } catch (err) {
+          openGlobalPopup({
+            title: "Error",
+            description: err.message || "Failed to delete cashier.",
+            type: "error"
+          });
+          return false;
+        }
+      },
+    });
+  };
+
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
@@ -58,155 +204,7 @@ export default function ManageCashiersPage() {
           />
 
           <GlobalButton
-            onClick={() => {
-              const openAddForm = (initialData = null) => {
-                openFormDialog({
-                  title: "Add Cashier",
-                  isView: false,
-                  submitText: "Submit",
-                  disableAutoValidation: true,
-                  content: (
-                    <CashierFormFields data={initialData} isView={false} />
-                  ),
-                  onSave: async (values, setFormErrors) => {
-                    const fields = [
-                      {
-                        name: "merCashierID",
-                        value: values.merCashierID,
-                        label: "Cashier User ID",
-                        required: true,
-                      },
-                      {
-                        name: "cashierFName",
-                        value: values.cashierFName,
-                        label: "First Name",
-                        required: true,
-                      },
-                      {
-                        name: "cashierLName",
-                        value: values.cashierLName,
-                        label: "Last Name",
-                        required: true,
-                      },
-                      {
-                        name: "cashierEmail",
-                        value: values.cashierEmail,
-                        label: "Email",
-                        required: true,
-                        type: "email",
-                      },
-                      {
-                        name: "cashierMobile",
-                        value: values.cashierMobile,
-                        label: "Mobile No.",
-                        required: true,
-                      },
-                      {
-                        name: "merSubID",
-                        value: values.merSubID,
-                        label: "Branch",
-                        required: true,
-                        type: "select",
-                      },
-                      {
-                        name: "cashierIDType",
-                        value: values.cashierIDType,
-                        label: "Cashier ID Type",
-                        required: true,
-                        type: "select",
-                      },
-                      {
-                        name: "cashierIDNum",
-                        value: values.cashierIDNum,
-                        label: "Cashier ID Number",
-                        required: true,
-                      },
-                    ];
-
-                    const validationResult = validate(fields);
-                    if (!validationResult.isValid) {
-                      setFormErrors(validationResult.errors);
-                      return false;
-                    }
-
-                    // Format mobile number
-                    const countryCode = values.countryCode || "";
-                    let rawMobile = values.cashierMobile || "";
-                    if (rawMobile && !rawMobile.startsWith(countryCode)) {
-                      rawMobile = countryCode + rawMobile;
-                    }
-
-                    const payload = {
-                      ...values,
-                      cashierMobile: rawMobile,
-                    };
-
-                    const openPermissionsDialog = () => {
-                      openFormDialog({
-                        title: "Cashier Permissions",
-                        submitText: "Save",
-                        content: <CashierPermissionsList />,
-                        onSave: async (permValues, showPermError) => {
-                          try {
-                            const functionalityIDs = permValues.functionalityIDs
-                              ? JSON.parse(permValues.functionalityIDs)
-                              : [];
-                            const permPayload = {
-                              merCashierID: values.merCashierID,
-                              functionalityIDs,
-                            };
-
-                            const res =
-                              await savePermissionsMutation.mutateAsync(
-                                permPayload,
-                              );
-                            openGlobalPopup({
-                              title: "Success",
-                              description:
-                                res.message ||
-                                "Permissions saved successfully.",
-                              type: "success",
-                            });
-                            return false;
-                          } catch (err) {
-                            openGlobalPopup({
-                              title: "Error",
-                              description:
-                                err.message || "Failed to save permissions.",
-                              type: "error",
-                              onClose: () => openPermissionsDialog(),
-                            });
-                            return false;
-                          }
-                        },
-                      });
-                    };
-
-                    try {
-                      const res =
-                        await createCashierMutation.mutateAsync(payload);
-                      openGlobalPopup({
-                        title: "Success",
-                        description:
-                          res.message || "Cashier created successfully.",
-                        type: "success",
-                        onClose: () => openPermissionsDialog(),
-                      });
-                      return false; // Prevent auto-close
-                    } catch (err) {
-                      openGlobalPopup({
-                        title: "Error",
-                        description: err.message || "Failed to create cashier.",
-                        type: "error",
-                        onClose: () => openAddForm(values),
-                      });
-                      return false;
-                    }
-                  },
-                });
-              };
-              openAddForm();
-            }}
+            onClick={() => handleAddCashier()}
             variant="primary"
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10 px-8"
           >
@@ -274,77 +272,28 @@ export default function ManageCashiersPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() =>
-                            openFormDialog({
-                              title: "View Cashier",
-                              isView: true,
-                              content: (
-                                <CashierFormFields
-                                  data={cashier.raw}
-                                  isView={true}
-                                />
-                              ),
-                            })
-                          }
+                          onClick={() => handleView(cashier)}
                           className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                           title="View"
                         >
                           <Eye size={18} />
                         </button>
                         <button
-                          onClick={() => {
-                            openFormDialog({
-                              title: "Edit Cashier",
-                              isView: false,
-                              submitText: "Save",
-                              content: (
-                                <CashierFormFields
-                                  data={cashier.raw}
-                                  isView={false}
-                                />
-                              ),
-                              onSave: (values) => {
-                                console.log("Cashier to update:", values);
-                              },
-                            });
-                          }}
+                          onClick={() => handleEdit(cashier)}
                           className="text-slate-400 hover:text-emerald-500 transition-colors"
                           title="Edit"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
-                          onClick={() => {
-                            openConfirmDialog({
-                              title: "Delete Cashier?",
-                              description: `Are you sure you want to delete ${cashier.name}? This action cannot be undone.`,
-                              confirmText: "Delete",
-                              iconType: "danger",
-                              onConfirm: () => {
-                                console.log("Delete cashier:", cashier.id);
-                              },
-                            });
-                          }}
+                          onClick={() => handleDelete(cashier)}
                           className="text-slate-400 hover:text-rose-500 transition-colors"
                           title="Delete"
                         >
                           <Trash2 size={16} />
                         </button>
                         <button
-                          onClick={() => {
-                            openConfirmDialog({
-                              title: "Reset PIN?",
-                              description: `Are you sure you want to reset PIN for cashier ${cashier.name}?`,
-                              confirmText: "Reset",
-                              iconType: "warning",
-                              onConfirm: () => {
-                                console.log(
-                                  "Reset PIN for cashier:",
-                                  cashier.id,
-                                );
-                              },
-                            });
-                          }}
+                          onClick={() => handleResetPin(cashier)}
                           className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                           title="Reset Pin"
                         >
@@ -418,39 +367,13 @@ export default function ManageCashiersPage() {
                 <div className="flex items-center justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
                   <div className="flex gap-4">
                     <button
-                      onClick={() =>
-                        openFormDialog({
-                          title: "View Cashier",
-                          isView: true,
-                          content: (
-                            <CashierFormFields
-                              data={cashier.raw}
-                              isView={true}
-                            />
-                          ),
-                        })
-                      }
+                      onClick={() => handleView(cashier)}
                       className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                     >
                       <Eye size={18} />
                     </button>
                     <button
-                      onClick={() => {
-                        openFormDialog({
-                          title: "Edit Cashier",
-                          isView: false,
-                          submitText: "Save",
-                          content: (
-                            <CashierFormFields
-                              data={cashier.raw}
-                              isView={false}
-                            />
-                          ),
-                          onSave: (values) => {
-                            console.log("Cashier to update:", values);
-                          },
-                        });
-                      }}
+                      onClick={() => handleEdit(cashier)}
                       className="text-slate-400 hover:text-emerald-500 transition-colors"
                     >
                       <Pencil size={18} />
@@ -458,33 +381,13 @@ export default function ManageCashiersPage() {
                   </div>
                   <div className="flex gap-4">
                     <button
-                      onClick={() => {
-                        openConfirmDialog({
-                          title: "Reset PIN?",
-                          description: `Are you sure you want to reset PIN for cashier ${cashier.name}?`,
-                          confirmText: "Reset",
-                          iconType: "warning",
-                          onConfirm: () => {
-                            console.log("Reset PIN for cashier:", cashier.id);
-                          },
-                        });
-                      }}
+                      onClick={() => handleResetPin(cashier)}
                       className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                     >
                       <Lock size={18} />
                     </button>
                     <button
-                      onClick={() => {
-                        openConfirmDialog({
-                          title: "Delete Cashier?",
-                          description: `Are you sure you want to delete ${cashier.name}? This action cannot be undone.`,
-                          confirmText: "Delete",
-                          iconType: "danger",
-                          onConfirm: () => {
-                            console.log("Delete cashier:", cashier.id);
-                          },
-                        });
-                      }}
+                      onClick={() => handleDelete(cashier)}
                       className="text-slate-400 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 size={18} />

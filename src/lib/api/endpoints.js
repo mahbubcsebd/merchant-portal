@@ -209,3 +209,7 @@ export async function getCashierPermssionList(payload = {}) {
 export async function saveMerchantCashierPermission(payload = {}) {
   return post("/saveMerchantCashierPermission", payload);
 }
+
+export async function unenrollCashier(payload = {}) {
+  return post("/unenrollCashier", payload);
+}

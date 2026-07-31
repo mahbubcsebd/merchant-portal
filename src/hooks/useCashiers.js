@@ -4,6 +4,7 @@ import {
   createCashier,
   getCashierPermssionList,
   saveMerchantCashierPermission,
+  unenrollCashier,
 } from "@/lib/api/endpoints";
 
 export function useCashiers() {
@@ -68,10 +69,27 @@ export function useCashiers() {
     },
   });
 
+  const deleteCashierMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await unenrollCashier(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to delete cashier");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cashiers"] });
+    },
+  });
+
   return {
     cashiersQuery,
     permissionsQuery,
     createCashierMutation,
     savePermissionsMutation,
+    deleteCashierMutation,
   };
 }
