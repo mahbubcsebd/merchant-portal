@@ -149,18 +149,18 @@ export default function Home() {
             <LoginForm />
 
             {/* Below-form note */}
-            <p className="mt-8 text-xs text-center text-slate-400 dark:text-slate-600 leading-relaxed">
+            <p className="mt-8 text-xs text-center text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
               By signing in, you agree to mPay Network&apos;s{' '}
               <a
                 href="/terms-and-conditions"
-                className="text-[#2563eb] dark:text-blue-400 hover:underline"
+                className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
                 Terms of Service
               </a>{' '}
               and{' '}
               <a
                 href="/privacy-policy"
-                className="text-[#2563eb] dark:text-blue-400 hover:underline"
+                className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
                 Privacy Policy
               </a>
