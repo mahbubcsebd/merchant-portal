@@ -183,6 +183,11 @@ export async function getLangPack(payload = {}) {
   return post("/getLangPack", payload);
 }
 
+// Update / Validate User Session
+export async function updateSession(payload = {}) {
+  return post("/updateSession", payload);
+}
+
 // Change User Wallet PIN
 export async function changePIN(payload = {}) {
   return post("/changePIN", payload);

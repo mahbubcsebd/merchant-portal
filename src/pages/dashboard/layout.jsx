@@ -1,5 +1,5 @@
 import { DashboardLayout as DashboardLayoutComponent } from "@/components/dashboard/DashboardLayout";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
@@ -9,6 +9,7 @@ import {
   getDashboardInfo,
   getPortalNotifications,
   transactionHistory,
+  updateSession,
 } from "@/lib/api/endpoints";
 
 import { DashboardContext } from "./context";
@@ -17,14 +18,39 @@ export default function DashboardLayout() {
   const [period, setPeriod] = useState("last3months");
   const [currency, setCurrency] = useState("");
 
-  const { data: profileResponse, isLoading: isLoadingProfile } = useQuery({
+  // 1. Session Protection Query: Check & Update User Session
+  const {
+    data: sessionResponse,
+    isLoading: isLoadingSession,
+    isError: isSessionError,
+  } = useQuery({
+    queryKey: ["userSession"],
+    queryFn: () => updateSession(),
+    staleTime: 60 * 1000, // 1 minute
+    retry: false,
+    refetchInterval: 2 * 60 * 1000, // Keep session alive every 2 minutes
+  });
+
+  const isSessionValid =
+    sessionResponse?.status === "success" || sessionResponse?.statusCode === 0;
+
+  // 2. Profile & Accounts queries (Only executed if session is valid)
+  const {
+    data: profileResponse,
+    isLoading: isLoadingProfile,
+    isError: isProfileError,
+  } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => loadUserProfile(),
+    enabled: isSessionValid,
+    retry: false,
   });
 
   const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
+    enabled: isSessionValid,
+    retry: false,
   });
 
   const profile = profileResponse?.data || null;
@@ -40,20 +66,11 @@ export default function DashboardLayout() {
     }
   }, [defaultAccountId, currency]);
 
-  useEffect(() => {
-    if (profile) {
-      console.log("Logged In User Profile Details:", profile);
-    }
-    if (accounts && accounts.length > 0) {
-      console.log("Logged In User Accounts Details:", accounts);
-    }
-  }, [profile, accounts]);
-
   const { data: dashboardInfoResponse, isLoading: isLoadingDashboardInfo } =
     useQuery({
       queryKey: ["dashboardInfo", activeAccountId, period],
       queryFn: () => getDashboardInfo({ period, accountId: activeAccountId }),
-      enabled: !!activeAccountId,
+      enabled: isSessionValid && !!activeAccountId,
     });
 
   const { data: notificationsResponse, isLoading: isLoadingNotifications } =
@@ -61,7 +78,7 @@ export default function DashboardLayout() {
       queryKey: ["notifications"],
       queryFn: () =>
         getPortalNotifications({ custType: profile?.custType || "C" }),
-      enabled: !!profile,
+      enabled: isSessionValid && !!profile,
     });
 
   const { data: transactionsResponse, isLoading: isLoadingTransactions } =
@@ -73,27 +90,31 @@ export default function DashboardLayout() {
           pageNum: 1,
           accountId: activeAccountId,
         }),
-      enabled: !!activeAccountId,
+      enabled: isSessionValid && !!activeAccountId,
     });
 
-  const isLoading =
-    isLoadingProfile ||
-    isLoadingAccounts ||
-    isLoadingDashboardInfo ||
-    isLoadingNotifications ||
-    isLoadingTransactions;
-
-  if (isLoading) {
+  // 3. Loading State
+  if (isLoadingSession || (isSessionValid && isLoadingProfile)) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Loading Dashboard...
+            Verifying Dashboard Session...
           </p>
         </div>
       </div>
     );
+  }
+
+  // 4. Protection & Redirect Check: If session is invalid or missing, redirect to Login ("/")
+  if (
+    isSessionError ||
+    !isSessionValid ||
+    isProfileError ||
+    (!isLoadingProfile && !profile)
+  ) {
+    return <Navigate to="/" replace />;
   }
 
   const dashboardInfo = dashboardInfoResponse || null;
