@@ -57,6 +57,7 @@ export function LoginForm() {
         if (data.show_otp) {
           setShowOtpDialog(true);
         } else {
+          localStorage.setItem("is_authenticated", "true");
           router("/dashboard");
         }
       } else {
@@ -82,6 +83,7 @@ export function LoginForm() {
     onSuccess: (data) => {
       if (data.status === "success" && data.statusCode === 0) {
         console.log("OTP Verification Success Data:", data);
+        localStorage.setItem("is_authenticated", "true");
         setShowOtpDialog(false);
         router("/dashboard");
       } else {

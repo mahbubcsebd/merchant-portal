@@ -68,6 +68,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         } catch (err) {
           console.error("Logout error", err);
         }
+        localStorage.removeItem('is_authenticated');
         navigate("/");
       }
     });

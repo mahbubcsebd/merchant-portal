@@ -18,6 +18,15 @@ export default function DashboardLayout() {
   const [period, setPeriod] = useState("last3months");
   const [currency, setCurrency] = useState("");
 
+  // Instant Client Check: If user is not authenticated at all, redirect immediately without showing full-screen spinner
+  const isAuthenticatedFlag =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_authenticated") === "true";
+
+  if (!isAuthenticatedFlag) {
+    return <Navigate to="/" replace />;
+  }
+
   // 1. Session Protection Query: Check & Update User Session
   const {
     data: sessionResponse,
@@ -46,7 +55,7 @@ export default function DashboardLayout() {
     retry: false,
   });
 
-  const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
+  const { data: accountsResponse } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
     enabled: isSessionValid,
@@ -66,34 +75,38 @@ export default function DashboardLayout() {
     }
   }, [defaultAccountId, currency]);
 
-  const { data: dashboardInfoResponse, isLoading: isLoadingDashboardInfo } =
-    useQuery({
-      queryKey: ["dashboardInfo", activeAccountId, period],
-      queryFn: () => getDashboardInfo({ period, accountId: activeAccountId }),
-      enabled: isSessionValid && !!activeAccountId,
-    });
+  const { data: dashboardInfoResponse } = useQuery({
+    queryKey: ["dashboardInfo", activeAccountId, period],
+    queryFn: () => getDashboardInfo({ period, accountId: activeAccountId }),
+    enabled: isSessionValid && !!activeAccountId,
+  });
 
-  const { data: notificationsResponse, isLoading: isLoadingNotifications } =
-    useQuery({
-      queryKey: ["notifications"],
-      queryFn: () =>
-        getPortalNotifications({ custType: profile?.custType || "C" }),
-      enabled: isSessionValid && !!profile,
-    });
+  const { data: notificationsResponse } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () =>
+      getPortalNotifications({ custType: profile?.custType || "C" }),
+    enabled: isSessionValid && !!profile,
+  });
 
-  const { data: transactionsResponse, isLoading: isLoadingTransactions } =
-    useQuery({
-      queryKey: ["transactions", activeAccountId],
-      queryFn: () =>
-        transactionHistory({
-          pageSize: 10,
-          pageNum: 1,
-          accountId: activeAccountId,
-        }),
-      enabled: isSessionValid && !!activeAccountId,
-    });
+  const { data: transactionsResponse } = useQuery({
+    queryKey: ["transactions", activeAccountId],
+    queryFn: () =>
+      transactionHistory({
+        pageSize: 10,
+        pageNum: 1,
+        accountId: activeAccountId,
+      }),
+    enabled: isSessionValid && !!activeAccountId,
+  });
 
-  // 3. Loading State
+  // Handle session failure / invalid session cleanup
+  useEffect(() => {
+    if (!isLoadingSession && (isSessionError || !isSessionValid || isProfileError)) {
+      localStorage.removeItem("is_authenticated");
+    }
+  }, [isLoadingSession, isSessionError, isSessionValid, isProfileError]);
+
+  // 3. Loading State (Only for authenticated users while verifying profile data)
   if (isLoadingSession || (isSessionValid && isLoadingProfile)) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
