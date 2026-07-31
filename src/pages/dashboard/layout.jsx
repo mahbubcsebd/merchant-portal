@@ -1,5 +1,5 @@
 import { DashboardLayout as DashboardLayoutComponent } from "@/components/dashboard/DashboardLayout";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
@@ -11,12 +11,15 @@ import {
   transactionHistory,
   updateSession,
 } from "@/lib/api/endpoints";
-
+import { useDialog } from "@/components/globals/DialogProvider";
 import { DashboardContext } from "./context";
 
 export default function DashboardLayout() {
+  const navigate = useNavigate();
+  const { openConfirmDialog } = useDialog();
   const [period, setPeriod] = useState("last3months");
   const [currency, setCurrency] = useState("");
+  const [sessionExpiredShown, setSessionExpiredShown] = useState(false);
 
   // Instant Client Check: If user is not authenticated at all, redirect immediately without showing full-screen spinner
   const isAuthenticatedFlag =
@@ -42,6 +45,38 @@ export default function DashboardLayout() {
 
   const isSessionValid =
     sessionResponse?.status === "success" || sessionResponse?.statusCode === 0;
+
+  // Handle Session Expiration with App's Consistent Dialog Popup
+  useEffect(() => {
+    if (
+      !isLoadingSession &&
+      (isSessionError || !isSessionValid) &&
+      !sessionExpiredShown
+    ) {
+      setSessionExpiredShown(true);
+      localStorage.removeItem("is_authenticated");
+      openConfirmDialog({
+        title: "Session Expired",
+        description:
+          sessionResponse?.message ||
+          "Your session has expired or is invalid. Please sign in again to continue.",
+        confirmText: "Sign In",
+        iconType: "danger",
+        hideCancel: true,
+        onConfirm: () => {
+          navigate("/", { replace: true });
+        },
+      });
+    }
+  }, [
+    isLoadingSession,
+    isSessionError,
+    isSessionValid,
+    sessionExpiredShown,
+    sessionResponse,
+    openConfirmDialog,
+    navigate,
+  ]);
 
   // 2. Profile & Accounts queries (Only executed if session is valid)
   const {
@@ -99,13 +134,6 @@ export default function DashboardLayout() {
     enabled: isSessionValid && !!activeAccountId,
   });
 
-  // Handle session failure / invalid session cleanup
-  useEffect(() => {
-    if (!isLoadingSession && (isSessionError || !isSessionValid || isProfileError)) {
-      localStorage.removeItem("is_authenticated");
-    }
-  }, [isLoadingSession, isSessionError, isSessionValid, isProfileError]);
-
   // 3. Loading State (Only for authenticated users while verifying profile data)
   if (isLoadingSession || (isSessionValid && isLoadingProfile)) {
     return (
@@ -120,7 +148,7 @@ export default function DashboardLayout() {
     );
   }
 
-  // 4. Protection & Redirect Check: If session is invalid or missing, redirect to Login ("/")
+  // 4. Protection Fallback Check
   if (
     isSessionError ||
     !isSessionValid ||
