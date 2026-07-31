@@ -44,7 +44,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "kyeontan154@gmail.com", pin: "444444" },
+    defaultValues: { email: "kyeontan154@gmail.com", pin: "111111" },
   });
 
   const loginMutation = useMutation({
