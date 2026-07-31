@@ -1,26 +1,15 @@
-import { post, get } from "./api";
+import { post, get, postBlob } from "./api";
 
-// Fetch User Profile
-export async function getProfile(payload = {}) {
-  return post("/getProfile", payload);
+// -------------------------------------------------------
+// API Endpoints
+// -------------------------------------------------------
+
+// Welcome (Boot up)
+export async function welcomeApi(payload = {}) {
+  return post("/welcome", payload);
 }
 
-// Fetch Portal Notifications
-export async function getPortalNotifications(payload = {}) {
-  return post("/getPortalNotifications", payload);
-}
-
-// Fetch Account/Dashboard Info
-export async function getDashboardInfo(payload = {}) {
-  return post("/getDashboardInfo", payload);
-}
-
-// Fetch Transaction History
-export async function transactionHistory(payload = {}) {
-  return post("/transactionHistory", payload);
-}
-
-// User Authentication / Login
+// Authenticate / Login
 export async function loginWithPin(payload = {}) {
   return post("/loginWithPin", payload);
 }
@@ -30,36 +19,125 @@ export async function verifyOTP(payload = {}) {
   return post("/verifyOTP", payload);
 }
 
-// Logout
-export async function logout(payload = {}) {
-  return post("/logout", payload);
+// Get User Profile
+export async function getUserProfile(payload = {}) {
+  return post("/getUserProfile", payload);
 }
 
-// Welcome API
-export async function welcomeApi(payload = {}) {
-  return post("/welcome", payload);
+export async function getProfile(payload = {}) {
+  return post("/getProfile", payload);
 }
 
-// Branch Management APIs
+// Load User Profile (Fresh Data)
+export async function loadUserProfile(payload = {}) {
+  return post("/loadUserProfile", payload);
+}
+
+// Get Accounts
+export async function getAccounts(payload = {}) {
+  return post("/getAccounts", payload);
+}
+
+// Get Dashboard Info
+export async function getDashboardInfo(payload = {}) {
+  return post("/getDashboardInfo", payload);
+}
+
+// Get Portal Notifications
+export async function getPortalNotifications(payload = {}) {
+  return post("/getPortalNotifications", payload);
+}
+
+// Get Transaction History
+export async function transactionHistory(payload = {}) {
+  return post("/transactionHistory", payload);
+}
+
+// Branch / Subsidiary Management APIs
+export async function getSubsidiaries(payload = {}) {
+  return post("/getSubsidiaries", payload);
+}
+
 export async function listBranches(payload = {}) {
   return post("/listBranches", payload);
+}
+
+export async function createSubsidiary(payload = {}) {
+  return post("/createSubsidiary", payload);
 }
 
 export async function createBranch(payload = {}) {
   return post("/createBranch", payload);
 }
 
-export async function updateBranch(payload = {}) {
-  return post("/updateBranch", payload);
+export async function deleteSubsidiary(payload = {}) {
+  return post(`/deleteSubsidiary?subId=${payload.subId}`, payload);
 }
 
 export async function deleteBranch(payload = {}) {
   return post("/deleteBranch", payload);
 }
 
-// Profile & Settlement Accounts APIs
+export async function modifySubsidiary(payload = {}) {
+  return post("/modifySubsidiary", payload);
+}
+
+export async function updateBranch(payload = {}) {
+  return post("/updateBranch", payload);
+}
+
+export async function uploadDocument(payload = {}) {
+  return post("/uploadDocument", payload);
+}
+
+export async function getCashierList(payload = {}) {
+  return post("/getCashierList", payload);
+}
+
+export async function listOfTerminal(payload = {}) {
+  return post("/listOfTerminal", payload);
+}
+
+export async function generateReportMerchantSettlement(payload = {}) {
+  return postBlob("/generateReportMerchantSettlement", payload);
+}
+
+export async function generateReportMerchantRefund(payload = {}) {
+  return postBlob("/generateReportMerchantRefund", payload);
+}
+
+export async function generateReportBalanceStatement(payload = {}) {
+  return postBlob("/generateReportBalanceStatement", payload);
+}
+
+// Get Document Content
+export async function getDocumentContent(payload = {}) {
+  return post("/getDocumentContent", payload);
+}
+
+// Logout
+export async function logout(payload = {}) {
+  return post("/logout", payload);
+}
+
+// Update User Profile
 export async function updateProfile(payload = {}) {
   return post("/updateProfile", payload);
+}
+
+// Get Beneficiaries
+export async function getBeneficiaries(payload = {}) {
+  return post("/getBeneficiaries", payload);
+}
+
+// Get Transaction Limits
+export async function getTransactionLimits(payload = {}) {
+  return post("/getTransactionLimits", payload);
+}
+
+// Get User Settlement Accounts
+export async function getUserSetAccounts(payload = {}) {
+  return post("/getUserSetAccounts", payload);
 }
 
 export async function getBanks(payload = {}) {
@@ -70,14 +148,17 @@ export async function getAccountTitle(payload = {}) {
   return post("/getAccountTitle", payload);
 }
 
+// Create User Settlement Account
 export async function createUserSetAccount(payload = {}) {
   return post("/createUserSetAccount", payload);
 }
 
+// Update User Settlement Account
 export async function updateUserSetAccount(payload = {}) {
   return post("/updateUserSetAccount", payload);
 }
 
+// Delete User Settlement Account
 export async function deleteUserSetAccount(payload = {}) {
   return post("/deleteUserSetAccount", payload);
 }
