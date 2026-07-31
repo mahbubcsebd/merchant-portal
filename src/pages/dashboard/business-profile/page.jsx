@@ -1,13 +1,13 @@
 import { MapPin, Pencil, User, Share2, Download } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import QRCodeStyling from "qr-code-styling";
 import { useRef, useState, useEffect, useMemo } from "react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
 import { useDashboardContext } from "@/pages/dashboard/context";
-import { updateProfile } from "@/lib/api/endpoints";
+import { updateProfile, uploadDocument } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 
 function Card({ title, children, className = "" }) {
@@ -51,6 +51,72 @@ function InputField({
 export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
   const queryClient = useQueryClient();
+  const { openConfirmDialog } = useDialog();
+
+  // File upload state & ref
+  const fileInputRef = useRef(null);
+  const p = profile || {};
+  const [logoPreview, setLogoPreview] = useState(
+    p.logo || p.companyLogo || p.profileImg || null
+  );
+
+  // Sync logo preview if profile updates
+  useEffect(() => {
+    if (p.logo || p.companyLogo || p.profileImg) {
+      setLogoPreview(p.logo || p.companyLogo || p.profileImg);
+    }
+  }, [p]);
+
+  // Logo Upload Mutation
+  const logoUploadMutation = useMutation({
+    mutationFn: (base64) => uploadDocument({ imgData: base64, imgType: "proImgId" }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      openConfirmDialog({
+        title: "Success",
+        description: data?.message || "Company logo uploaded successfully.",
+        confirmText: "Close",
+        iconType: "success",
+        hideCancel: true,
+      });
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description:
+          err?.response?.data?.message || "Failed to upload company logo.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  // Handle image file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      openConfirmDialog({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setLogoPreview(base64);
+      logoUploadMutation.mutate(base64);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Get welcome API data (COUNTRYCODE)
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -62,7 +128,6 @@ export default function BusinessProfilePage() {
     }));
   }, [welcomeData]);
 
-  const { openConfirmDialog } = useDialog();
   const qrRef = useRef(null);
   const qrCodeInstance = useRef(null);
   const [selectedAccountId, setSelectedAccountId] = useState("");
@@ -78,9 +143,6 @@ export default function BusinessProfilePage() {
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
   }, [queryClient]);
-
-  // Fallback to empty if profile is somehow missing
-  const p = profile || {};
 
   const {
     register,
@@ -175,7 +237,7 @@ export default function BusinessProfilePage() {
         imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
         dotsOptions: { type: "extra-rounded", color: "#000" },
         backgroundOptions: { color: "#ffffff" },
-        image: "/images/logo.svg",
+        image: logoPreview || "/images/logo.svg",
       });
       if (qrRef.current) {
         // Clear anything currently in the ref
@@ -183,9 +245,9 @@ export default function BusinessProfilePage() {
         qrCodeInstance.current.append(qrRef.current);
       }
     } else {
-      qrCodeInstance.current.update({ data: qrValue });
+      qrCodeInstance.current.update({ data: qrValue, image: logoPreview || "/images/logo.svg" });
     }
-  }, [qrValue]);
+  }, [qrValue, logoPreview]);
 
   const handleDownloadQR = () => {
     if (qrCodeInstance.current) {
@@ -218,22 +280,49 @@ export default function BusinessProfilePage() {
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
               {/* Logo Upload Section */}
               <div className="flex flex-col items-center gap-3 shrink-0">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#2563eb] p-1">
-                  <div className="w-full h-full rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[#2563eb] dark:text-white">
-                    <User
-                      className="w-10 h-10 sm:w-12 sm:h-12"
-                      strokeWidth={1.5}
-                    />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#2563eb] p-1 cursor-pointer group relative overflow-hidden transition-all hover:scale-105"
+                  title="Click to upload logo"
+                >
+                  <div className="w-full h-full rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[#2563eb] dark:text-white overflow-hidden">
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt="Company Logo"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <User
+                        className="w-10 h-10 sm:w-12 sm:h-12"
+                        strokeWidth={1.5}
+                      />
+                    )}
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Pencil className="w-6 h-6 text-white" />
+                    </div>
                   </div>
                 </div>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40">
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40 font-medium">
                   Upload Company Logo
                 </span>
                 <GlobalButton
+                  type="button"
                   variant="primary"
+                  isLoading={logoUploadMutation.isPending}
+                  loadingText="Uploading..."
+                  onClick={() => fileInputRef.current?.click()}
                   className="px-5 py-1.5 h-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
                 >
-                  Upload
+                  {logoUploadMutation.isPending ? "Uploading..." : "Upload"}
                 </GlobalButton>
               </div>
 
