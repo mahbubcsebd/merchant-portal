@@ -1,8 +1,10 @@
 import { LoginForm } from '@/components/LoginForm';
-
+import { useLanguage } from '@/components/globals/LanguageProvider';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Main Split ───────────────────────────────── */}
@@ -43,7 +45,6 @@ export default function Home() {
                 alt="mPay Network"
                 width={120}
                 height={47}
-                priority
                 className="w-[95px] sm:w-[110px] lg:w-[115px] xl:w-[120px] 2xl:w-[125px] h-auto"
               />
             </Link>
@@ -55,7 +56,7 @@ export default function Home() {
             <div className="inline-flex w-fit items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-[#e65625] animate-pulse" />
               <span className="text-xs sm:text-sm font-medium text-slate-300 tracking-wide">
-                Merchant Portal
+                {t('merchant_operations_title', 'Merchant Portal')}
               </span>
             </div>
 
@@ -69,13 +70,7 @@ export default function Home() {
               2xl:text-6xl
               font-bold leading-[1.12] tracking-tight"
             >
-              Changing the way
-              <br />
-              your business
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-                moves forward.
-              </span>
+              {t('mp_dashboard_subtitle', 'Changing the way your business moves forward.')}
             </h1>
 
             <p
@@ -94,7 +89,7 @@ export default function Home() {
             {/* Stats */}
             <div className="flex gap-8 xl:gap-10 pt-2">
               {[
-                { value: '50K+', label: 'Merchants' },
+                { value: '50K+', label: t('active_cashiers_title', 'Merchants') },
                 { value: '99.9%', label: 'Uptime' },
                 { value: '$2B+', label: 'Processed' },
               ].map(({ value, label }) => (

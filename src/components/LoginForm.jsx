@@ -148,10 +148,10 @@ export function LoginForm() {
       {/* ── Heading ─────────────────────────────── */}
       <div className="mb-8 xl:mb-10 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          {t("welcome_back", "Welcome back")}
+          {t("wallet_pin_login", t("login_with_pin", "Welcome back"))}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-          {t("signin_subtitle", "Sign in to your Merchant Portal account")}
+          {t("enter_pin_to_continue", "Sign in to your Merchant Portal account")}
         </p>
       </div>
 
@@ -165,7 +165,7 @@ export function LoginForm() {
         <GlobalInput
           id="email"
           type="email"
-          label={t("email_label", "Email Address")}
+          label={t("crEmail", "Email Address")}
           required
           placeholder="merchant@example.com"
           leftIcon={<Mail size={16} />}
@@ -181,14 +181,14 @@ export function LoginForm() {
               htmlFor="pin"
               className="text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              {t("wallet_pin", "Wallet PIN")}{" "}
+              {t("enter_your_pin", t("enter_pin", "Wallet PIN"))}{" "}
               <span className="text-[#e65625]">*</span>
             </label>
             <Link
               to="/forgot-pin"
               className="text-xs font-semibold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2"
             >
-              {t("forgot_pin", "Forgot PIN?")}
+              {t("beforeLoginForgotPIN", t("forget_wallet_pin", "Forgot PIN?"))}
             </Link>
           </div>
           <GlobalInput
@@ -217,10 +217,10 @@ export function LoginForm() {
           variant="primary"
           fullWidth
           isLoading={loginMutation.isPending}
-          loadingText={t("signing_in", "Signing in…")}
+          loadingText={t("verifying", "Signing in…")}
           className="mt-2"
         >
-          {t("login", "Sign In")}
+          {t("authenticateSignIn", "Sign In")}
         </GlobalButton>
       </form>
 
@@ -231,7 +231,7 @@ export function LoginForm() {
           to="/enroll"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
         >
-          {t("enroll_as_merchant", "Enroll as Merchant")}
+          {t("registerMerchant", "Enroll as Merchant")}
         </Link>
       </p>
 
@@ -240,10 +240,10 @@ export function LoginForm() {
         <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-[#0f1829] border border-slate-200 dark:border-white/5 shadow-2xl rounded-2xl overflow-hidden">
           <DialogHeader className="flex flex-col items-center">
             <DialogTitle className="text-xl font-bold text-[#2563eb] dark:text-blue-400 mb-2">
-              {t("otp_confirm_title", "Confirmation OTP")}
+              {t("verify_registration", t("otp_confirm_title", "Confirmation OTP"))}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-[300px] leading-relaxed">
-              {t("otp_confirm_desc", "We have just sent you a One-time PIN via SMS and to your email.")}
+              {t("otp_text", "We have just sent you a One-time PIN via SMS and to your email.")}
             </DialogDescription>
           </DialogHeader>
 
@@ -290,7 +290,7 @@ export function LoginForm() {
           </div>
 
           <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            <span>{t("didnt_receive_code", "Didn't receive code?")}</span>
+            <span>{t("otp_notReceive", "Didn't receive code?")}</span>
             <button
               type="button"
               disabled={resendOTPMutation.isPending}
@@ -300,7 +300,7 @@ export function LoginForm() {
                 resendOTPMutation.mutate();
               }}
             >
-              {resendOTPMutation.isPending ? t("resending", "Resending...") : t("resend_code", "Resend Code")}
+              {resendOTPMutation.isPending ? t("verifying", "Resending...") : t("otp_resend", "Resend Code")}
             </button>
           </div>
         </DialogContent>

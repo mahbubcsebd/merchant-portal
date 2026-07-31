@@ -46,7 +46,7 @@ export function LanguageProvider({ children }) {
   const { data: langPackResponse, isLoading: isLangLoading } = useQuery({
     queryKey: ['langPack', lang],
     queryFn: () => getLangPack({ langID: lang, langId: lang }),
-    staleTime: 15 * 60 * 1000, // 15 minutes stale time
+    staleTime: 0, // Always fetch fresh translation pack when language changes
     refetchOnWindowFocus: false,
   });
 
