@@ -28,19 +28,24 @@ export function LanguageProvider({ children }) {
     }
   });
 
-  // Fetch translation packs from backend
+  // Fetch translation packs from backend for current language
   const { data: langPackResponse } = useQuery({
-    queryKey: ['langPack'],
-    queryFn: () => getLangPack(),
+    queryKey: ['langPack', lang],
+    queryFn: () => getLangPack({ langID: lang, langId: lang }),
     staleTime: 10 * 60 * 1000, // 10 minutes stale time
   });
 
   // Build lookup dictionary whenever language or response changes
   const translationMap = useMemo(() => {
-    if (langPackResponse?.language?.[lang]?.data) {
-      const list = langPackResponse.language[lang].data;
+    const languageObj = langPackResponse?.language;
+    const langData =
+      languageObj?.[lang]?.data ||
+      languageObj?.[lang.toLowerCase()]?.data ||
+      (languageObj && Object.values(languageObj)[0]?.data);
+
+    if (langData && Array.isArray(langData)) {
       const dict = {};
-      list.forEach((item) => {
+      langData.forEach((item) => {
         if (item.labelId) {
           dict[item.labelId] = item.labelValue;
         }
