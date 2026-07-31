@@ -4,19 +4,93 @@ import { Link } from 'react-router-dom';
 import { useDialog } from "@/components/globals/DialogProvider"
 import GlobalButton from "@/components/globals/GlobalButton"
 import BillerTemplateFormFields from "@/components/pay-bills/BillerTemplateFormFields"
-
-const MOCK_TEMPLATES = [
-  { 
-    id: 1, 
-    billerName: "Bank of America", 
-    templateName: "Bill Template 001", 
-    referenceNo: "12345", 
-    currency: "XCG" 
-  },
-]
+import { usePayBills } from "@/hooks/usePayBills"
+import { useQueryClient } from "@tanstack/react-query"
 
 export default function ManageBillTemplatesPage() {
-  const { openFormDialog, openConfirmDialog, openDetailDialog } = useDialog()
+  const { openFormDialog, openConfirmDialog, openDetailDialog, openPreconfirmDialog, openSuccessDialog, openGlobalPopup, closeDialog } = useDialog()
+  const { userBillersQuery, createBillTemplateMutation, updateBillTemplateMutation, deleteBillTemplateMutation } = usePayBills()
+  const queryClient = useQueryClient()
+  const welcomeData = queryClient.getQueryData(["welcome"])
+
+  const getCurrencyLabel = (currencyId) => {
+    if (!welcomeData?.metaData?.CURRENCY) return currencyId;
+    const curr = welcomeData.metaData.CURRENCY.find(c => String(c.id) === String(currencyId));
+    return curr ? curr.title : currencyId;
+  };
+
+  const templates = (userBillersQuery.data || []).map((b, index) => ({
+    id: b.BILLID || index,
+    billerId: b.BILLERID,
+    billerName: b.BLRDESC || b.BILLERNAME || "Unknown",
+    templateName: b.BILLNAME || "Template",
+    referenceNo: b.REFNUM || b.REFNO || b.REFERENCE || "",
+    currency: b.CURRENCY || b.BILLCUR || b.BLRWALCUR || "N/A",
+    raw: b
+  }))
+
+  const handleAddClick = (initialValues = null) => {
+    const isEdit = !!initialValues?.id;
+    openFormDialog({
+      title: isEdit ? "Edit Bill Template" : "Create Bill Template",
+      isView: false,
+      submitText: isEdit ? "Save Changes" : "Create",
+      size: "sm:max-w-md",
+      content: <BillerTemplateFormFields data={initialValues} isView={false} />,
+      onSave: (values) => {
+        openPreconfirmDialog({
+          title: "Confirm Bill Template",
+          details: {
+            "Biller Name": values.billerName,
+            "Bill Template Name": values.billName,
+            "Reference No": values.refNum,
+            "Currency": getCurrencyLabel(values.currency)
+          },
+          onChange: () => {
+            handleAddClick(values);
+          },
+          onSubmit: () => {
+            const payload = {
+              billerId: values.billerId,
+              billName: values.billName,
+              refNum: values.refNum,
+              currency: values.currency,
+              billerName: values.billerName
+            };
+
+            const mutation = isEdit ? updateBillTemplateMutation : createBillTemplateMutation;
+            if (isEdit) payload.billId = initialValues.id;
+
+            mutation.mutate(payload, {
+              onSuccess: () => {
+                openSuccessDialog({
+                  title: isEdit ? "Template Updated" : "Template Created",
+                  message: `Your bill template has been successfully ${isEdit ? "updated" : "created"}.`,
+                  details: {
+                    "Bill Template Name": values.billName,
+                    "Biller Name": values.billerName,
+                    "Reference No": values.refNum,
+                    "Currency": getCurrencyLabel(values.currency)
+                  }
+                });
+              },
+              onError: (err) => {
+                openGlobalPopup({
+                  title: "Error",
+                  description: err.message || `Failed to ${isEdit ? "update" : "create"} bill template.`,
+                  type: "error"
+                });
+              }
+            });
+          }
+        });
+        
+        // Return false to prevent the FormDialogShell from calling onClose() 
+        // and overriding our openPreconfirmDialog state.
+        return false;
+      }
+    });
+  };
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
@@ -32,18 +106,7 @@ export default function ManageBillTemplatesPage() {
         {/* Top Controls */}
         <div className="flex justify-end mb-6">
           <GlobalButton 
-            onClick={() => {
-              openFormDialog({
-                title: "Create Bill Template",
-                isView: false,
-                submitText: "Create",
-                size: "sm:max-w-md",
-                content: <BillerTemplateFormFields data={null} isView={false} />,
-                onSave: (values) => {
-                  console.log("Create bill template:", values)
-                }
-              })
-            }}
+            onClick={() => handleAddClick()}
             variant="primary"
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10 px-8"
           >
@@ -61,7 +124,7 @@ export default function ManageBillTemplatesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-              {MOCK_TEMPLATES.map((template, idx) => (
+              {templates.map((template, idx) => (
                 <tr key={template.id} className={`${idx % 2 === 0 ? 'bg-blue-50/50 dark:bg-white/[0.02]' : 'bg-white dark:bg-transparent'} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}>
                   <td className="px-5 py-4 text-slate-600 dark:text-white/70">{template.templateName}</td>
                   <td className="px-5 py-4">
@@ -74,7 +137,7 @@ export default function ManageBillTemplatesPage() {
                               { label: "Biller Name", value: template.billerName },
                               { label: "Bill Template Name", value: template.templateName },
                               { label: "Reference No", value: template.referenceNo },
-                              { label: "Currency", value: template.currency }
+                              { label: "Currency", value: getCurrencyLabel(template.currency) }
                             ],
                             doneText: "Back"
                           })
@@ -85,18 +148,7 @@ export default function ManageBillTemplatesPage() {
                         <Eye size={18} />
                       </button>
                       <button 
-                        onClick={() => {
-                          openFormDialog({
-                            title: "Edit Bill Template",
-                            isView: false,
-                            submitText: "Save",
-                            size: "sm:max-w-md",
-                            content: <BillerTemplateFormFields data={template} isView={false} />,
-                            onSave: (values) => {
-                              console.log("Update bill template:", values)
-                            }
-                          })
-                        }} 
+                        onClick={() => handleAddClick(template)}
                         className="text-slate-400 hover:text-emerald-500 transition-colors" 
                         title="Edit"
                       >
@@ -104,15 +156,36 @@ export default function ManageBillTemplatesPage() {
                       </button>
                       <button 
                         onClick={() => {
-                          openConfirmDialog({
+                          openPreconfirmDialog({
                             title: "Delete Template?",
                             description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
+                            details: {
+                              "Biller Name": template.billerName,
+                              "Bill Template Name": template.templateName,
+                              "Reference No": template.referenceNo,
+                              "Currency": getCurrencyLabel(template.currency)
+                            },
                             confirmText: "Delete",
                             iconType: "danger",
-                            onConfirm: () => {
-                              console.log("Delete template:", template.id)
+                            onChange: () => closeDialog(),
+                            onSubmit: () => {
+                              deleteBillTemplateMutation.mutate({ billId: template.id }, {
+                                onSuccess: () => {
+                                  openSuccessDialog({
+                                    title: "Template Deleted",
+                                    message: "The bill template has been successfully deleted.",
+                                  });
+                                },
+                                onError: (err) => {
+                                  openGlobalPopup({
+                                    title: "Error",
+                                    description: err.message || "Failed to delete template.",
+                                    type: "error"
+                                  });
+                                }
+                              });
                             }
-                          })
+                          });
                         }} 
                         className="text-slate-400 hover:text-rose-500 transition-colors" 
                         title="Delete"
@@ -123,7 +196,7 @@ export default function ManageBillTemplatesPage() {
                   </td>
                 </tr>
               ))}
-              {MOCK_TEMPLATES.length === 0 && (
+              {templates.length === 0 && (
                 <tr>
                   <td colSpan="2" className="px-5 py-8 text-center text-slate-500 dark:text-white/50">
                     No bill templates found.
@@ -136,7 +209,7 @@ export default function ManageBillTemplatesPage() {
 
         {/* Card Feed — Mobile View (Hidden on desktop) */}
         <div className="md:hidden space-y-3 mb-8">
-          {MOCK_TEMPLATES.map((template) => (
+          {templates.map((template) => (
             <div 
               key={template.id}
               className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
@@ -158,7 +231,7 @@ export default function ManageBillTemplatesPage() {
                         { label: "Biller Name", value: template.billerName },
                         { label: "Bill Template Name", value: template.templateName },
                         { label: "Reference No", value: template.referenceNo },
-                        { label: "Currency", value: template.currency }
+                        { label: "Currency", value: getCurrencyLabel(template.currency) }
                       ],
                       doneText: "Back"
                     })
@@ -169,18 +242,7 @@ export default function ManageBillTemplatesPage() {
                   <Eye size={18} />
                 </button>
                 <button 
-                  onClick={() => {
-                    openFormDialog({
-                      title: "Edit Bill Template",
-                      isView: false,
-                      submitText: "Save",
-                      size: "sm:max-w-md",
-                      content: <BillerTemplateFormFields data={template} isView={false} />,
-                      onSave: (values) => {
-                        console.log("Update bill template:", values)
-                      }
-                    })
-                  }} 
+                  onClick={() => handleAddClick(template)}
                   className="text-slate-400 hover:text-emerald-500 transition-colors" 
                   title="Edit"
                 >
@@ -188,15 +250,36 @@ export default function ManageBillTemplatesPage() {
                 </button>
                 <button 
                   onClick={() => {
-                    openConfirmDialog({
+                    openPreconfirmDialog({
                       title: "Delete Template?",
                       description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
+                      details: {
+                        "Biller Name": template.billerName,
+                        "Bill Template Name": template.templateName,
+                        "Reference No": template.referenceNo,
+                        "Currency": getCurrencyLabel(template.currency)
+                      },
                       confirmText: "Delete",
                       iconType: "danger",
-                      onConfirm: () => {
-                        console.log("Delete template:", template.id)
+                      onChange: () => closeDialog(),
+                      onSubmit: () => {
+                        deleteBillTemplateMutation.mutate({ billId: template.id }, {
+                          onSuccess: () => {
+                            openSuccessDialog({
+                              title: "Template Deleted",
+                              message: "The bill template has been successfully deleted.",
+                            });
+                          },
+                          onError: (err) => {
+                            openGlobalPopup({
+                              title: "Error",
+                              description: err.message || "Failed to delete template.",
+                              type: "error"
+                            });
+                          }
+                        });
                       }
-                    })
+                    });
                   }} 
                   className="text-slate-400 hover:text-rose-500 transition-colors" 
                   title="Delete"
@@ -206,7 +289,7 @@ export default function ManageBillTemplatesPage() {
               </div>
             </div>
           ))}
-          {MOCK_TEMPLATES.length === 0 && (
+          {templates.length === 0 && (
             <div className="p-8 text-center text-slate-500 dark:text-white/50 bg-white dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
               No bill templates found.
             </div>

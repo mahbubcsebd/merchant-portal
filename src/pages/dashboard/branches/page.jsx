@@ -18,7 +18,14 @@ export default function BranchesPage() {
     openGlobalPopup,
   } = useDialog();
 
-  const { branches, isLoading, addMutation, deleteMutation, queryClient } = useBranches();
+  const {
+    branches,
+    isLoading,
+    addMutation,
+    deleteMutation,
+    editMutation,
+    queryClient,
+  } = useBranches();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,7 +44,7 @@ export default function BranchesPage() {
   const getLabel = (type, value) => {
     if (!welcomeData?.metaData || !welcomeData.metaData[type]) return value;
     const option = welcomeData.metaData[type].find(
-      (item) => String(item.id) === String(value)
+      (item) => String(item.id) === String(value),
     );
     return option ? option.title : value;
   };
@@ -66,8 +73,7 @@ export default function BranchesPage() {
             "Street No": values.streetNum,
             "Unit Name": values.unitName,
             "Zip Code": values.subZip,
-            "Branch Category":
-              values.subCategoryLabel || values.subCategory,
+            "Branch Category": values.subCategoryLabel || values.subCategory,
             "Business ID Type":
               values.businessIdTypeLabel || values.businessIdType,
             "Business ID Number": values.businessIdNum,
@@ -75,17 +81,38 @@ export default function BranchesPage() {
             Status: values.subStatusLabel || values.subStatus,
           },
           onChange: () => {
-            // Go back to form with filled values
             handleAddClick(values);
           },
           onSubmit: () => {
-            // Transform payload to match API requirements
+            // Transform payload to exactly match old portal requirements
             const payload = {
-              ...values,
               businessCategory: values.subCategory,
+              businessIdImg: values.businessIdImg || "",
+              businessIdImg_: "assets/take_photo.svg",
+              businessIdNum: values.businessIdNum,
+              businessIdType: values.businessIdType,
+              businessPhone: values.businessPhone,
               businessTaxId: values.businessIdNum,
+              coordLat: "1.1",
+              coordLong: "1.1",
               countryCode: values.mobileDial || "",
               countryCodeB: values.businessDial || "",
+              custType: "C",
+              emailAddr: values.emailAddr,
+              mobilePhone: values.mobilePhone,
+              proImgId: values.proImgId || "",
+              proImgId_: "assets/take_photo.svg",
+              streetName: values.streetName,
+              streetNum: values.streetNum,
+              subCategory: values.subCategory,
+              subCity: values.subCity,
+              subCountry: values.subCountry,
+              subName: values.subName,
+              subState: values.subState,
+              subStatus: values.subStatus || "A",
+              subZip: values.subZip,
+              unitName: values.unitName,
+              website: values.website,
             };
 
             addMutation.mutate(payload, {
@@ -99,29 +126,26 @@ export default function BranchesPage() {
                     title: "Branch Created",
                     message: "The branch has been successfully created.",
                     details: {
-                      "Branch Name": variables.subName,
-                      "Email Address": variables.emailAddr,
+                      "Branch Name": values.subName,
+                      "Email Address": values.emailAddr,
                       "Mobile Phone":
-                        (variables.mobileDial || "") + variables.mobilePhone,
+                        (values.mobileDial || "") + values.mobilePhone,
                       "Business Phone":
-                        (variables.businessDial || "") +
-                        variables.businessPhone,
-                      Country:
-                        variables.subCountryLabel || variables.subCountry,
-                      State: variables.subState,
-                      City: variables.subCity,
-                      "Street Name": variables.streetName,
-                      "Street No": variables.streetNum,
-                      "Unit Name": variables.unitName,
-                      "Zip Code": variables.subZip,
+                        (values.businessDial || "") + values.businessPhone,
+                      Country: values.subCountryLabel || values.subCountry,
+                      State: values.subState,
+                      City: values.subCity,
+                      "Street Name": values.streetName,
+                      "Street No": values.streetNum,
+                      "Unit Name": values.unitName,
+                      "Zip Code": values.subZip,
                       "Branch Category":
-                        variables.subCategoryLabel || variables.subCategory,
+                        values.subCategoryLabel || values.subCategory,
                       "Business ID Type":
-                        variables.businessIdTypeLabel ||
-                        variables.businessIdType,
-                      "Business ID Number": variables.businessIdNum,
-                      Website: variables.website,
-                      Status: variables.subStatusLabel || variables.subStatus,
+                        values.businessIdTypeLabel || values.businessIdType,
+                      "Business ID Number": values.businessIdNum,
+                      Website: values.website,
+                      Status: values.subStatusLabel || values.subStatus,
                     },
                   });
                 } else {
@@ -148,6 +172,8 @@ export default function BranchesPage() {
             });
           },
         });
+
+        return false;
       },
     });
   };
@@ -160,32 +186,184 @@ export default function BranchesPage() {
         { label: "Email Address", value: branch.EMAILADDR || "N/A" },
         { label: "Mobile Phone", value: branch.MOBILEPHONE || "N/A" },
         { label: "Business Phone", value: branch.BUSINESSPHONE || "N/A" },
-        { label: "Country", value: getLabel("COUNTRYCODE", branch.SUBCOUNTRY) || "N/A" },
+        {
+          label: "Country",
+          value: getLabel("COUNTRYCODE", branch.SUBCOUNTRY) || "N/A",
+        },
         { label: "State", value: branch.SUBSTATE || "N/A" },
         { label: "City", value: branch.SUBCITY || branch.CITY || "N/A" },
         { label: "Street Name", value: branch.STREETNAME || "N/A" },
         { label: "Street No", value: branch.STREETNUM || "N/A" },
         { label: "Unit Name", value: branch.UNITNAME || "N/A" },
         { label: "Zip Code", value: branch.SUBZIP || "N/A" },
-        { label: "Branch Category", value: getLabel("SUBCATEGORY", branch.SUBCATEGORY) || "N/A" },
-        { label: "Business ID Type", value: getLabel("BUSINESSIDTYPE", branch.BUSINESSIDTYPE) || "N/A" },
+        {
+          label: "Branch Category",
+          value: getLabel("SUBCATEGORY", branch.SUBCATEGORY) || "N/A",
+        },
+        {
+          label: "Business ID Type",
+          value: getLabel("BUSINESSIDTYPE", branch.BUSINESSIDTYPE) || "N/A",
+        },
         { label: "Business ID Number", value: branch.BUSINESSIDNUM || "N/A" },
         { label: "Website", value: branch.WEBSITE || "N/A" },
-        { label: "Status", value: branch.SUBSTATUS === "A" ? "Active" : "Inactive" },
+        {
+          label: "Status",
+          value: branch.SUBSTATUS === "A" ? "Active" : "Inactive",
+        },
       ],
-      doneText: "Close"
+      doneText: "Close",
     });
   };
 
   const handleEditClick = (branch) => {
+    // Map uppercase API fields back to camelCase form fields
+    const initialValues = {
+      subId: branch.subId || branch.CORPCUSTSUBID,
+      subName: branch.subName || branch.SUBNAME,
+      emailAddr: branch.emailAddr || branch.EMAILADDR,
+      mobileDial: branch.mobileDial || branch.PHCOUNTRYCODE,
+      mobilePhone: branch.mobilePhone || branch.MOBILEPHONE,
+      businessDial: branch.businessDial || branch.PHCOUNTRYCODEBUSINESS,
+      businessPhone: branch.businessPhone || branch.BUSINESSPHONE,
+      subCountry: branch.subCountry || branch.SUBCOUNTRY,
+      subState: branch.subState || branch.SUBSTATE,
+      subCity: branch.subCity || branch.SUBCITY || branch.CITY,
+      streetName: branch.streetName || branch.STREETNAME,
+      streetNum: branch.streetNum || branch.STREETNUMB,
+      unitName: branch.unitName || branch.UNITNAME,
+      subZip: branch.subZip || branch.SUBZIP,
+      subCategory: branch.subCategory || branch.SUBCATEGORY,
+      businessIdType: branch.businessIdType || branch.BUSINESSIDTYPE,
+      businessIdNum: branch.businessIdNum || branch.BUSSINESSIDNUMB,
+      website: branch.website || branch.WEBSITE,
+      proImgId: branch.proImgId || branch.PROFIMGID,
+      businessIdImg: branch.businessIdImg || branch.BUSINESSIDIMAGE,
+      subStatus: branch.subStatus || branch.SUBSTATUS || "A",
+    };
     openFormDialog({
       title: "Edit Branch",
       isView: false,
       submitText: "Save",
       size: "sm:max-w-4xl",
-      content: <BranchFormFields data={branch} isView={false} />,
+      content: <BranchFormFields data={initialValues} isView={false} />,
       onSave: (values) => {
-        console.log("Branch to update:", values);
+        // Show preconfirm screen
+        openPreconfirmDialog({
+          title: "Confirm Updated Branch Details",
+          details: {
+            "Branch Name": values.subName,
+            "Email Address": values.emailAddr,
+            "Mobile Phone": (values.mobileDial || "") + values.mobilePhone,
+            "Business Phone":
+              (values.businessDial || "") + values.businessPhone,
+            Country: values.subCountryLabel || values.subCountry,
+            State: values.subState,
+            City: values.subCity,
+            "Street Name": values.streetName,
+            "Street No": values.streetNum,
+            "Unit Name": values.unitName,
+            "Zip Code": values.subZip,
+            "Branch Category": values.subCategoryLabel || values.subCategory,
+            "Business ID Type":
+              values.businessIdTypeLabel || values.businessIdType,
+            "Business ID Number": values.businessIdNum,
+            Website: values.website,
+            Status: values.subStatusLabel || values.subStatus,
+          },
+          onChange: () => {
+            // Re-open edit form with the updated values
+            const updatedBranch = { ...branch, ...values };
+            handleEditClick(updatedBranch);
+          },
+          onSubmit: () => {
+            const payload = {
+              businessCategory: values.subCategory,
+              businessIdImg: values.businessIdImg || "",
+              businessIdImg_: "assets/take_photo.svg",
+              businessIdNum: values.businessIdNum,
+              businessIdType: values.businessIdType,
+              businessPhone: values.businessPhone,
+              businessTaxId: values.businessIdNum,
+              coordLat: "1.1",
+              coordLong: "1.1",
+              countryCode: values.mobileDial || "",
+              countryCodeB: values.businessDial || "",
+              custType: "C",
+              emailAddr: values.emailAddr,
+              mobilePhone: values.mobilePhone,
+              proImgId: values.proImgId || "",
+              proImgId_: "assets/take_photo.svg",
+              streetName: values.streetName,
+              streetNum: values.streetNum,
+              subCategory: values.subCategory,
+              subCity: values.subCity,
+              subCountry: values.subCountry,
+              subId: initialValues.subId,
+              subName: values.subName,
+              subState: values.subState,
+              subStatus: values.subStatus || "A",
+              subZip: values.subZip,
+              unitName: values.unitName,
+              website: values.website,
+            };
+
+            editMutation.mutate(payload, {
+              onSuccess: (res, variables) => {
+                if (
+                  res.status === "success" &&
+                  (res.statusCode === "0" || res.statusCode === 0)
+                ) {
+                  queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
+                  openSuccessDialog({
+                    title: "Branch Updated",
+                    message: "The branch has been successfully updated.",
+                    details: {
+                      "Branch Name": values.subName,
+                      "Email Address": values.emailAddr,
+                      "Mobile Phone":
+                        (values.mobileDial || "") + values.mobilePhone,
+                      "Business Phone":
+                        (values.businessDial || "") + values.businessPhone,
+                      Country: values.subCountryLabel || values.subCountry,
+                      State: values.subState,
+                      City: values.subCity,
+                      "Street Name": values.streetName,
+                      "Street No": values.streetNum,
+                      "Unit Name": values.unitName,
+                      "Zip Code": values.subZip,
+                      "Branch Category":
+                        values.subCategoryLabel || values.subCategory,
+                      "Business ID Type":
+                        values.businessIdTypeLabel || values.businessIdType,
+                      "Business ID Number": values.businessIdNum,
+                      Website: values.website,
+                      Status: values.subStatusLabel || values.subStatus,
+                    },
+                  });
+                } else {
+                  openGlobalPopup({
+                    title: "Error",
+                    description: res.message || "Failed to update branch",
+                    type: "error",
+                    onClose: () => {
+                      const updatedBranch = { ...branch, ...values };
+                      handleEditClick(updatedBranch);
+                    },
+                  });
+                }
+              },
+              onError: (err) => {
+                openGlobalPopup({
+                  title: "Error",
+                  description: err.message || "An unexpected error occurred",
+                  type: "error",
+                });
+              },
+            });
+          },
+        });
+
+        return false;
       },
     });
   };
@@ -208,7 +386,9 @@ export default function BranchesPage() {
                 queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
                 openGlobalPopup({
                   title: "Branch Deleted",
-                  description: res.message || `The branch ${branch.SUBNAME} has been successfully deleted.`,
+                  description:
+                    res.message ||
+                    `The branch ${branch.SUBNAME} has been successfully deleted.`,
                   type: "success",
                 });
               } else {
@@ -226,8 +406,9 @@ export default function BranchesPage() {
                 type: "error",
               });
             },
-          }
+          },
         );
+        return false;
       },
     });
   };

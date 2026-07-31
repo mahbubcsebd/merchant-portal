@@ -84,7 +84,7 @@ export function DialogProvider({ children }) {
       return "sm:max-w-md";
     }
     if (dialogType === "preconfirm") return "sm:max-w-lg";
-    if (dialogType === "success") return "sm:max-w-sm";
+    if (dialogType === "success") return "sm:max-w-lg";
     if (dialogType === "globalPopup") return "sm:max-w-sm";
     if (dialogType === "pay") return "sm:max-w-md";
     return "sm:max-w-md";

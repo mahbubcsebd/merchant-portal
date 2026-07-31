@@ -10,6 +10,7 @@ export default function FormDialogShell({
   onSave,
   onClose,
   children,
+  disableAutoValidation = false,
 }) {
   const [formErrors, setFormErrors] = useState({});
 
@@ -38,7 +39,7 @@ export default function FormDialogShell({
       }
     });
 
-    if (Object.keys(errors).length > 0) {
+    if (!disableAutoValidation && Object.keys(errors).length > 0) {
       setFormErrors(errors);
       firstErrorField?.focus();
       return;
@@ -49,12 +50,21 @@ export default function FormDialogShell({
     const formData = new FormData(form);
     const values = Object.fromEntries(formData.entries());
 
-    let shouldClose = true;
+    let result;
     if (onSave) {
-      shouldClose = onSave(values);
+      result = onSave(values, setFormErrors);
     }
-    if (shouldClose !== false) {
-      onClose();
+    
+    if (result instanceof Promise) {
+      result.then((shouldClose) => {
+        if (shouldClose !== false) {
+          onClose();
+        }
+      }).catch(console.error);
+    } else {
+      if (result !== false) {
+        onClose();
+      }
     }
   };
 
