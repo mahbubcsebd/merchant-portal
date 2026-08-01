@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from '@/components/ui/dropdown-menu';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Map notification types to icons and colors
 const notificationMeta = {
@@ -111,6 +112,9 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Theme Toggle */}
         {mounted && (
           <button
