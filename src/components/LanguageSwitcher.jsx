@@ -18,7 +18,7 @@ export function LanguageSwitcher() {
         <SelectTrigger
           className="
             group
-            h-8 sm:h-9 gap-1 sm:gap-1.5 px-2 sm:px-3
+            h-8 sm:h-9 gap-1 sm:gap-1.5 px-2.5 sm:px-3
             rounded-full
             border border-slate-200/80 dark:border-white/10
             bg-white/80 dark:bg-[#0f1829]/80
@@ -33,12 +33,12 @@ export function LanguageSwitcher() {
         >
           <Globe
             size={13}
-            className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200 shrink-0 hidden xs:inline-block"
+            className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200 shrink-0"
           />
-          <span className="flex items-center gap-1 shrink-0">
-            <span className="text-xs sm:text-sm">{currentLang.flag}</span>
+          <span className="flex items-center gap-1.5 shrink-0">
+            <span className="hidden sm:inline">{currentLang.flag}</span>
             <span className="hidden sm:inline">{currentLang.label}</span>
-            <span className="inline sm:hidden uppercase font-bold text-[10px] sm:text-xs tracking-wider">{currentLang.code}</span>
+            <span className="inline sm:hidden uppercase font-bold text-xs tracking-wider">{currentLang.code}</span>
           </span>
         </SelectTrigger>
 
