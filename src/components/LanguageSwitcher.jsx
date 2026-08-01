@@ -4,7 +4,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { useLanguage, SUPPORTED_LANGUAGES } from "@/components/globals/LanguageProvider";
 
@@ -19,7 +18,7 @@ export function LanguageSwitcher() {
         <SelectTrigger
           className="
             group
-            h-9 gap-1.5 px-3
+            h-8 sm:h-9 gap-1 sm:gap-1.5 px-2 sm:px-3
             rounded-full
             border border-slate-200/80 dark:border-white/10
             bg-white/80 dark:bg-[#0f1829]/80
@@ -29,22 +28,23 @@ export function LanguageSwitcher() {
             shadow-sm
             hover:border-[#2563eb]/40 hover:text-[#2563eb] hover:bg-white dark:hover:bg-[#131c31]
             focus-visible:ring-2 focus-visible:ring-[#2563eb]/30 focus-visible:border-[#2563eb]/40
-            transition-all duration-200 cursor-pointer
+            transition-all duration-200 cursor-pointer shrink-0
           "
         >
           <Globe
-            size={14}
-            className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200 shrink-0"
+            size={13}
+            className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200 shrink-0 hidden xs:inline-block"
           />
-          <span className="flex items-center gap-1.5">
-            <span>{currentLang.flag}</span>
-            <span>{currentLang.label}</span>
+          <span className="flex items-center gap-1 shrink-0">
+            <span className="text-xs sm:text-sm">{currentLang.flag}</span>
+            <span className="hidden sm:inline">{currentLang.label}</span>
+            <span className="inline sm:hidden uppercase font-bold text-[10px] sm:text-xs tracking-wider">{currentLang.code}</span>
           </span>
         </SelectTrigger>
 
         <SelectContent
           align="end"
-          className="min-w-[170px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-xl shadow-slate-200/50 dark:shadow-black/40 p-1 z-50"
+          className="min-w-[160px] sm:min-w-[170px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-xl shadow-slate-200/50 dark:shadow-black/40 p-1 z-50"
         >
           {SUPPORTED_LANGUAGES.map(({ code, flag, label }) => (
             <SelectItem
