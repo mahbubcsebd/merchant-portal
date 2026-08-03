@@ -125,15 +125,6 @@ export async function updateProfile(payload = {}) {
   return post("/updateProfile", payload);
 }
 
-// Get Beneficiaries
-export async function getBeneficiaries(payload = {}) {
-  return post("/getBeneficiaries", payload);
-}
-
-export async function createBeneficiary(payload = {}) {
-  return post("/createBeneficiary", payload);
-}
-
 // Get Transaction Limits
 export async function getTransactionLimits(payload = {}) {
   return post("/getTransactionLimits", payload);
@@ -275,9 +266,13 @@ export async function unenrollCashier(payload = {}) {
 // -------------------------------------------------------
 // Beneficiary APIs
 // -------------------------------------------------------
-// export async function getBeneficiaries(payload = {}) {
-//   return post("/getBeneficiaries", payload);
-// }
+export async function getBeneficiaries(payload = {}) {
+  return post("/getBeneficiaries", payload);
+}
+
+export async function createBeneficiary(payload = {}) {
+  return post("/createBeneficiary", payload);
+}
 
 export async function getBankRoutingByBankId(payload = {}) {
   return post("/getBankRoutingByBankId", payload);
@@ -289,4 +284,20 @@ export async function updateBeneficiary(payload = {}) {
 
 export async function deleteBeneficiary(payload = {}) {
   return post("/deleteBeneficiary", payload);
+}
+
+export async function scheduledTxn(payload = {}) {
+  return post("/scheduledTxn", payload);
+}
+
+export async function updateScheduledTxn(payload = {}) {
+  return post("/updateScheduledTxn", payload);
+}
+
+export async function deleteScheduledTxn(payload = {}) {
+  return post("/deleteScheduledTxn", payload);
+}
+
+export async function scheduledTxnHistory(payload = {}) {
+  return post("/scheduledTxnHistory", payload);
 }
