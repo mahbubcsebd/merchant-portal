@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getBeneficiaries, createBeneficiary } from "@/lib/api/endpoints";
+import { getBeneficiaries, createBeneficiary, updateBeneficiary, deleteBeneficiary } from "@/lib/api/endpoints";
 
 export function useBeneficiaries() {
   const queryClient = useQueryClient();
@@ -34,8 +34,30 @@ export function useBeneficiaries() {
     },
   });
 
+  const updateBeneficiaryMutation = useMutation({
+    mutationFn: updateBeneficiary,
+    onSuccess: (data) => {
+      if (data.status === "error") {
+        throw new Error(data.message || "Failed to update beneficiary");
+      }
+      queryClient.invalidateQueries(["beneficiaries"]);
+    },
+  });
+
+  const deleteBeneficiaryMutation = useMutation({
+    mutationFn: deleteBeneficiary,
+    onSuccess: (data) => {
+      if (data.status === "error") {
+        throw new Error(data.message || "Failed to delete beneficiary");
+      }
+      queryClient.invalidateQueries(["beneficiaries"]);
+    },
+  });
+
   return {
     beneficiariesQuery,
     createBeneficiaryMutation,
+    updateBeneficiaryMutation,
+    deleteBeneficiaryMutation,
   };
 }

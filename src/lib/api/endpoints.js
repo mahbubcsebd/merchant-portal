@@ -228,3 +228,11 @@ export async function unenrollCashier(payload = {}) {
 export async function getBankRoutingByBankId(payload = {}) {
   return post("/getBankRoutingByBankId", payload);
 }
+
+export async function updateBeneficiary(payload = {}) {
+  return post("/updateBeneficiary", payload);
+}
+
+export async function deleteBeneficiary(payload = {}) {
+  return post("/deleteBeneficiary", payload);
+}

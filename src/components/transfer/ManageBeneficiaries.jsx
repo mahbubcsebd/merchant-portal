@@ -10,13 +10,15 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalButton from "@/components/globals/GlobalButton";
 
 export default function ManageBeneficiaries({ setView: setParentView, setViewData }) {
-  const { beneficiariesQuery, createBeneficiaryMutation } = useBeneficiaries();
+  const { beneficiariesQuery, createBeneficiaryMutation, updateBeneficiaryMutation, deleteBeneficiaryMutation } = useBeneficiaries();
   const {
     openFormDialog,
     openConfirmDialog,
     openSuccessDialog,
     openPreconfirmDialog,
     openGlobalPopup,
+    openDetailDialog,
+    closeDialog,
   } = useDialog();
   const { validate } = useFormValidation();
   const queryClient = useQueryClient();
@@ -50,48 +52,21 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
     );
   });
 
-  const handleAdd = (initialValues = null) => {
+  const openBeneficiaryForm = (initialValues = null, isEdit = false, originalBeneficiary = null) => {
     openFormDialog({
-      title: "Add Beneficiary",
+      title: isEdit ? "Edit Beneficiary" : "Add Beneficiary",
       isView: false,
       submitText: "Submit",
       size: "sm:max-w-md",
       disableAutoValidation: true,
-      content: <BeneficiaryFormFields data={initialValues} isView={false} />,
+      content: <BeneficiaryFormFields data={initialValues} isView={false} isEditMode={isEdit} />,
       onSave: (values, setErrors) => {
         const fieldsToValidate = [
-          {
-            name: "payeeName",
-            value: values.payeeName,
-            label: "Beneficiary Name",
-            required: true,
-          },
-          {
-            name: "payeeNickName",
-            value: values.payeeNickName,
-            label: "Beneficiary Nickname",
-            required: true,
-          },
-          {
-            name: "payeeBankAccount",
-            value: values.payeeBankAccount,
-            label: "Account Number",
-            required: true,
-          },
-          {
-            name: "payeeBankId",
-            value: values.payeeBankId,
-            label: "Bank",
-            type: "select",
-            required: true,
-          },
-          {
-            name: "payeeAcctCurr",
-            value: values.payeeAcctCurr,
-            label: "Currency",
-            type: "select",
-            required: true,
-          },
+          { name: "payeeName", value: values.payeeName, label: "Beneficiary Name", required: true },
+          { name: "payeeNickName", value: values.payeeNickName, label: "Beneficiary Nickname", required: true },
+          { name: "payeeBankAccount", value: values.payeeBankAccount, label: "Account Number", required: true },
+          { name: "payeeBankId", value: values.payeeBankId, label: "Bank", type: "select", required: true },
+          { name: "payeeAcctCurr", value: values.payeeAcctCurr, label: "Currency", type: "select", required: true },
         ];
 
         const { isValid, errors } = validate(fieldsToValidate);
@@ -109,19 +84,17 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
         };
 
         openPreconfirmDialog({
-          title: "Confirm Beneficiary",
-          message: "Please review the beneficiary details before submitting.",
+          title: isEdit ? "Confirm Edit" : "Confirm Beneficiary",
+          message: isEdit ? "Please review the updated details before submitting." : "Please review the beneficiary details before submitting.",
           details: preconfirmDetails,
           onChange: () => {
-            handleAdd(values);
+            openBeneficiaryForm(values, isEdit, originalBeneficiary);
           },
           onSubmit: async () => {
             try {
               let routing = "";
               try {
-                const routingRes = await getBankRoutingByBankId({
-                  payeeBankId: values.payeeBankId,
-                });
+                const routingRes = await getBankRoutingByBankId({ payeeBankId: values.payeeBankId });
                 if (routingRes && typeof routingRes.bankRouting === "string") {
                   routing = routingRes.bankRouting;
                 }
@@ -129,25 +102,41 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
                 console.warn("Failed to fetch routing number", e);
               }
 
-              const payload = {
-                payeeName: values.payeeName,
-                payeeNickName: values.payeeNickName,
-                payeeBankAccount: values.payeeBankAccount,
-                payeeBankId: values.payeeBankId,
-                payeeBankRouting: routing,
-                payeeAcctCurr: values.payeeAcctCurr,
-              };
+              let payload;
+              if (isEdit) {
+                payload = {
+                  payeeBankAccount: originalBeneficiary.payeeBankAccount,
+                  payeeBankId: originalBeneficiary.payeeBankBIC,
+                  payeeBankAccountUpd: values.payeeBankAccount,
+                  payeeBankIdUpd: values.payeeBankId,
+                  payeeBankRouting: routing,
+                  payeeName: values.payeeName,
+                  payeeNickName: values.payeeNickName,
+                  payeeAcctCurr: values.payeeAcctCurr,
+                };
+              } else {
+                payload = {
+                  payeeName: values.payeeName,
+                  payeeNickName: values.payeeNickName,
+                  payeeBankAccount: values.payeeBankAccount,
+                  payeeBankId: values.payeeBankId,
+                  payeeBankRouting: routing,
+                  payeeAcctCurr: values.payeeAcctCurr,
+                };
+              }
 
-              const res = await createBeneficiaryMutation.mutateAsync(payload);
+              const mutation = isEdit ? updateBeneficiaryMutation : createBeneficiaryMutation;
+              const res = await mutation.mutateAsync(payload);
+              
               openSuccessDialog({
                 title: "Success",
-                message: res.message || "Beneficiary created successfully.",
+                message: res.message || (isEdit ? "Beneficiary updated successfully." : "Beneficiary created successfully."),
                 details: preconfirmDetails,
               });
             } catch (err) {
               openGlobalPopup({
                 title: "Error",
-                description: err.message || "Failed to create beneficiary.",
+                description: err.message || (isEdit ? "Failed to update beneficiary." : "Failed to create beneficiary."),
                 type: "error",
               });
             }
@@ -159,14 +148,56 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
     });
   };
 
-  const handleEdit = (b, index) => {
-    alert("Update to be implemented later!");
+  const handleAdd = (initialValues = null) => openBeneficiaryForm(initialValues, false);
+
+  const handleEdit = (b) => {
+    openBeneficiaryForm({
+      payeeName: b.payeeName,
+      payeeNickName: b.payeeNickName,
+      payeeBankAccount: b.payeeBankAccount,
+      payeeBankId: b.payeeBankBIC,
+      payeeAcctCurr: b.payeeAcctCurr,
+    }, true, b);
   };
 
   const handleDelete = (index) => {
-    if (confirm("Are you sure you want to delete this beneficiary?")) {
-      alert("Delete to be implemented later!");
-    }
+    const beneficiary = filteredBeneficiaries[index];
+    const details = {
+      "Beneficiary Name": beneficiary.payeeName,
+      Nickname: beneficiary.payeeNickName,
+      "Account Number": beneficiary.payeeBankAccount,
+      Bank: getBankName(beneficiary.payeeBankBIC),
+      Currency: getCurrencyLabel(beneficiary.payeeAcctCurr),
+    };
+
+    openPreconfirmDialog({
+      title: "Delete Beneficiary?",
+      message: `Are you sure you want to delete ${beneficiary.payeeName}? This action cannot be undone.`,
+      details,
+      confirmText: "Delete",
+      iconType: "danger",
+      onChange: () => closeDialog(),
+      onSubmit: async () => {
+        try {
+          const payload = {
+            payeeBankAccount: beneficiary.payeeBankAccount,
+            payeeBankBIC: beneficiary.payeeBankBIC,
+          };
+          const res = await deleteBeneficiaryMutation.mutateAsync(payload);
+          openSuccessDialog({
+            title: "Success",
+            message: res.message || "Beneficiary deleted successfully.",
+            details,
+          });
+        } catch (err) {
+          openGlobalPopup({
+            title: "Error",
+            description: err.message || "Failed to delete beneficiary.",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -230,14 +261,17 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
                 <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                   <button
                     onClick={() => {
-                      setViewData({
-                        name: b.payeeName,
-                        nickname: b.payeeNickName,
-                        account: b.payeeBankAccount,
-                        bank: b.payeeBankBIC,
-                        currency: b.payeeAcctCurr,
+                      openDetailDialog({
+                        title: "View Beneficiary",
+                        details: [
+                          { label: "Beneficiary Name", value: b.payeeName },
+                          { label: "Nickname", value: b.payeeNickName },
+                          { label: "Account Number", value: b.payeeBankAccount },
+                          { label: "Bank", value: getBankName(b.payeeBankBIC) },
+                          { label: "Currency", value: getCurrencyLabel(b.payeeAcctCurr) },
+                        ],
+                        doneText: "Close",
                       });
-                      setParentView("view_beneficiary");
                     }}
                     className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
                     title="View"

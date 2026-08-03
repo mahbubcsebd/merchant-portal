@@ -3,7 +3,7 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function BeneficiaryFormFields({ data, isView, errors = {}, clearError = () => {} }) {
+export default function BeneficiaryFormFields({ data, isView, isEditMode = false, errors = {}, clearError = () => {} }) {
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
@@ -62,7 +62,7 @@ export default function BeneficiaryFormFields({ data, isView, errors = {}, clear
         name="display_payeeName"
         value={formData.payeeName}
         onChange={(e) => handleChange("payeeName", e.target.value)}
-        disabled={isView}
+        disabled={isView || isEditMode}
         required
         error={errors.payeeName}
         placeholder="Enter beneficiary name"
