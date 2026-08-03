@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from '@/components/ui/dropdown-menu';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Map notification types to icons and colors
 const notificationMeta = {
@@ -90,18 +91,18 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
   };
 
   return (
-    <header className="h-16 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 flex-shrink-0 transition-colors duration-300">
-      <div className="flex items-center gap-2">
+    <header className="h-16 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-3 sm:px-4 md:px-8 sticky top-0 z-10 flex-shrink-0 transition-colors duration-300">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
         {/* Mobile Hamburger menu */}
         <button
           onClick={() => setIsMobileOpen?.(true)}
-          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all shrink-0"
           aria-label="Open menu"
         >
           <Menu size={18} />
         </button>
-        <div>
-          <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">
+        <div className="min-w-0">
+          <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
             {title}
           </h1>
           <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 dark:text-white/70 font-semibold">
@@ -110,7 +111,10 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Theme Toggle */}
         {mounted && (
           <button

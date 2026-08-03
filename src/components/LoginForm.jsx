@@ -44,7 +44,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "kyeontan154@gmail.com", pin: "444444" },
+    defaultValues: { email: "kyeontan154@gmail.com", pin: "111111" },
   });
 
   const loginMutation = useMutation({
@@ -231,9 +231,9 @@ export function LoginForm() {
         {t("dont_have_account", "Don't have an account?")}{" "}
         <Link
           to="/enroll"
-          className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors"
+          className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors capitalize"
         >
-          {t("registerMerchant", "Enroll as Merchant")}
+          {t("registerMerchant", "Merchant Registration").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
         </Link>
       </p>
 
