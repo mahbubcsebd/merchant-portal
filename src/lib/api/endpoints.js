@@ -213,3 +213,10 @@ export async function saveMerchantCashierPermission(payload = {}) {
 export async function unenrollCashier(payload = {}) {
   return post("/unenrollCashier", payload);
 }
+
+// -------------------------------------------------------
+// Beneficiary APIs
+// -------------------------------------------------------
+// export async function getBeneficiaries(payload = {}) {
+//   return post("/getBeneficiaries", payload);
+// }
