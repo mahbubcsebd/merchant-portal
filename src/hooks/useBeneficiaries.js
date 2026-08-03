@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { getBeneficiaries } from "@/lib/api/endpoints";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getBeneficiaries, createBeneficiary } from "@/lib/api/endpoints";
 
 export function useBeneficiaries() {
+  const queryClient = useQueryClient();
+
   const beneficiariesQuery = useQuery({
     queryKey: ["beneficiaries"],
     queryFn: async () => {
@@ -16,7 +18,24 @@ export function useBeneficiaries() {
     },
   });
 
+  const createBeneficiaryMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await createBeneficiary(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to create beneficiary");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["beneficiaries"] });
+    },
+  });
+
   return {
     beneficiariesQuery,
+    createBeneficiaryMutation,
   };
 }

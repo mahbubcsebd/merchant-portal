@@ -109,6 +109,10 @@ export async function getBeneficiaries(payload = {}) {
   return post("/getBeneficiaries", payload);
 }
 
+export async function createBeneficiary(payload = {}) {
+  return post("/createBeneficiary", payload);
+}
+
 // Get Transaction Limits
 export async function getTransactionLimits(payload = {}) {
   return post("/getTransactionLimits", payload);
@@ -220,3 +224,7 @@ export async function unenrollCashier(payload = {}) {
 // export async function getBeneficiaries(payload = {}) {
 //   return post("/getBeneficiaries", payload);
 // }
+
+export async function getBankRoutingByBankId(payload = {}) {
+  return post("/getBankRoutingByBankId", payload);
+}
