@@ -1,10 +1,9 @@
-
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Mail, Calendar as CalendarIcon } from "lucide-react"
-import { Link } from "react-router-dom";
+import { Mail, Calendar as CalendarIcon, AlertCircle } from "lucide-react"
+import { Link } from "react-router-dom"
 import { format } from "date-fns"
 import { buttonVariants } from "@/components/ui/button"
 import GlobalButton from "@/components/globals/GlobalButton"
@@ -16,6 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { forgotPin } from "@/lib/api/endpoints"
+import { useDialog } from "@/components/globals/DialogProvider"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -24,12 +25,15 @@ const formSchema = z.object({
 
 export function ForgotPinForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [apiError, setApiError] = useState("")
+  const { openSuccessDialog } = useDialog()
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
@@ -40,9 +44,31 @@ export function ForgotPinForm() {
 
   async function onSubmit(values) {
     setIsSubmitting(true)
-    await new Promise((r) => setTimeout(r, 700))
-    console.log("mPay Merchant Forgot PIN →", values)
-    setIsSubmitting(false)
+    setApiError("")
+    try {
+      const formattedDob = format(values.dob, "dd/MM/yyyy")
+      const payload = {
+        email: values.email,
+        dateOfBirth: formattedDob,
+        custType: "C",
+      }
+
+      const res = await forgotPin(payload)
+
+      if (res?.status === "success" || res?.statusCode === 0) {
+        openSuccessDialog({
+          title: "Request Submitted",
+          description: res?.message || "If the details match, instructions to reset your PIN have been sent.",
+        })
+        reset()
+      } else {
+        setApiError(res?.message || "Invalid details. Please try again")
+      }
+    } catch (err) {
+      setApiError(err?.message || "Something went wrong. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -50,12 +76,20 @@ export function ForgotPinForm() {
       {/* Heading */}
       <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          Reset Wallet PIN
+          Forgot Wallet PIN
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-          Enter your details to receive a reset link
+          Enter your registered email address and date of birth to reset your PIN.
         </p>
       </div>
+
+      {/* API Error Banner */}
+      {apiError && (
+        <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-3 text-red-600 dark:text-red-400 animate-[fade-up_0.3s_ease-out]">
+          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+          <p className="text-sm font-medium leading-relaxed">{apiError}</p>
+        </div>
+      )}
 
       {/* Form */}
       <form
@@ -91,16 +125,22 @@ export function ForgotPinForm() {
                   !dobValue ? "text-slate-400 font-normal" : "text-slate-900 dark:text-white"
                 )}
               >
-                {dobValue ? format(dobValue, "PPP") : <span>mm/dd/yyyy</span>}
+                {dobValue ? format(dobValue, "dd/MM/yyyy") : <span>dd/mm/yyyy</span>}
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={dobValue}
-                  onSelect={(date) => setValue("dob", date, { shouldValidate: true })}
+                  onSelect={(date) => {
+                    setValue("dob", date, { shouldValidate: true })
+                    setApiError("")
+                  }}
                   disabled={(date) =>
                     date > new Date() || date < new Date("1900-01-01")
                   }
+                  captionLayout="dropdown"
+                  fromYear={1930}
+                  toYear={new Date().getFullYear()}
                   initialFocus
                 />
               </PopoverContent>

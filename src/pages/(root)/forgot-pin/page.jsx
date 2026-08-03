@@ -64,7 +64,7 @@ export default function ForgotPinPage() {
               {[
                 { value: "50K+", label: "Merchants" },
                 { value: "99.9%", label: "Uptime" },
-                { value: "৳2B+", label: "Processed" },
+                { value: "$2B+", label: "Processed" },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-white">{value}</p>
