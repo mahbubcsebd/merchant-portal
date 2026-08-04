@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -36,6 +36,7 @@ export function LoginForm() {
   const [otpValue, setOtpValue] = useState("");
   const [otpError, setOtpError] = useState(false);
   const [otpErrorMessage, setOtpErrorMessage] = useState("");
+  const [apiError, setApiError] = useState("");
   const [resendSuccessMsg, setResendSuccessMsg] = useState("");
 
   const {
@@ -46,7 +47,7 @@ export function LoginForm() {
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: "mahbub.cse.bd@gmail.com",
       pin: "111111",
     },
   });
@@ -59,6 +60,7 @@ export function LoginForm() {
         walletPIN: data.pin,
       }),
     onSuccess: (res) => {
+      setApiError("");
       if (res?.status === "success" || res?.statusCode === 0) {
         if (res?.data?.show_otp) {
           setShowOtpDialog(true);
@@ -67,11 +69,11 @@ export function LoginForm() {
           router("/dashboard");
         }
       } else {
-        alert(res?.message || t("login_failed", "Login failed. Please check your credentials."));
+        setApiError(res?.message || t("login_failed", "Invalid email or PIN. Please check your credentials."));
       }
     },
     onError: (err) => {
-      alert(err?.message || t("something_went_wrong_try_again", "Something went wrong. Please try again."));
+      setApiError(err?.message || t("something_went_wrong_try_again", "Something went wrong. Please try again."));
     },
   });
 
@@ -109,15 +111,18 @@ export function LoginForm() {
         setResendSuccessMsg(res?.message || t("otp_resent_success", "The OTP has been successfully resent."));
         setTimeout(() => setResendSuccessMsg(""), 5000);
       } else {
-        alert(res?.message || t("failed_resend_otp", "Failed to resend OTP."));
+        setOtpError(true);
+        setOtpErrorMessage(res?.message || t("failed_resend_otp", "Failed to resend OTP."));
       }
     },
     onError: (err) => {
-      alert(err?.message || t("failed_resend_otp", "Failed to resend OTP."));
+      setOtpError(true);
+      setOtpErrorMessage(err?.message || t("failed_resend_otp", "Failed to resend OTP."));
     },
   });
 
   function onSubmit(values) {
+    setApiError("");
     loginMutation.mutate(values);
   }
 
@@ -132,6 +137,14 @@ export function LoginForm() {
           {t("login_subtitle", "Welcome back! Please enter your details.")}
         </p>
       </div>
+
+      {/* API Error Banner */}
+      {apiError && (
+        <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-3 text-red-600 dark:text-red-400 animate-[fade-up_0.3s_ease-out]">
+          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+          <p className="text-sm font-medium leading-relaxed">{apiError}</p>
+        </div>
+      )}
 
       {/* Login Form */}
       <form
