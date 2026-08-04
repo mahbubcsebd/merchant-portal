@@ -4,9 +4,11 @@ import { RecentTransactionsTable } from "@/components/dashboard/RecentTransactio
 import { StatisticsChart } from "@/components/dashboard/StatisticsChart"
 import { PeriodDropdown, CurrencyDropdown } from "@/components/dashboard/Dropdowns"
 import { useDashboardContext } from "@/pages/dashboard/context"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export default function DashboardPage() {
   const { period, setPeriod, currency, setCurrency } = useDashboardContext();
+  const { t } = useLanguage();
 
   return (
     <div className="w-full">
@@ -15,7 +17,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Overview
+            {t("overview", "Overview")}
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             Business Summary

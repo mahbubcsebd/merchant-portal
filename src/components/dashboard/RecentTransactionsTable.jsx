@@ -6,6 +6,7 @@ import {
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
 import { useDashboardContext } from "@/pages/dashboard/context"
 import { useMemo } from "react"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 const columns = [
   {
@@ -65,6 +66,7 @@ const columns = [
 
 export function RecentTransactionsTable({ currencyDropdown }) {
   const { transactions } = useDashboardContext();
+  const { t } = useLanguage();
 
   const formattedTransactions = useMemo(() => {
     if (!transactions) return [];
@@ -88,7 +90,7 @@ export function RecentTransactionsTable({ currencyDropdown }) {
   return (
     <div>
       <div className="flex items-center justify-between h-9 mb-5">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Recent Transactions</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("recentTransactions", "Recent Transactions")}</h3>
         {currencyDropdown}
       </div>
 

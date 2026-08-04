@@ -9,6 +9,7 @@ import GlobalButton from "@/components/globals/GlobalButton";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { updateProfile } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 function Card({ title, children, className = "" }) {
   return (
@@ -33,6 +34,8 @@ function InputField({
   registration,
   error,
   isReadOnly,
+  maxLength,
+  onInput,
 }) {
   return (
     <GlobalInput
@@ -43,6 +46,8 @@ function InputField({
       labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
       error={error}
       isReadOnly={isReadOnly}
+      maxLength={maxLength}
+      onInput={onInput}
       {...registration}
     />
   );
@@ -51,6 +56,7 @@ function InputField({
 export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // Get welcome API data (COUNTRYCODE)
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -202,7 +208,7 @@ export default function BusinessProfilePage() {
             Settings
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Business Profile
+            {t("business_profile", "Business Profile")}
           </h2>
         </div>
       </div>
@@ -214,7 +220,7 @@ export default function BusinessProfilePage() {
           className="xl:col-span-8 flex flex-col gap-6"
         >
           {/* Business Profile */}
-          <Card title="Business Profile">
+          <Card title={t("business_profile", "Business Profile")}>
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
               {/* Logo Upload Section */}
               <div className="flex flex-col items-center gap-3 shrink-0">
@@ -227,38 +233,38 @@ export default function BusinessProfilePage() {
                   </div>
                 </div>
                 <span className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40">
-                  Upload Company Logo
+                  {t("uploadLogo", "Upload Company Logo")}
                 </span>
                 <GlobalButton
                   variant="primary"
                   className="px-5 py-1.5 h-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
                 >
-                  Upload
+                  {t("fileUploadButton", "Upload")}
                 </GlobalButton>
               </div>
 
               {/* Form Fields */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <InputField
-                  label="Store Name"
+                  label={t("store_name", "Store Name")}
                   isReadOnly={true}
                   registration={register("custName")}
                   error={errors.custName?.message}
                 />
                 <InputField
-                  label="Business User ID"
+                  label={t("businessUserID", "Business User ID")}
                   isReadOnly={true}
                   registration={register("userName")}
                   error={errors.userName?.message}
                 />
                 <InputField
-                  label="Business Phone Number"
+                  label={t("businessPhone", "Business Phone Number")}
                   isReadOnly={true}
                   registration={register("mobilePhone")}
                   error={errors.mobilePhone?.message}
                 />
                 <InputField
-                  label="Business Email Address"
+                  label={t("businessEmail", "Business Email Address")}
                   isReadOnly={true}
                   registration={register("email")}
                   error={errors.email?.message}
@@ -268,31 +274,47 @@ export default function BusinessProfilePage() {
           </Card>
 
           {/* Address Details */}
-          <Card title="Address Details">
+          <Card title={t("address_details", "Address Details")}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <InputField
-                label="Street No"
+                label={t("street_no", "Street No")}
                 icon={MapPin}
                 registration={register("addrStreetNo")}
                 error={errors.addrStreetNo?.message}
+                maxLength={10}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                }}
               />
               <InputField
-                label="Street Name"
+                label={t("street_name", "Street Name")}
                 icon={MapPin}
                 registration={register("addrStreetName")}
                 error={errors.addrStreetName?.message}
+                maxLength={30}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
+                }}
               />
               <InputField
-                label="City"
+                label={t("city", "City")}
                 icon={MapPin}
                 registration={register("city")}
                 error={errors.city?.message}
+                maxLength={30}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
+                }}
               />
               <InputField
-                label="State"
+                label={t("state", "State")}
                 icon={Pencil}
                 registration={register("state")}
                 error={errors.state?.message}
+                maxLength={30}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
+                }}
               />
 
               <Controller
@@ -300,7 +322,7 @@ export default function BusinessProfilePage() {
                 name="country"
                 render={({ field }) => (
                   <GlobalSelect
-                    label="Country"
+                    label={t("crCountry", "Country")}
                     value={field.value}
                     onChange={field.onChange}
                     labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
@@ -310,10 +332,14 @@ export default function BusinessProfilePage() {
               />
 
               <InputField
-                label="Zip Code"
+                label={t("ucZipCode", "Zip Code")}
                 icon={Pencil}
                 registration={register("zipCode")}
                 error={errors.zipCode?.message}
+                maxLength={7}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                }}
               />
             </div>
 
@@ -324,7 +350,9 @@ export default function BusinessProfilePage() {
                 disabled={updateMutation.isPending}
                 className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
               >
-                {updateMutation.isPending ? "Submitting..." : "Submit"}
+                {updateMutation.isPending
+                  ? "Submitting..."
+                  : t("buttonSubmit", "Submit")}
               </GlobalButton>
             </div>
           </Card>
@@ -333,7 +361,7 @@ export default function BusinessProfilePage() {
         {/* Right Column (QR Code) */}
         <div className="xl:col-span-4 flex flex-col">
           <Card
-            title="Business QR Code"
+            title={t("businessQrCode", "Business QR Code")}
             className="flex-1 flex flex-col h-full"
           >
             <div className="flex flex-col items-center flex-1">
@@ -345,7 +373,7 @@ export default function BusinessProfilePage() {
               </p>
 
               <GlobalSelect
-                label="Account"
+                label={t("ott_account", "Account")}
                 value={selectedAccountId}
                 onChange={setSelectedAccountId}
                 labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
@@ -378,7 +406,7 @@ export default function BusinessProfilePage() {
                     }
                   }}
                 >
-                  Share
+                  {t("buttonsShareQR", "Share")}
                 </GlobalButton>
                 <GlobalButton
                   onClick={handleDownloadQR}
@@ -386,7 +414,7 @@ export default function BusinessProfilePage() {
                   leftIcon={<Download size={16} />}
                   className="flex-1 text-xs font-bold uppercase tracking-wider h-10"
                 >
-                  Download
+                  {t("buttonsDownloadQR", "Download")}
                 </GlobalButton>
               </div>
             </div>

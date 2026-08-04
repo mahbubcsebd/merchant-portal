@@ -1,8 +1,10 @@
 import { Bell } from "lucide-react"
 import { useDashboardContext } from "@/pages/dashboard/context"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export function LatestActivities() {
   const { notifications } = useDashboardContext();
+  const { t } = useLanguage();
 
   const recentNotifications = [...notifications]
     .sort((a, b) => Number(b.msgId) - Number(a.msgId))
@@ -11,7 +13,7 @@ export function LatestActivities() {
   return (
     <div>
       <div className="flex items-center h-9 mb-5">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Latest Activities</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("latest_activities", "Latest Activities")}</h3>
       </div>
 
       <div className="rounded-xl overflow-hidden
