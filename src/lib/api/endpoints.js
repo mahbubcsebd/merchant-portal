@@ -298,6 +298,10 @@ export async function deleteScheduledTxn(payload = {}) {
   return post("/deleteScheduledTxn", payload);
 }
 
+export async function payToBank(payload = {}) {
+  return post("/payToBank", payload);
+}
+
 export async function scheduledTxnHistory(payload = {}) {
   return post("/scheduledTxnHistory", payload);
 }
