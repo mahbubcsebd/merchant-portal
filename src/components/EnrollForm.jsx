@@ -65,23 +65,7 @@ export function EnrollForm() {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch dynamic country codes list from BootLoader / Welcome API metadata (or fallback)
-  const welcomeData = queryClient.getQueryData(['welcome']);
-  const countryCodesList = useMemo(() => {
-    const list = welcomeData?.metaData?.COUNTRYCODE || [];
-    if (list && list.length > 0) {
-      return list.map((item, idx) => {
-        const phCode = (item.phCode || item.phoneCode || item.code || item.id || '').toString().replace('+', '');
-        return {
-          code: phCode,
-          flag: item.flag || '🌐',
-          country: `${item.title || item.name || item.country} (+${phCode})`,
-          isoCode: item.isoCode || item.code || `${phCode}-${idx}`,
-        };
-      });
-    }
-    return COUNTRY_OPTIONS;
-  }, [welcomeData]);
+  const countryCodesList = COUNTRY_OPTIONS;
 
   const filteredCountries = useMemo(() => {
     if (!searchQuery) return countryCodesList;
