@@ -9,6 +9,7 @@ import GlobalButton from '@/components/globals/GlobalButton';
 import GlobalInput from '@/components/globals/GlobalInput';
 import { registerMerchant, verifyMerchantOTP, resendOTP } from '@/lib/api/endpoints';
 import { useLanguage } from '@/components/globals/LanguageProvider';
+import { useDialog } from '@/components/globals/DialogProvider';
 import {
   Command,
   CommandEmpty,
@@ -93,6 +94,26 @@ export function EnrollForm() {
       appConsent: 'Y',
     },
   });
+
+  const { openConfirmDialog } = useDialog();
+
+  const handleOpenTermsModal = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openConfirmDialog({
+      title: t("terms_and_conditions", "Terms and Conditions"),
+      description: t(
+        "terms_and_conditions_full_text",
+        "By enrolling a Merchant Account, you agree to comply with all applicable terms, conditions, and regulatory policies governing payment processing on the mPay Network platform. Enrolling a new merchant account on this device will remove the existing customer account linked to this device."
+      ),
+      confirmText: t("accept", "I Agree & Accept"),
+      iconType: "info",
+      onConfirm: () => {
+        setValue("acceptTerms", true, { shouldValidate: true });
+        setValue("acceptDevice", true, { shouldValidate: true });
+      },
+    });
+  };
 
   const formValues = watch();
 
@@ -377,12 +398,13 @@ export function EnrollForm() {
                 </div>
                 <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
                   {t("accept_terms", "Accept")}{' '}
-                  <Link
-                    to="/terms-and-conditions"
-                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline"
+                  <button
+                    type="button"
+                    onClick={handleOpenTermsModal}
+                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 inline"
                   >
                     {t("terms_and_conditions", "Terms and Conditions")}
-                  </Link>{' '}
+                  </button>{' '}
                   <span className="text-[#e65625]">*</span>
                 </span>
               </label>
