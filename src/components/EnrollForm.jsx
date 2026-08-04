@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Building2, Check, Mail, Phone, AlertCircle, ChevronsUpDown } from 'lucide-react';
+import { Building2, Check, Mail, Phone, AlertCircle, ChevronsUpDown, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -63,22 +63,36 @@ export function EnrollForm() {
   const [otpCode, setOtpCode] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Fetch dynamic country codes list from BootLoader / Welcome API metadata (or fallback)
   const welcomeData = queryClient.getQueryData(['welcome']);
   const countryCodesList = useMemo(() => {
     const list = welcomeData?.metaData?.COUNTRYCODE || [];
     if (list && list.length > 0) {
-      return list.map((item) => {
+      return list.map((item, idx) => {
         const phCode = (item.phCode || item.phoneCode || item.code || item.id || '').toString().replace('+', '');
         return {
           code: phCode,
           flag: item.flag || '🌐',
           country: `${item.title || item.name || item.country} (+${phCode})`,
+          isoCode: item.isoCode || item.code || `${phCode}-${idx}`,
         };
       });
     }
     return COUNTRY_OPTIONS;
   }, [welcomeData]);
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery) return countryCodesList;
+    const q = searchQuery.toLowerCase().trim();
+    return countryCodesList.filter(
+      (c) =>
+        c.country.toLowerCase().includes(q) ||
+        c.code.includes(q) ||
+        (c.isoCode && c.isoCode.toLowerCase().includes(q))
+    );
+  }, [countryCodesList, searchQuery]);
 
   const {
     register,
@@ -324,38 +338,49 @@ export function EnrollForm() {
                       <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[240px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search country..." />
-                      <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
-                        <CommandGroup>
-                          {countryCodesList.map((country) => (
-                            <CommandItem
-                              key={country.code}
-                              value={country.country + ' ' + country.code}
-                              onSelect={() => {
-                                setValue('countryCode', country.code);
-                                setOpenCountryBox(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  watch('countryCode') === country.code
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                )}
-                              />
-                              <span className="flex items-center gap-2">
-                                <span>{country.flag}</span>
-                                <span>{country.country}</span>
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
+                  <PopoverContent className="w-[280px] p-2 bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-[100]" align="start">
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search country..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-8 pl-8 pr-3 text-xs bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
+                      {filteredCountries.length === 0 ? (
+                        <div className="py-4 text-center text-xs text-slate-400">No country found</div>
+                      ) : (
+                        filteredCountries.map((country, idx) => (
+                          <button
+                            key={`${country.code}-${country.isoCode || idx}`}
+                            type="button"
+                            onClick={() => {
+                              setValue('countryCode', country.code, { shouldValidate: true });
+                              setOpenCountryBox(false);
+                              setSearchQuery('');
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-blue-50 dark:hover:bg-white/10 text-left cursor-pointer",
+                              watch('countryCode') === country.code
+                                ? "bg-blue-50/80 dark:bg-white/10 text-[#2563eb] dark:text-blue-400 font-bold"
+                                : "text-slate-700 dark:text-slate-200"
+                            )}
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <span className="text-base leading-none">{country.flag}</span>
+                              <span className="truncate">{country.country}</span>
+                            </span>
+                            {watch('countryCode') === country.code && (
+                              <Check className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-400 shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </PopoverContent>
                 </Popover>
 
