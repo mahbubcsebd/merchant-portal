@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Building2, Check, Mail, Phone, AlertCircle, ChevronsUpDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 import GlobalButton from '@/components/globals/GlobalButton';
 import GlobalInput from '@/components/globals/GlobalInput';
@@ -29,7 +30,7 @@ import {
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
 
-const COUNTRY_CODES = [
+const DEFAULT_COUNTRY_CODES = [
   { code: '355', flag: '🇦🇱', country: 'Albania (+355)' },
   { code: '1', flag: '🇺🇸', country: 'USA (+1)' },
   { code: '124', flag: '🇨🇦', country: 'Canada (+124)' },
@@ -66,7 +67,10 @@ const formSchema = z.object({
 
 export function EnrollForm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const { openConfirmDialog } = useDialog();
+
   const [step, setStep] = useState('form'); // 'form' | 'confirm' | 'otp' | 'success'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -74,6 +78,23 @@ export function EnrollForm() {
   const [openCountryBox, setOpenCountryBox] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Fetch dynamic country codes list from BootLoader / Welcome API metadata (or fallback)
+  const welcomeData = queryClient.getQueryData(['welcome']);
+  const countryCodesList = useMemo(() => {
+    const list = welcomeData?.metaData?.COUNTRYCODE || [];
+    if (list && list.length > 0) {
+      return list.map((item) => {
+        const phCode = (item.phCode || item.phoneCode || item.code || item.id || '').toString().replace('+', '');
+        return {
+          code: phCode,
+          flag: item.flag || '🌐',
+          country: `${item.title || item.name || item.country} (+${phCode})`,
+        };
+      });
+    }
+    return DEFAULT_COUNTRY_CODES;
+  }, [welcomeData]);
 
   const {
     register,
@@ -94,8 +115,6 @@ export function EnrollForm() {
       appConsent: 'Y',
     },
   });
-
-  const { openConfirmDialog } = useDialog();
 
   const handleOpenTermsModal = (e) => {
     e.preventDefault();
@@ -311,9 +330,9 @@ export function EnrollForm() {
                       <span className="flex items-center gap-1.5">
                         <span>
                           {
-                            COUNTRY_CODES.find(
+                            countryCodesList.find(
                               (c) => c.code === watch('countryCode')
-                            )?.flag
+                            )?.flag || '🌐'
                           }
                         </span>
                         <span>+{watch('countryCode')}</span>
@@ -327,7 +346,7 @@ export function EnrollForm() {
                       <CommandList>
                         <CommandEmpty>No country found.</CommandEmpty>
                         <CommandGroup>
-                          {COUNTRY_CODES.map((country) => (
+                          {countryCodesList.map((country) => (
                             <CommandItem
                               key={country.code}
                               value={country.country + ' ' + country.code}
