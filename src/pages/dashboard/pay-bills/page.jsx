@@ -9,10 +9,13 @@ import { useCalculateFees } from "@/hooks/useCalculateFees";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceNumericSpace, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
 
 export default function PayBillsPage() {
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
+  const { t } = useLanguage();
 
   const { accounts } = useDashboardContext();
   const { userBillersQuery, getBillerDetailsMutation, payBillsMutation } =
@@ -70,21 +73,21 @@ export default function PayBillsPage() {
       {
         name: "biller",
         value: biller,
-        label: "a valid biller",
+        label: t("bp_to", "To"),
         type: "select",
         required: true,
       },
       {
         name: "fromAccount",
         value: fromAccount,
-        label: "an Acount",
+        label: t("from_account", "From Account"),
         type: "select",
         required: true,
       },
       {
         name: "amount",
         value: amount,
-        label: "a valid amount",
+        label: t("bp_amount", "Amount"),
         type: "input",
         required: true,
         customValidation: (val) =>
@@ -95,7 +98,7 @@ export default function PayBillsPage() {
       {
         name: "when",
         value: when,
-        label: "when to pay",
+        label: t("schedule_when", "When"),
         type: "select",
         required: true,
       },
@@ -143,18 +146,18 @@ export default function PayBillsPage() {
           "XCG";
 
         const details = {
-          "From Wallet": fromWalletLabel,
-          "To Biller": selectedBillerLabel,
-          "Biller Name": billerDetails.billerName,
-          "Reference No": billerDetails.referenceNo,
-          Amount: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(amount))} ${currencyLabel}`,
+          [t("from_account", "From Account")]: fromWalletLabel,
+          [t("bp_to", "To")]: selectedBillerLabel,
+          [t("bp_tpBillerName", "Biller Name")]: billerDetails.billerName,
+          [t("bp_ref1", "Reference No")]: billerDetails.referenceNo,
+          [t("bp_amount", "Amount")]: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(amount))} ${currencyLabel}`,
           "Exchange Rate": exchangeRateText,
           "Total Fees": totalFeesText,
-          Description: description || "N/A",
+          [t("bp_desc", "Description")]: description || "N/A",
         };
 
         openPreconfirmDialog({
-          title: "Confirm Bill Payment",
+          title: t("confirm_payment", "Confirm Payment"),
           details: details,
           onChange: () => {
             closeDialog();
@@ -188,7 +191,7 @@ export default function PayBillsPage() {
             payBillsMutation.mutate(payPayload, {
               onSuccess: () => {
                 openSuccessDialog({
-                  title: "Payment Successful",
+                  title: t("payment_successful", "Payment Successful"),
                   message: "Your bill payment has been successfully processed.",
                   details: details,
                 });
@@ -199,7 +202,7 @@ export default function PayBillsPage() {
               },
               onError: (err) => {
                 openGlobalPopup({
-                  title: "Error",
+                  title: t("error_title", "Error"),
                   description: err.message || "Failed to process bill payment.",
                   type: "error",
                 });
@@ -210,7 +213,7 @@ export default function PayBillsPage() {
       },
       onError: (err) => {
         openGlobalPopup({
-          title: "Error calculating fees",
+          title: t("error_title", "Error calculating fees"),
           description:
             err.message ||
             "An error occurred while calculating transaction fees.",
@@ -243,8 +246,11 @@ export default function PayBillsPage() {
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* To (Biller) */}
           <GlobalSelect
-            label="To"
-            required
+            label={
+              <>
+                {t("bp_to", "To")} <span className="text-red-500">*</span>
+              </>
+            }
             value={biller}
             onChange={(val) => {
               setBiller(val);
@@ -261,7 +267,7 @@ export default function PayBillsPage() {
             <div className="bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex justify-between text-sm">
                 <span className="font-semibold text-slate-700 dark:text-white/80">
-                  Biller Name
+                  {t("bp_tpBillerName", "Biller Name")}
                 </span>
                 <span className="text-slate-600 dark:text-white/60">
                   {billerDetails.billerName}
@@ -269,7 +275,7 @@ export default function PayBillsPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="font-semibold text-slate-700 dark:text-white/80">
-                  Reference No
+                  {t("bp_ref1", "Reference No")}
                 </span>
                 <span className="text-slate-600 dark:text-white/60">
                   {billerDetails.referenceNo}
@@ -277,7 +283,7 @@ export default function PayBillsPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="font-semibold text-slate-700 dark:text-white/80">
-                  Currency
+                  {t("bp_currency", "Currency")}
                 </span>
                 <span className="text-slate-600 dark:text-white/60">
                   {welcomeData?.metaData?.CURRENCY?.find(
@@ -292,8 +298,11 @@ export default function PayBillsPage() {
 
           {/* From Account */}
           <GlobalSelect
-            label="From"
-            required
+            label={
+              <>
+                {t("from_account", "From Account")} <span className="text-red-500">*</span>
+              </>
+            }
             value={fromAccount}
             onChange={(val) => {
               setFromAccount(val);
@@ -306,14 +315,18 @@ export default function PayBillsPage() {
 
           {/* Amount */}
           <GlobalInput
-            label="Amount"
-            required
+            label={
+              <>
+                {t("bp_amount", "Amount")} <span className="text-red-500">*</span>
+              </>
+            }
             type="text"
             inputMode="decimal"
-            maxLength={18}
+            maxLength={17}
             placeholder="0.00"
             value={amount}
             error={errors.amount}
+            onInput={enforceNumericSpace}
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, "");
               setAmount(val);
@@ -335,19 +348,23 @@ export default function PayBillsPage() {
 
           {/* Description */}
           <GlobalInput
-            label="Description"
+            label={t("bp_desc", "Description")}
             type="text"
             maxLength={30}
-            placeholder="Payment description"
+            placeholder={t("bp_desc", "Description")}
             value={description}
+            onInput={enforceAlphanumericSpace}
             onChange={(e) => setDescription(e.target.value)}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
           />
 
           {/* When */}
           <GlobalSelect
-            label="When"
-            required
+            label={
+              <>
+                {t("schedule_when", "When")} <span className="text-red-500">*</span>
+              </>
+            }
             value={when}
             onChange={(val) => {
               setWhen(val);
@@ -355,7 +372,7 @@ export default function PayBillsPage() {
             }}
             error={errors.when}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[{ value: "immediate", label: "Immediate" }]}
+            options={[{ value: "immediate", label: t("schedule_now", "Pay Now") }]}
           />
 
           {/* Submit */}
@@ -368,7 +385,7 @@ export default function PayBillsPage() {
                 calculateFeesMutation.isPending || payBillsMutation.isPending
               }
             >
-              Submit
+              {t("buttonSubmit", "Submit")}
             </GlobalButton>
           </div>
         </form>

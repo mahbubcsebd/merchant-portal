@@ -1,17 +1,32 @@
-import { Eye, Pencil, Trash2 } from "lucide-react"
-import { Link } from 'react-router-dom';
-import { useDialog } from "@/components/globals/DialogProvider"
-import GlobalButton from "@/components/globals/GlobalButton"
-import BillerTemplateFormFields from "@/components/pay-bills/BillerTemplateFormFields"
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useDialog } from "@/components/globals/DialogProvider";
+import GlobalButton from "@/components/globals/GlobalButton";
+import BillerTemplateFormFields from "@/components/pay-bills/BillerTemplateFormFields";
 import { getCurrencyLabel } from "@/lib/utils/TransferUtils";
-import { usePayBills } from "@/hooks/usePayBills"
-import { useQueryClient } from "@tanstack/react-query"
+import { usePayBills } from "@/hooks/usePayBills";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function ManageBillTemplatesPage() {
-  const { openFormDialog, openConfirmDialog, openDetailDialog, openPreconfirmDialog, openSuccessDialog, openGlobalPopup, closeDialog } = useDialog()
-  const { userBillersQuery, createBillTemplateMutation, updateBillTemplateMutation, deleteBillTemplateMutation } = usePayBills()
-  const queryClient = useQueryClient()
-  const welcomeData = queryClient.getQueryData(["welcome"])
+  const {
+    openFormDialog,
+    openConfirmDialog,
+    openDetailDialog,
+    openPreconfirmDialog,
+    openSuccessDialog,
+    openGlobalPopup,
+    closeDialog,
+  } = useDialog();
+  const {
+    userBillersQuery,
+    createBillTemplateMutation,
+    updateBillTemplateMutation,
+    deleteBillTemplateMutation,
+  } = usePayBills();
+  const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
+  const { t } = useLanguage();
 
   const templates = (userBillersQuery.data || []).map((b, index) => ({
     id: b.BILLID || index,
@@ -20,8 +35,70 @@ export default function ManageBillTemplatesPage() {
     templateName: b.BILLNAME || "Template",
     referenceNo: b.REFNUM || b.REFNO || b.REFERENCE || "",
     currency: b.CURRENCY || b.BILLCUR || b.BLRWALCUR || "N/A",
-    raw: b
-  }))
+    raw: b,
+  }));
+
+
+  const handleViewClick = (template) => {
+    openDetailDialog({
+      title: "View Bill Template",
+      details: [
+        {
+          label: t("bp_tpBillerName", "Biller Name"),
+          value: template.billerName,
+        },
+        {
+          label: t("bp_tpName1", "Template Name"),
+          value: template.templateName,
+        },
+        {
+          label: t("bp_ref1", "Reference No"),
+          value: template.referenceNo,
+        },
+        {
+          label: t("bp_currency", "Currency"),
+          value: getCurrencyLabel(welcomeData, template.currency),
+        },
+      ],
+      doneText: "Back",
+    });
+  };
+
+  const handleDeleteClick = (template) => {
+    openPreconfirmDialog({
+      title: "Delete Template?",
+      description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
+      details: {
+        [t("bp_tpBillerName", "Biller Name")]: template.billerName,
+        [t("bp_tpName1", "Template Name")]: template.templateName,
+        [t("bp_ref1", "Reference No")]: template.referenceNo,
+        [t("bp_currency", "Currency")]: getCurrencyLabel(welcomeData, template.currency),
+      },
+      confirmText: "Delete",
+      iconType: "danger",
+      onChange: () => closeDialog(),
+      onSubmit: () => {
+        deleteBillTemplateMutation.mutate(
+          { billId: template.id },
+          {
+            onSuccess: () => {
+              openSuccessDialog({
+                title: t("delete.templates", "Delete Bill Template"),
+                message: t("delete.templates_success", "Deleted Bill Template successfully."),
+              });
+            },
+            onError: (err) => {
+              openGlobalPopup({
+                title: t("error_title", "Error"),
+                description: err.message || "Failed to delete template.",
+                type: "error",
+              });
+            },
+          },
+        );
+      },
+    });
+  };
 
   const handleAddClick = (initialValues = null) => {
     const isEdit = !!initialValues?.id;
@@ -35,12 +112,15 @@ export default function ManageBillTemplatesPage() {
       content: <BillerTemplateFormFields data={initialValues} isView={false} />,
       onSave: (values) => {
         openPreconfirmDialog({
-          title: "Confirm Bill Template",
+          title: t("confirm_payment", "Confirm Payment"),
           details: {
-            "Biller Name": billerTitle,
-            "Bill Template Name": values.billName,
-            "Reference No": values.refNum,
-            "Currency": getCurrencyLabel(welcomeData, values.currency)
+            [t("bp_tpBillerName", "Biller Name")]: billerTitle,
+            [t("bp_tpName1", "Template Name")]: values.billName,
+            [t("bp_ref1", "Reference No")]: values.refNum,
+            [t("bp_currency", "Currency")]: getCurrencyLabel(
+              welcomeData,
+              values.currency,
+            ),
           },
           onChange: () => {
             handleAddClick(values);
@@ -51,38 +131,47 @@ export default function ManageBillTemplatesPage() {
               billName: values.billName,
               refNum: values.refNum,
               currency: values.currency,
-              billerName: values.billerName
+              billerName: values.billerName,
             };
 
-            const mutation = isEdit ? updateBillTemplateMutation : createBillTemplateMutation;
+            const mutation = isEdit
+              ? updateBillTemplateMutation
+              : createBillTemplateMutation;
             if (isEdit) payload.billId = initialValues.id;
 
             mutation.mutate(payload, {
               onSuccess: () => {
                 openSuccessDialog({
-                  title: isEdit ? "Template Updated" : "Template Created",
+                  title: isEdit
+                    ? t("template_updated", "Template Updated")
+                    : t("template_created", "Template Created"),
                   message: `Your bill template has been successfully ${isEdit ? "updated" : "created"}.`,
                   details: {
-                    "Bill Template Name": values.billName,
-                    "Biller Name": billerTitle,
-                    "Reference No": values.refNum,
-                    "Currency": getCurrencyLabel(welcomeData, values.currency)
-                  }
+                    [t("bp_tpName1", "Template Name")]: values.billName,
+                    [t("bp_tpBillerName", "Biller Name")]: billerTitle,
+                    [t("bp_ref1", "Reference No")]: values.refNum,
+                    [t("bp_currency", "Currency")]: getCurrencyLabel(
+                      welcomeData,
+                      values.currency,
+                    ),
+                  },
                 });
               },
               onError: (err) => {
                 openGlobalPopup({
-                  title: "Error",
-                  description: err.message || `Failed to ${isEdit ? "update" : "create"} bill template.`,
-                  type: "error"
+                  title: t("error_title", "Error"),
+                  description:
+                    err.message ||
+                    `Failed to ${isEdit ? "update" : "create"} bill template.`,
+                  type: "error",
                 });
-              }
+              },
             });
-          }
+          },
         });
-        
+
         return false;
-      }
+      },
     });
   };
 
@@ -90,19 +179,18 @@ export default function ManageBillTemplatesPage() {
     <div className="w-full max-w-[1400px] mx-auto pb-10">
       <div className="mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-          Manage Bill Templates
+          {t("manage.templates", "Manage Bill Templates")}
         </h2>
       </div>
 
       <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
-        
         <div className="flex justify-end mb-6">
-          <GlobalButton 
+          <GlobalButton
             onClick={() => handleAddClick()}
             variant="primary"
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10 px-8"
           >
-            Create Bill Template
+            {t("create.bill_template", "Create Bill Template")}
           </GlobalButton>
         </div>
 
@@ -110,75 +198,42 @@ export default function ManageBillTemplatesPage() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">Template Name</th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white text-right">Action</th>
+                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                  {t("bp_tpName1", "Template Name")}
+                </th>
+                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white text-right">
+                  {t("action", "Action")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/10">
               {templates.map((template, idx) => (
-                <tr key={template.id} className={`${idx % 2 === 0 ? 'bg-blue-50/50 dark:bg-white/[0.02]' : 'bg-white dark:bg-transparent'} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}>
-                  <td className="px-5 py-4 text-slate-600 dark:text-white/70">{template.templateName}</td>
+                <tr
+                  key={template.id}
+                  className={`${idx % 2 === 0 ? "bg-blue-50/50 dark:bg-white/[0.02]" : "bg-white dark:bg-transparent"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
+                >
+                  <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    {template.templateName}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-3">
-                      <button 
-                        onClick={() => {
-                          openDetailDialog({
-                            title: "View Bill Template",
-                            details: [
-                              { label: "Biller Name", value: template.billerName },
-                              { label: "Bill Template Name", value: template.templateName },
-                              { label: "Reference No", value: template.referenceNo },
-                              { label: "Currency", value: getCurrencyLabel(welcomeData, template.currency) }
-                            ],
-                            doneText: "Back"
-                          })
-                        }} 
-                        className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors" 
+                      <button
+                        onClick={() => handleViewClick(template)}
+                        className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                         title="View"
                       >
                         <Eye size={18} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleAddClick(template)}
-                        className="text-slate-400 hover:text-emerald-500 transition-colors" 
+                        className="text-slate-400 hover:text-emerald-500 transition-colors"
                         title="Edit"
                       >
                         <Pencil size={18} />
                       </button>
-                      <button 
-                        onClick={() => {
-                          openPreconfirmDialog({
-                            title: "Delete Template?",
-                            description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
-                            details: {
-                              "Biller Name": template.billerName,
-                              "Bill Template Name": template.templateName,
-                              "Reference No": template.referenceNo,
-                              "Currency": getCurrencyLabel(welcomeData, template.currency)
-                            },
-                            confirmText: "Delete",
-                            iconType: "danger",
-                            onChange: () => closeDialog(),
-                            onSubmit: () => {
-                              deleteBillTemplateMutation.mutate({ billId: template.id }, {
-                                onSuccess: () => {
-                                  openSuccessDialog({
-                                    title: "Template Deleted",
-                                    message: "The bill template has been successfully deleted.",
-                                  });
-                                },
-                                onError: (err) => {
-                                  openGlobalPopup({
-                                    title: "Error",
-                                    description: err.message || "Failed to delete template.",
-                                    type: "error"
-                                  });
-                                }
-                              });
-                            }
-                          });
-                        }} 
-                        className="text-slate-400 hover:text-rose-500 transition-colors" 
+                      <button
+                        onClick={() => handleDeleteClick(template)}
+                        className="text-slate-400 hover:text-rose-500 transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -189,7 +244,10 @@ export default function ManageBillTemplatesPage() {
               ))}
               {templates.length === 0 && (
                 <tr>
-                  <td colSpan="2" className="px-5 py-8 text-center text-slate-500 dark:text-white/50">
+                  <td
+                    colSpan="2"
+                    className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
+                  >
                     No bill templates found.
                   </td>
                 </tr>
@@ -200,76 +258,40 @@ export default function ManageBillTemplatesPage() {
 
         <div className="md:hidden space-y-3 mb-8">
           {templates.map((template) => (
-            <div 
+            <div
               key={template.id}
               className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
             >
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">{template.templateName}</h4>
-                <p className="text-xs text-slate-400 dark:text-white/45 mt-1">Biller: {template.billerName}</p>
-                <p className="text-[10px] text-slate-400 dark:text-white/30 mt-0.5">Ref: {template.referenceNo} · {template.currency}</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
+                  {template.templateName}
+                </h4>
+                <p className="text-xs text-slate-400 dark:text-white/45 mt-1">
+                  Biller: {template.billerName}
+                </p>
+                <p className="text-[10px] text-slate-400 dark:text-white/30 mt-0.5">
+                  Ref: {template.referenceNo} · {template.currency}
+                </p>
               </div>
 
               <div className="flex items-center justify-start gap-4 pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
-                <button 
-                  onClick={() => {
-                    openDetailDialog({
-                      title: "View Bill Template",
-                      details: [
-                        { label: "Biller Name", value: template.billerName },
-                        { label: "Bill Template Name", value: template.templateName },
-                        { label: "Reference No", value: template.referenceNo },
-                        { label: "Currency", value: getCurrencyLabel(welcomeData, template.currency) }
-                      ],
-                      doneText: "Back"
-                    })
-                  }} 
-                  className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors" 
+                <button
+                  onClick={() => handleViewClick(template)}
+                  className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
                   title="View"
                 >
                   <Eye size={18} />
                 </button>
-                <button 
+                <button
                   onClick={() => handleAddClick(template)}
-                  className="text-slate-400 hover:text-emerald-500 transition-colors" 
+                  className="text-slate-400 hover:text-emerald-500 transition-colors"
                   title="Edit"
                 >
                   <Pencil size={18} />
                 </button>
-                <button 
-                  onClick={() => {
-                    openPreconfirmDialog({
-                      title: "Delete Template?",
-                      description: `Are you sure you want to delete ${template.templateName}? This action cannot be undone.`,
-                      details: {
-                        "Biller Name": template.billerName,
-                        "Bill Template Name": template.templateName,
-                        "Reference No": template.referenceNo,
-                        "Currency": getCurrencyLabel(welcomeData, template.currency)
-                      },
-                      confirmText: "Delete",
-                      iconType: "danger",
-                      onChange: () => closeDialog(),
-                      onSubmit: () => {
-                        deleteBillTemplateMutation.mutate({ billId: template.id }, {
-                          onSuccess: () => {
-                            openSuccessDialog({
-                              title: "Template Deleted",
-                              message: "The bill template has been successfully deleted.",
-                            });
-                          },
-                          onError: (err) => {
-                            openGlobalPopup({
-                              title: "Error",
-                              description: err.message || "Failed to delete template.",
-                              type: "error"
-                            });
-                          }
-                        });
-                      }
-                    });
-                  }} 
-                  className="text-slate-400 hover:text-rose-500 transition-colors" 
+                <button
+                  onClick={() => handleDeleteClick(template)}
+                  className="text-slate-400 hover:text-rose-500 transition-colors"
                   title="Delete"
                 >
                   <Trash2 size={18} />
@@ -287,7 +309,7 @@ export default function ManageBillTemplatesPage() {
         {/* Back Button */}
         <div className="flex justify-center border-t border-dashed border-slate-200 dark:border-white/10 pt-6">
           <Link to="/dashboard/pay-bills" className="w-full sm:w-auto">
-            <GlobalButton 
+            <GlobalButton
               variant="secondary"
               className="w-full sm:w-auto uppercase tracking-wider font-bold h-10 text-xs px-8"
             >
@@ -297,5 +319,5 @@ export default function ManageBillTemplatesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

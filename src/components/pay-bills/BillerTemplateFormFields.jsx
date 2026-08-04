@@ -3,6 +3,8 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import { usePayBills } from "@/hooks/usePayBills";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceAlphanumeric, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
 
 export default function BillerTemplateFormFields({
   data,
@@ -13,6 +15,7 @@ export default function BillerTemplateFormFields({
   const { allBillersQuery } = usePayBills();
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
+  const { t } = useLanguage();
 
   const [billerId, setBillerId] = useState(data?.billerId || "");
   const [billerName, setBillerName] = useState(data?.billerName || "");
@@ -50,8 +53,12 @@ export default function BillerTemplateFormFields({
 
       <GlobalSelect
         name="billerId"
-        label="Biller Name"
         required
+        label={
+          <>
+            {t("r_billerName", "Biller Name")} <span className="text-red-500">*</span>
+          </>
+        }
         disabled={isView || allBillersQuery.isLoading}
         value={billerId}
         onChange={(val) => {
@@ -64,31 +71,40 @@ export default function BillerTemplateFormFields({
       />
       <GlobalInput
         name="billName"
-        label="Bill Template Name"
         required
+        label={
+          <>
+            {t("bp_tpName1", "Template Name")} <span className="text-red-500">*</span>
+          </>
+        }
         disabled={isView}
         defaultValue={data?.templateName || ""}
         placeholder="e.g. Bill Template 001"
+        maxLength={50}
+        onInput={enforceAlphanumericSpace}
         error={errors.billName}
         onChange={() => clearError("billName")}
       />
       <GlobalInput
         name="refNum"
-        label="Reference Number"
         required
+        label={
+          <>
+            {t("bp_ref", "Reference Number")} <span className="text-red-500">*</span>
+          </>
+        }
         disabled={isView}
         defaultValue={data?.referenceNo || ""}
         placeholder="e.g. 12345"
+        maxLength={30}
+        onInput={enforceAlphanumeric}
         error={errors.refNum}
-        onChange={(e) => {
-          e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
-          clearError("refNum");
-        }}
+        onChange={() => clearError("refNum")}
       />
       <GlobalSelect
         name="displayCurrency"
-        label="Currency"
         required
+        label={t("lmCurrency", "Currency")}
         disabled={true}
         value={currency}
         options={(welcomeData?.metaData?.CURRENCY || []).map((c) => ({
