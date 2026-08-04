@@ -103,41 +103,44 @@ function MyQrView() {
   };
 
   return (
-    <div className="w-full h-full min-h-[450px] flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+    <div className="w-full min-h-[520px] flex flex-col items-center justify-center p-8 md:p-12 bg-white dark:bg-[#131c31] rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl animate-in fade-in duration-300">
+      
+      {/* Merchant Details */}
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          {p.custName || "Merchant Store"}
+        <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+          {p.custName || p.FIRSTNAME || "Merchant Store"}
         </h3>
-        <p className="text-sm font-medium text-slate-500 dark:text-white/60">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
           {p.userName ? `@${p.userName}` : ""}
         </p>
       </div>
 
-      {qrOptions.length > 1 && (
-        <div className="w-full max-w-[260px] mb-6">
-          <GlobalSelect
-            value={selectedCurrency}
-            onChange={(val) => setSelectedCurrency(val)}
-            options={qrOptions}
-            placeholder={t("selectCurrency", "Select Currency")}
-          />
-        </div>
-      )}
+      {/* Currency Select */}
+      <div className="w-full max-w-[280px] mb-8">
+        <GlobalSelect
+          value={selectedCurrency}
+          onChange={(val) => setSelectedCurrency(val)}
+          options={qrOptions.length > 0 ? qrOptions : [{ value: "default", label: "XCG Wallet QR" }]}
+          placeholder={t("selectCurrency", "Select Currency")}
+        />
+      </div>
 
-      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
-        {/* Render QR code here */}
+      {/* QR Code White Box */}
+      <div className="relative mb-8 p-6 bg-white rounded-3xl shadow-lg border border-slate-100 flex items-center justify-center w-[260px] h-[260px]">
         <div ref={qrRef} className="w-[220px] h-[220px] flex items-center justify-center" />
       </div>
 
+      {/* Download Button */}
       <GlobalButton 
         variant="primary"
         leftIcon={<Download size={18} />}
-        className="px-6 text-xs font-bold uppercase tracking-wider"
+        className="px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all"
         onClick={handleDownloadQR}
         disabled={!qrValue}
       >
-        {t("download_qr", "Download QR")}
+        {t("download_qr", "DOWNLOAD QR")}
       </GlobalButton>
+
     </div>
   )
 }
@@ -165,7 +168,7 @@ function PaymentLimitsView() {
 
   if (isLoading && limitsList.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -1233,18 +1236,6 @@ export default function AdminPage() {
     }
   }
 
-  const getHeaderTitle = () => {
-    switch (activeTab) {
-      case 'my_qr': return t("my_qr", t("manage_storeQR", "Store QR Code"))
-      case 'payment_limits': return t("paymentLimits", t("payment_limits", "Payment Limits"))
-      case 'settlement_settings': return t("sl_title", t("settlement_settings", "My Settlement Settings"))
-      case 'manage_notifications': return t("notifications_tlt", t("manage_notifications", "Manage Notifications"))
-      case 'change_language': return t("change_language", "Change Language")
-      case 'change_pin': return t("change_wallet_pin", t("change_pin", "Change PIN"))
-      default: return t("adm_title", t("admin", "Administration"))
-    }
-  }
-
   const tabs = [
     { id: 'my_qr', label: t("manage_storeQR", t("store_qr_code", "Store QR Code")), icon: QrCode },
     { id: 'payment_limits', label: t("paymentLimits", t("payment_limits", "Payment Limits")), icon: Wallet },
@@ -1256,24 +1247,11 @@ export default function AdminPage() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">
-      
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 pb-4 border-b border-slate-200 dark:border-white/10 gap-2">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            {t("adm_title", t("admin", "Administration"))}
-          </p>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            {getHeaderTitle()}
-          </h1>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         
-        {/* Left Sidebar Tabs - Responsive (Horizontal scroll on mobile, Vertical on Desktop) */}
+        {/* Left Sidebar Tabs (Pill buttons styling like user's screenshot) */}
         <div className="w-full lg:w-72 shrink-0">
-          <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-2 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-1.5 snap-x">
+          <div className="bg-white dark:bg-[#0f1829] rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm p-3 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-2 snap-x">
             
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id
@@ -1281,14 +1259,14 @@ export default function AdminPage() {
                 <button 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center shrink-0 lg:w-full gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${
+                  className={`flex items-center shrink-0 lg:w-full gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${
                     isActive
-                      ? 'bg-[#1b55ad] text-white shadow-md'
-                      : 'text-slate-600 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1b55ad] dark:hover:text-blue-400'
+                      ? 'bg-[#2563eb] text-white shadow-md shadow-blue-500/20'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <tab.icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-white/40'} />
-                  {tab.label}
+                  <tab.icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               )
             })}
@@ -1296,8 +1274,8 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Right Content Area */}
-        <div className="flex-1 min-w-0">
+        {/* Right Content Area (Clean large rounded card) */}
+        <div className="flex-1 min-w-0 w-full">
           {renderContent()}
         </div>
 
