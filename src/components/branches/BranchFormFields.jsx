@@ -19,6 +19,13 @@ import GlobalUpload from "@/components/globals/GlobalUpload";
 import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/lib/api/endpoints";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import {
+  enforceNumeric,
+  enforceAlphanumericSpace,
+  enforceNumericSpace,
+  enforceEmail,
+} from "@/lib/utils/inputFormatters";
 
 export default function BranchFormFields({
   data,
@@ -26,6 +33,7 @@ export default function BranchFormFields({
   errors = {},
   clearError = () => {},
 }) {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
   const countryOptions = (welcomeData?.metaData?.COUNTRYCODE || []).map(
@@ -45,8 +53,8 @@ export default function BranchFormFields({
   }));
 
   // Mobile and Business Dial state
-  const [mobileDial, setMobileDial] = useState(data?.mobileDial || "+63");
-  const [businessDial, setBusinessDial] = useState(data?.businessDial || "+63");
+  const [mobileDial, setMobileDial] = useState(data?.mobileDial || "");
+  const [businessDial, setBusinessDial] = useState(data?.businessDial || "");
   const [openMobileCountryBox, setOpenMobileCountryBox] = useState(false);
   const [openBusinessCountryBox, setOpenBusinessCountryBox] = useState(false);
 
@@ -73,22 +81,30 @@ export default function BranchFormFields({
       <input type="hidden" name="businessDial" value={businessDial} />
       <input type="hidden" name="proImgId" value={profilePic || ""} />
       <input type="hidden" name="businessIdImg" value={docPic || ""} />
+      <input type="hidden" name="subStatus" value={status} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-left w-full">
+        {data?.subId && <input type="hidden" name="subId" value={data.subId} />}
         <GlobalInput
           name="subName"
-          label="Branch Name"
+          label={t("subsidiaryName", "Branch Name")}
           required
+          maxLength={40}
+          minLength={3}
           defaultValue={data?.subName || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.subName}
           placeholder="e.g. Silicon Valley Branch"
         />
         <GlobalInput
           name="emailAddr"
-          label="Branch Email Address"
+          label={t("subs_email_address", "Email Address")}
           type="email"
+          required
+          maxLength={80}
           defaultValue={data?.emailAddr || ""}
+          onInput={enforceEmail}
           disabled={isView}
           error={errors.emailAddr}
           placeholder="e.g. branch@example.com"
@@ -97,9 +113,17 @@ export default function BranchFormFields({
         {/* Mobile Phone (Branch) */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-            Mobile Phone <span className="ml-1 text-[#e65625]">*</span>
+            {t("subs_mobile_num", "Mobile Phone")}{" "}
+            <span className="ml-1 text-[#e65625]">*</span>
           </label>
-          <div className="flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden">
+          <div
+            className={cn(
+              "flex items-stretch w-full h-10 rounded-lg border bg-slate-50 dark:bg-white/5 focus-within:ring-1 transition-all duration-150 overflow-hidden",
+              errors.mobileDial || errors.mobilePhone
+                ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-500/20"
+                : "border-slate-200 dark:border-white/10 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20",
+            )}
+          >
             <Popover
               open={openMobileCountryBox}
               onOpenChange={setOpenMobileCountryBox}
@@ -112,7 +136,7 @@ export default function BranchFormFields({
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 min-w-[70px]"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span>{mobileDial}</span>
+                    <span>{mobileDial || t("select", "Select")}</span>
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
@@ -130,6 +154,7 @@ export default function BranchFormFields({
                           onSelect={() => {
                             setMobileDial(countryItem.code);
                             setOpenMobileCountryBox(false);
+                            clearError("mobileDial");
                           }}
                         >
                           <Check
@@ -163,7 +188,11 @@ export default function BranchFormFields({
                 type="tel"
                 required
                 placeholder="Enter mobile phone"
+                maxLength={15}
+                minLength={7}
                 defaultValue={data?.mobilePhone?.replace(mobileDial, "") || ""}
+                onInput={enforceNumeric}
+                onChange={() => clearError("mobilePhone")}
                 disabled={isView}
                 className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
               />
@@ -180,9 +209,17 @@ export default function BranchFormFields({
         {/* Business Phone (Branch) */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-            Business Phone <span className="ml-1 text-[#e65625]">*</span>
+            {t("sub_businessPhone", "Business Phone")}{" "}
+            <span className="ml-1 text-[#e65625]">*</span>
           </label>
-          <div className="flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden">
+          <div
+            className={cn(
+              "flex items-stretch w-full h-10 rounded-lg border bg-slate-50 dark:bg-white/5 focus-within:ring-1 transition-all duration-150 overflow-hidden",
+              errors.businessDial || errors.businessPhone
+                ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-500/20"
+                : "border-slate-200 dark:border-white/10 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20",
+            )}
+          >
             <Popover
               open={openBusinessCountryBox}
               onOpenChange={setOpenBusinessCountryBox}
@@ -195,7 +232,7 @@ export default function BranchFormFields({
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 min-w-[70px]"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span>{businessDial}</span>
+                    <span>{businessDial || t("select", "Select")}</span>
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
@@ -213,6 +250,7 @@ export default function BranchFormFields({
                           onSelect={() => {
                             setBusinessDial(countryItem.code);
                             setOpenBusinessCountryBox(false);
+                            clearError("businessDial");
                           }}
                         >
                           <Check
@@ -246,9 +284,13 @@ export default function BranchFormFields({
                 type="tel"
                 required
                 placeholder="Enter business phone"
+                maxLength={20}
+                minLength={3}
                 defaultValue={
                   data?.businessPhone?.replace(businessDial, "") || ""
                 }
+                onInput={enforceNumeric}
+                onChange={() => clearError("businessPhone")}
                 disabled={isView}
                 className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
               />
@@ -263,7 +305,7 @@ export default function BranchFormFields({
         </div>
 
         <GlobalSelect
-          label="Country"
+          label={t("sub_country", "Country")}
           name="subCountry"
           value={country}
           onChange={(val) => {
@@ -279,60 +321,77 @@ export default function BranchFormFields({
 
         <GlobalInput
           name="subState"
-          label="State"
+          label={t("sub_state", "State")}
+          maxLength={50}
           defaultValue={data?.subState || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.subState}
           placeholder="e.g. Metro Manila"
         />
         <GlobalInput
           name="subCity"
-          label="City"
+          label={t("sub_city", "City")}
           required
+          maxLength={30}
+          minLength={2}
           defaultValue={data?.subCity || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.subCity}
           placeholder="e.g. Manila"
         />
         <GlobalInput
           name="streetName"
-          label="Street Name"
+          label={t("sub_street", "Street Name")}
           required
+          maxLength={30}
+          minLength={2}
           defaultValue={data?.streetName || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.streetName}
           placeholder="e.g. Taft Avenue"
         />
         <GlobalInput
           name="streetNum"
-          label="Street No"
+          label={t("sub_streetNo", "Street No")}
           required
+          maxLength={10}
+          minLength={1}
           defaultValue={data?.streetNum || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.streetNum}
           placeholder="e.g. 123"
         />
         <GlobalInput
           name="unitName"
-          label="Unit Name"
+          label={t("sub_unitname", "Unit Name")}
           required
+          maxLength={10}
+          minLength={1}
           defaultValue={data?.unitName || ""}
+          onInput={enforceAlphanumericSpace}
           disabled={isView}
           error={errors.unitName}
           placeholder="e.g. Suite 400"
         />
         <GlobalInput
           name="subZip"
-          label="Zip Code"
+          label={t("sub_zip", "Zip Code")}
           required
+          maxLength={20}
+          minLength={3}
           defaultValue={data?.subZip || ""}
+          onInput={enforceNumeric}
           disabled={isView}
           error={errors.subZip}
           placeholder="e.g. 1234"
         />
 
         <GlobalSelect
-          label="Branch Category"
+          label={t("sub_category", "Branch Category")}
           name="subCategory"
           value={category}
           onChange={(val) => {
@@ -347,7 +406,7 @@ export default function BranchFormFields({
         />
 
         <GlobalSelect
-          label="Business ID Type"
+          label={t("subs_bussiness_idtype", "Business ID Type")}
           name="businessIdType"
           value={idType}
           onChange={(val) => {
@@ -363,9 +422,11 @@ export default function BranchFormFields({
 
         <GlobalInput
           name="businessIdNum"
-          label="Business ID Number"
+          label={t("subs_bussines_idnumber", "Business ID Number")}
           required
+          maxLength={30}
           defaultValue={data?.businessIdNum || ""}
+          onInput={enforceNumericSpace}
           disabled={isView}
           error={errors.businessIdNum}
           placeholder="e.g. Corp-ID-12345"
@@ -373,7 +434,8 @@ export default function BranchFormFields({
 
         <GlobalInput
           name="website"
-          label="Website"
+          label={t("sub_webSite", "Website")}
+          maxLength={80}
           defaultValue={data?.website || ""}
           disabled={isView}
           error={errors.website}
@@ -381,7 +443,7 @@ export default function BranchFormFields({
         />
 
         <GlobalSelect
-          label="Status"
+          label={t("global_status", "Status")}
           name="subStatus"
           value={status}
           onChange={(val) => {
@@ -401,7 +463,7 @@ export default function BranchFormFields({
         {/* Profile Image & Doc Image */}
         <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
           <GlobalUpload
-            label="Upload Profile Picture"
+            label={t("sub_proImgId", "Upload Profile Picture")}
             value={profilePic}
             onChange={async (fileBase64) => {
               if (!fileBase64) {
@@ -425,7 +487,7 @@ export default function BranchFormFields({
             disabled={isView}
           />
           <GlobalUpload
-            label="Upload Business ID Picture"
+            label={t("sub_businessIdImg", "Upload Business ID Picture")}
             value={docPic}
             onChange={async (fileBase64) => {
               if (!fileBase64) {

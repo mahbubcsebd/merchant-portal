@@ -7,6 +7,8 @@ import BranchFormFields from "@/components/branches/BranchFormFields";
 import BranchDesktopTable from "@/components/branches/BranchDesktopTable";
 import BranchMobileList from "@/components/branches/BranchMobileList";
 import { useBranches } from "@/hooks/useBranches";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { useFormValidation } from "@/hooks/useFormValidation";
 
 export default function BranchesPage() {
   const {
@@ -26,20 +28,31 @@ export default function BranchesPage() {
     editMutation,
     queryClient,
   } = useBranches();
+  
+  const { t } = useLanguage();
+  const { validate } = useFormValidation();
+  
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredBranches = branches.filter((branch) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (branch.SUBNAME || "").toLowerCase().includes(term) ||
-      (branch.EMAILADDR || "").toLowerCase().includes(term) ||
-      (branch.MOBILEPHONE || "").toLowerCase().includes(term) ||
-      (branch.CITY || "").toLowerCase().includes(term)
-    );
-  });
+  const filteredBranches = branches
+    .filter((branch) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        (branch.SUBNAME || "").toLowerCase().includes(term) ||
+        (branch.EMAILADDR || "").toLowerCase().includes(term) ||
+        (branch.MOBILEPHONE || "").toLowerCase().includes(term) ||
+        (branch.CITY || "").toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      // Sort alphabetically by ID to keep the list stable
+      const idA = String(a.subId || a.CORPCUSTSUBID || "").toLowerCase();
+      const idB = String(b.subId || b.CORPCUSTSUBID || "").toLowerCase();
+      return idA.localeCompare(idB);
+    });
 
   const getLabel = (type, value) => {
     if (!welcomeData?.metaData || !welcomeData.metaData[type]) return value;
@@ -51,34 +64,58 @@ export default function BranchesPage() {
 
   const handleAddClick = (initialValues = null) => {
     openFormDialog({
-      title: "Add Branch",
+      title: t("ms_addAgent", "Add Branch"),
       isView: false,
-      submitText: "Create",
+      submitText: t("buttonsSave", "Save"),
       size: "sm:max-w-4xl",
+      disableAutoValidation: true,
       content: <BranchFormFields data={initialValues} isView={false} />,
-      onSave: (values) => {
+      onSave: (values, setFormErrors) => {
+        // Validation
+        const fields = [
+          { name: 'subName', value: values.subName, label: t("subsidiaryName", "Branch Name"), required: true },
+          { name: 'emailAddr', value: values.emailAddr, label: t("subs_email_address", "Branch Email Address"), required: true, type: 'email' },
+          { name: 'mobileDial', value: values.mobileDial, label: t("country_code", "Country Code"), required: true, type: 'select' },
+          { name: 'mobilePhone', value: values.mobilePhone, label: t("subs_mobile_num", "Mobile Phone"), required: true },
+          { name: 'businessDial', value: values.businessDial, label: t("country_code", "Country Code"), required: true, type: 'select' },
+          { name: 'businessPhone', value: values.businessPhone, label: t("sub_businessPhone", "Business Phone"), required: true },
+          { name: 'subCountry', value: values.subCountry, label: t("sub_country", "Country"), required: true, type: 'select' },
+          { name: 'subCity', value: values.subCity, label: t("sub_city", "City"), required: true },
+          { name: 'streetName', value: values.streetName, label: t("sub_street", "Street Name"), required: true },
+          { name: 'streetNum', value: values.streetNum, label: t("sub_streetNo", "Street No"), required: true },
+          { name: 'unitName', value: values.unitName, label: t("sub_unitname", "Unit Name"), required: true },
+          { name: 'subZip', value: values.subZip, label: t("sub_zip", "Zip Code"), required: true },
+          { name: 'subCategory', value: values.subCategory, label: t("sub_category", "Branch Category"), required: true, type: 'select' },
+          { name: 'businessIdType', value: values.businessIdType, label: t("subs_bussiness_idtype", "Business ID Type"), required: true, type: 'select' },
+          { name: 'businessIdNum', value: values.businessIdNum, label: t("subs_bussines_idnumber", "Business ID Number"), required: true },
+        ];
+        
+        const validationResult = validate(fields);
+        if (!validationResult.isValid) {
+          setFormErrors(validationResult.errors);
+          return false;
+        }
+
         // Show preconfirm screen
         openPreconfirmDialog({
-          title: "Confirm Branch Details",
+          title: t("ms_manage_agent", "Confirm Branch Details"),
           details: {
-            "Branch Name": values.subName,
-            "Email Address": values.emailAddr,
-            "Mobile Phone": (values.mobileDial || "") + values.mobilePhone,
-            "Business Phone":
-              (values.businessDial || "") + values.businessPhone,
-            Country: values.subCountryLabel || values.subCountry,
-            State: values.subState,
-            City: values.subCity,
-            "Street Name": values.streetName,
-            "Street No": values.streetNum,
-            "Unit Name": values.unitName,
-            "Zip Code": values.subZip,
-            "Branch Category": values.subCategoryLabel || values.subCategory,
-            "Business ID Type":
-              values.businessIdTypeLabel || values.businessIdType,
-            "Business ID Number": values.businessIdNum,
-            Website: values.website,
-            Status: values.subStatusLabel || values.subStatus,
+            [t("subsidiaryName", "Branch Name")]: values.subName,
+            [t("subs_email_address", "Email Address")]: values.emailAddr,
+            [t("subs_mobile_num", "Mobile Phone")]: (values.mobileDial || "") + values.mobilePhone,
+            [t("sub_businessPhone", "Business Phone")]: (values.businessDial || "") + values.businessPhone,
+            [t("sub_country", "Country")]: values.subCountryLabel || values.subCountry,
+            [t("sub_state", "State")]: values.subState,
+            [t("sub_city", "City")]: values.subCity,
+            [t("sub_street", "Street Name")]: values.streetName,
+            [t("sub_streetNo", "Street No")]: values.streetNum,
+            [t("sub_unitname", "Unit Name")]: values.unitName,
+            [t("sub_zip", "Zip Code")]: values.subZip,
+            [t("sub_category", "Branch Category")]: values.subCategoryLabel || values.subCategory,
+            [t("subs_bussiness_idtype", "Business ID Type")]: values.businessIdTypeLabel || values.businessIdType,
+            [t("subs_bussines_idnumber", "Business ID Number")]: values.businessIdNum,
+            [t("sub_webSite", "Website")]: values.website,
+            [t("global_status", "Status")]: values.subStatusLabel || values.subStatus,
           },
           onChange: () => {
             handleAddClick(values);
@@ -123,29 +160,25 @@ export default function BranchesPage() {
                 ) {
                   queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
                   openSuccessDialog({
-                    title: "Branch Created",
+                    title: t("ms_manage_agent", "Branch Created"),
                     message: "The branch has been successfully created.",
                     details: {
-                      "Branch Name": values.subName,
-                      "Email Address": values.emailAddr,
-                      "Mobile Phone":
-                        (values.mobileDial || "") + values.mobilePhone,
-                      "Business Phone":
-                        (values.businessDial || "") + values.businessPhone,
-                      Country: values.subCountryLabel || values.subCountry,
-                      State: values.subState,
-                      City: values.subCity,
-                      "Street Name": values.streetName,
-                      "Street No": values.streetNum,
-                      "Unit Name": values.unitName,
-                      "Zip Code": values.subZip,
-                      "Branch Category":
-                        values.subCategoryLabel || values.subCategory,
-                      "Business ID Type":
-                        values.businessIdTypeLabel || values.businessIdType,
-                      "Business ID Number": values.businessIdNum,
-                      Website: values.website,
-                      Status: values.subStatusLabel || values.subStatus,
+                      [t("subsidiaryName", "Branch Name")]: values.subName,
+                      [t("subs_email_address", "Email Address")]: values.emailAddr,
+                      [t("subs_mobile_num", "Mobile Phone")]: (values.mobileDial || "") + values.mobilePhone,
+                      [t("sub_businessPhone", "Business Phone")]: (values.businessDial || "") + values.businessPhone,
+                      [t("sub_country", "Country")]: values.subCountryLabel || values.subCountry,
+                      [t("sub_state", "State")]: values.subState,
+                      [t("sub_city", "City")]: values.subCity,
+                      [t("sub_street", "Street Name")]: values.streetName,
+                      [t("sub_streetNo", "Street No")]: values.streetNum,
+                      [t("sub_unitname", "Unit Name")]: values.unitName,
+                      [t("sub_zip", "Zip Code")]: values.subZip,
+                      [t("sub_category", "Branch Category")]: values.subCategoryLabel || values.subCategory,
+                      [t("subs_bussiness_idtype", "Business ID Type")]: values.businessIdTypeLabel || values.businessIdType,
+                      [t("subs_bussines_idnumber", "Business ID Number")]: values.businessIdNum,
+                      [t("sub_webSite", "Website")]: values.website,
+                      [t("global_status", "Status")]: values.subStatusLabel || values.subStatus,
                     },
                   });
                 } else {
@@ -180,34 +213,34 @@ export default function BranchesPage() {
 
   const handleViewClick = (branch) => {
     openDetailDialog({
-      title: "View Branch",
+      title: t("ms_manage_agent", "View Branch"),
       details: [
-        { label: "Branch Name", value: branch.SUBNAME || "N/A" },
-        { label: "Email Address", value: branch.EMAILADDR || "N/A" },
-        { label: "Mobile Phone", value: branch.MOBILEPHONE || "N/A" },
-        { label: "Business Phone", value: branch.BUSINESSPHONE || "N/A" },
+        { label: t("subsidiaryName", "Branch Name"), value: branch.SUBNAME || "N/A" },
+        { label: t("subs_email_address", "Email Address"), value: branch.EMAILADDR || "N/A" },
+        { label: t("subs_mobile_num", "Mobile Phone"), value: branch.MOBILEPHONE || "N/A" },
+        { label: t("sub_businessPhone", "Business Phone"), value: branch.BUSINESSPHONE || "N/A" },
         {
-          label: "Country",
+          label: t("sub_country", "Country"),
           value: getLabel("COUNTRYCODE", branch.SUBCOUNTRY) || "N/A",
         },
-        { label: "State", value: branch.SUBSTATE || "N/A" },
-        { label: "City", value: branch.SUBCITY || branch.CITY || "N/A" },
-        { label: "Street Name", value: branch.STREETNAME || "N/A" },
-        { label: "Street No", value: branch.STREETNUM || "N/A" },
-        { label: "Unit Name", value: branch.UNITNAME || "N/A" },
-        { label: "Zip Code", value: branch.SUBZIP || "N/A" },
+        { label: t("sub_state", "State"), value: branch.SUBSTATE || "N/A" },
+        { label: t("sub_city", "City"), value: branch.SUBCITY || branch.CITY || "N/A" },
+        { label: t("sub_street", "Street Name"), value: branch.STREETNAME || "N/A" },
+        { label: t("sub_streetNo", "Street No"), value: branch.STREETNUM || "N/A" },
+        { label: t("sub_unitname", "Unit Name"), value: branch.UNITNAME || "N/A" },
+        { label: t("sub_zip", "Zip Code"), value: branch.SUBZIP || "N/A" },
         {
-          label: "Branch Category",
+          label: t("sub_category", "Branch Category"),
           value: getLabel("SUBCATEGORY", branch.SUBCATEGORY) || "N/A",
         },
         {
-          label: "Business ID Type",
+          label: t("subs_bussiness_idtype", "Business ID Type"),
           value: getLabel("BUSINESSIDTYPE", branch.BUSINESSIDTYPE) || "N/A",
         },
-        { label: "Business ID Number", value: branch.BUSINESSIDNUM || "N/A" },
-        { label: "Website", value: branch.WEBSITE || "N/A" },
+        { label: t("subs_bussines_idnumber", "Business ID Number"), value: branch.BUSINESSIDNUM || "N/A" },
+        { label: t("sub_webSite", "Website"), value: branch.WEBSITE || "N/A" },
         {
-          label: "Status",
+          label: t("global_status", "Status"),
           value: branch.SUBSTATUS === "A" ? "Active" : "Inactive",
         },
       ],
@@ -241,34 +274,58 @@ export default function BranchesPage() {
       subStatus: branch.subStatus || branch.SUBSTATUS || "A",
     };
     openFormDialog({
-      title: "Edit Branch",
+      title: t("ms_manage_agent", "Edit Branch"),
       isView: false,
-      submitText: "Save",
+      submitText: t("buttonsSave", "Save"),
       size: "sm:max-w-4xl",
+      disableAutoValidation: true,
       content: <BranchFormFields data={initialValues} isView={false} />,
-      onSave: (values) => {
+      onSave: (values, setFormErrors) => {
+        // Validation
+        const fields = [
+          { name: 'subName', value: values.subName, label: t("subsidiaryName", "Branch Name"), required: true },
+          { name: 'emailAddr', value: values.emailAddr, label: t("subs_email_address", "Branch Email Address"), required: true, type: 'email' },
+          { name: 'mobileDial', value: values.mobileDial, label: t("country_code", "Country Code"), required: true, type: 'select' },
+          { name: 'mobilePhone', value: values.mobilePhone, label: t("subs_mobile_num", "Mobile Phone"), required: true },
+          { name: 'businessDial', value: values.businessDial, label: t("country_code", "Country Code"), required: true, type: 'select' },
+          { name: 'businessPhone', value: values.businessPhone, label: t("sub_businessPhone", "Business Phone"), required: true },
+          { name: 'subCountry', value: values.subCountry, label: t("sub_country", "Country"), required: true, type: 'select' },
+          { name: 'subCity', value: values.subCity, label: t("sub_city", "City"), required: true },
+          { name: 'streetName', value: values.streetName, label: t("sub_street", "Street Name"), required: true },
+          { name: 'streetNum', value: values.streetNum, label: t("sub_streetNo", "Street No"), required: true },
+          { name: 'unitName', value: values.unitName, label: t("sub_unitname", "Unit Name"), required: true },
+          { name: 'subZip', value: values.subZip, label: t("sub_zip", "Zip Code"), required: true },
+          { name: 'subCategory', value: values.subCategory, label: t("sub_category", "Branch Category"), required: true, type: 'select' },
+          { name: 'businessIdType', value: values.businessIdType, label: t("subs_bussiness_idtype", "Business ID Type"), required: true, type: 'select' },
+          { name: 'businessIdNum', value: values.businessIdNum, label: t("subs_bussines_idnumber", "Business ID Number"), required: true },
+        ];
+        
+        const validationResult = validate(fields);
+        if (!validationResult.isValid) {
+          setFormErrors(validationResult.errors);
+          return false;
+        }
+
         // Show preconfirm screen
         openPreconfirmDialog({
-          title: "Confirm Updated Branch Details",
+          title: t("ms_manage_agent", "Confirm Updated Branch Details"),
           details: {
-            "Branch Name": values.subName,
-            "Email Address": values.emailAddr,
-            "Mobile Phone": (values.mobileDial || "") + values.mobilePhone,
-            "Business Phone":
-              (values.businessDial || "") + values.businessPhone,
-            Country: values.subCountryLabel || values.subCountry,
-            State: values.subState,
-            City: values.subCity,
-            "Street Name": values.streetName,
-            "Street No": values.streetNum,
-            "Unit Name": values.unitName,
-            "Zip Code": values.subZip,
-            "Branch Category": values.subCategoryLabel || values.subCategory,
-            "Business ID Type":
-              values.businessIdTypeLabel || values.businessIdType,
-            "Business ID Number": values.businessIdNum,
-            Website: values.website,
-            Status: values.subStatusLabel || values.subStatus,
+            [t("subsidiaryName", "Branch Name")]: values.subName,
+            [t("subs_email_address", "Email Address")]: values.emailAddr,
+            [t("subs_mobile_num", "Mobile Phone")]: (values.mobileDial || "") + values.mobilePhone,
+            [t("sub_businessPhone", "Business Phone")]: (values.businessDial || "") + values.businessPhone,
+            [t("sub_country", "Country")]: values.subCountryLabel || values.subCountry,
+            [t("sub_state", "State")]: values.subState,
+            [t("sub_city", "City")]: values.subCity,
+            [t("sub_street", "Street Name")]: values.streetName,
+            [t("sub_streetNo", "Street No")]: values.streetNum,
+            [t("sub_unitname", "Unit Name")]: values.unitName,
+            [t("sub_zip", "Zip Code")]: values.subZip,
+            [t("sub_category", "Branch Category")]: values.subCategoryLabel || values.subCategory,
+            [t("subs_bussiness_idtype", "Business ID Type")]: values.businessIdTypeLabel || values.businessIdType,
+            [t("subs_bussines_idnumber", "Business ID Number")]: values.businessIdNum,
+            [t("sub_webSite", "Website")]: values.website,
+            [t("global_status", "Status")]: values.subStatusLabel || values.subStatus,
           },
           onChange: () => {
             // Re-open edit form with the updated values
@@ -315,29 +372,25 @@ export default function BranchesPage() {
                 ) {
                   queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
                   openSuccessDialog({
-                    title: "Branch Updated",
+                    title: t("ms_manage_agent", "Branch Updated"),
                     message: "The branch has been successfully updated.",
                     details: {
-                      "Branch Name": values.subName,
-                      "Email Address": values.emailAddr,
-                      "Mobile Phone":
-                        (values.mobileDial || "") + values.mobilePhone,
-                      "Business Phone":
-                        (values.businessDial || "") + values.businessPhone,
-                      Country: values.subCountryLabel || values.subCountry,
-                      State: values.subState,
-                      City: values.subCity,
-                      "Street Name": values.streetName,
-                      "Street No": values.streetNum,
-                      "Unit Name": values.unitName,
-                      "Zip Code": values.subZip,
-                      "Branch Category":
-                        values.subCategoryLabel || values.subCategory,
-                      "Business ID Type":
-                        values.businessIdTypeLabel || values.businessIdType,
-                      "Business ID Number": values.businessIdNum,
-                      Website: values.website,
-                      Status: values.subStatusLabel || values.subStatus,
+                      [t("subsidiaryName", "Branch Name")]: values.subName,
+                      [t("subs_email_address", "Email Address")]: values.emailAddr,
+                      [t("subs_mobile_num", "Mobile Phone")]: (values.mobileDial || "") + values.mobilePhone,
+                      [t("sub_businessPhone", "Business Phone")]: (values.businessDial || "") + values.businessPhone,
+                      [t("sub_country", "Country")]: values.subCountryLabel || values.subCountry,
+                      [t("sub_state", "State")]: values.subState,
+                      [t("sub_city", "City")]: values.subCity,
+                      [t("sub_street", "Street Name")]: values.streetName,
+                      [t("sub_streetNo", "Street No")]: values.streetNum,
+                      [t("sub_unitname", "Unit Name")]: values.unitName,
+                      [t("sub_zip", "Zip Code")]: values.subZip,
+                      [t("sub_category", "Branch Category")]: values.subCategoryLabel || values.subCategory,
+                      [t("subs_bussiness_idtype", "Business ID Type")]: values.businessIdTypeLabel || values.businessIdType,
+                      [t("subs_bussines_idnumber", "Business ID Number")]: values.businessIdNum,
+                      [t("sub_webSite", "Website")]: values.website,
+                      [t("global_status", "Status")]: values.subStatusLabel || values.subStatus,
                     },
                   });
                 } else {
@@ -370,9 +423,9 @@ export default function BranchesPage() {
 
   const handleDeleteClick = (branch) => {
     openConfirmDialog({
-      title: "Delete Branch?",
-      description: `Are you sure you want to delete ${branch.SUBNAME}? This action cannot be undone.`,
-      confirmText: deleteMutation.isPending ? "Deleting..." : "Delete",
+      title: t("del_sub_title", "Delete Branch?"),
+      description: t("del_sub_desc", `Are you sure you want to delete ${branch.SUBNAME}? This action cannot be undone.`),
+      confirmText: deleteMutation.isPending ? t("deleting", "Deleting...") : t("delete", "Delete"),
       iconType: "danger",
       onConfirm: async () => {
         await deleteMutation.mutateAsync(
@@ -385,24 +438,24 @@ export default function BranchesPage() {
               ) {
                 queryClient.invalidateQueries({ queryKey: ["subsidiaries"] });
                 openGlobalPopup({
-                  title: "Branch Deleted",
+                  title: t("del_sub_title", "Branch Deleted"),
                   description:
                     res.message ||
-                    `The branch ${branch.SUBNAME} has been successfully deleted.`,
+                    t("del_sub_success", `The branch ${branch.SUBNAME} has been successfully deleted.`),
                   type: "success",
                 });
               } else {
                 openGlobalPopup({
-                  title: "Error",
-                  description: res.message || "Failed to delete branch",
+                  title: t("error", "Error"),
+                  description: res.message || t("error_desc", "Failed to delete branch"),
                   type: "error",
                 });
               }
             },
             onError: (err) => {
               openGlobalPopup({
-                title: "Error",
-                description: err.message || "An unexpected error occurred",
+                title: t("error", "Error"),
+                description: err.message || t("error_desc", "An unexpected error occurred"),
                 type: "error",
               });
             },
@@ -413,13 +466,15 @@ export default function BranchesPage() {
     });
   };
 
+
+
   return (
     <div className="w-full h-full flex flex-col p-4 sm:p-6 lg:p-8 bg-slate-50/50 dark:bg-[#0a0a0a]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize">
-            Branches
+            {t("ms_manage_agent", "Branches")}
           </h1>
           <p className="text-sm text-slate-500 dark:text-white/60 mt-1">
             Manage your branches
@@ -444,7 +499,7 @@ export default function BranchesPage() {
             isLoading={addMutation.isPending}
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10 px-8"
           >
-            Add Branch
+            {t("ms_addAgent", "Add Branch")}
           </GlobalButton>
         </div>
 
