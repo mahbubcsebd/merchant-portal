@@ -303,24 +303,22 @@ export function EnrollForm() {
                 )}
               >
                 <Popover open={openCountryBox} onOpenChange={setOpenCountryBox}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-expanded={openCountryBox}
-                      className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <span>
-                          {
-                            countryCodesList.find(
-                              (c) => c.code === watch('countryCode')
-                            )?.flag || '🌐'
-                          }
-                        </span>
-                        <span>+{watch('countryCode')}</span>
+                  <PopoverTrigger
+                    type="button"
+                    aria-expanded={openCountryBox}
+                    className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>
+                        {
+                          countryCodesList.find(
+                            (c) => c.code === watch('countryCode')
+                          )?.flag || '🌐'
+                        }
                       </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
-                    </button>
+                      <span>+{watch('countryCode')}</span>
+                    </span>
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                   </PopoverTrigger>
                   <PopoverContent className="w-[280px] p-2 bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-[100]" align="start">
                     <div className="relative mb-2">

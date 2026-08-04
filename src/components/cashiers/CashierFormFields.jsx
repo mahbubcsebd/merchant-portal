@@ -99,18 +99,16 @@ export default function CashierFormFields({
               open={openMobileCountryBox}
               onOpenChange={setOpenMobileCountryBox}
             >
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  disabled={isView}
-                  aria-expanded={openMobileCountryBox}
-                  className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span>{mobileDial}</span>
-                  </span>
-                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
-                </button>
+              <PopoverTrigger
+                type="button"
+                disabled={isView}
+                aria-expanded={openMobileCountryBox}
+                className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>{mobileDial}</span>
+                </span>
+                <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
               </PopoverTrigger>
               <PopoverContent className="w-[240px] p-0" align="start">
                 <Command>

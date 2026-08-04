@@ -130,18 +130,16 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
 
         {/* Notification Bell using shadcn DropdownMenu */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
-              aria-label="Notifications"
-            >
-              <Bell size={14} className="sm:size-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#e65625] text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-[#0a0f1c] flex items-center justify-center animate-in zoom-in duration-200">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
+          <DropdownMenuTrigger
+            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all cursor-pointer"
+            aria-label="Notifications"
+          >
+            <Bell size={14} className="sm:size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#e65625] text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-[#0a0f1c] flex items-center justify-center animate-in zoom-in duration-200">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
