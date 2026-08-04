@@ -47,7 +47,7 @@ export function LoginForm() {
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "mahbub.cse.bd@gmail.com",
+      email: "mahbub.cse.me@gmail.com",
       pin: "111111",
     },
   });
