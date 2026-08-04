@@ -102,44 +102,47 @@ function MyQrView() {
     }
   };
 
+  const btnText = (t("buttonsDownloadQR", t("download_qr", "QR DOWNLOADEN"))).toUpperCase();
+
   return (
-    <div className="w-full min-h-[520px] flex flex-col items-center justify-center p-8 md:p-12 bg-white dark:bg-[#131c31] rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl animate-in fade-in duration-300">
+    <div className="w-full min-h-[480px] flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
       
       {/* Merchant Details */}
-      <div className="text-center mb-6">
-        <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+      <div className="text-center mb-5">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
           {p.custName || p.FIRSTNAME || "Merchant Store"}
         </h3>
-        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
           {p.userName ? `@${p.userName}` : ""}
         </p>
       </div>
 
       {/* Currency Select */}
-      <div className="w-full max-w-[280px] mb-8">
-        <GlobalSelect
-          value={selectedCurrency}
-          onChange={(val) => setSelectedCurrency(val)}
-          options={qrOptions.length > 0 ? qrOptions : [{ value: "default", label: "XCG Wallet QR" }]}
-          placeholder={t("selectCurrency", "Select Currency")}
-        />
-      </div>
+      {qrOptions.length > 1 && (
+        <div className="w-full max-w-[260px] mb-6">
+          <GlobalSelect
+            value={selectedCurrency}
+            onChange={(val) => setSelectedCurrency(val)}
+            options={qrOptions}
+            placeholder={t("selectCurrency", "Select Currency")}
+          />
+        </div>
+      )}
 
       {/* QR Code White Box */}
-      <div className="relative mb-8 p-6 bg-white rounded-3xl shadow-lg border border-slate-100 flex items-center justify-center w-[260px] h-[260px]">
+      <div className="relative mb-6 p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center w-[250px] h-[250px]">
         <div ref={qrRef} className="w-[220px] h-[220px] flex items-center justify-center" />
       </div>
 
       {/* Download Button */}
-      <GlobalButton 
-        variant="primary"
-        leftIcon={<Download size={18} />}
-        className="px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all"
+      <button 
+        type="button"
+        className="px-6 py-2.5 bg-[#1b55ad] hover:bg-[#184994] text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
         onClick={handleDownloadQR}
         disabled={!qrValue}
       >
-        {t("download_qr", "DOWNLOAD QR")}
-      </GlobalButton>
+        {btnText}
+      </button>
 
     </div>
   )
@@ -168,7 +171,7 @@ function PaymentLimitsView() {
 
   if (isLoading && limitsList.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+      <div className="w-full flex items-center justify-center p-12 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -1236,6 +1239,18 @@ export default function AdminPage() {
     }
   }
 
+  const getHeaderTitle = () => {
+    switch (activeTab) {
+      case 'my_qr': return t("my_qr", t("manage_storeQR", "Mijn QR"))
+      case 'payment_limits': return t("paymentLimits", t("payment_limits", "Payment Limits"))
+      case 'settlement_settings': return t("sl_title", t("settlement_settings", "My Settlement Settings"))
+      case 'manage_notifications': return t("notifications_tlt", t("manage_notifications", "Manage Notifications"))
+      case 'change_language': return t("change_language", "Change Language")
+      case 'change_pin': return t("change_wallet_pin", t("change_pin", "Change PIN"))
+      default: return t("adm_title", t("admin", "Administration"))
+    }
+  }
+
   const tabs = [
     { id: 'my_qr', label: t("manage_storeQR", t("store_qr_code", "Store QR Code")), icon: QrCode },
     { id: 'payment_limits', label: t("paymentLimits", t("payment_limits", "Payment Limits")), icon: Wallet },
@@ -1249,7 +1264,7 @@ export default function AdminPage() {
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         
-        {/* Left Sidebar Tabs (Pill buttons styling like user's screenshot) */}
+        {/* Left Sidebar Tabs */}
         <div className="w-full lg:w-72 shrink-0">
           <div className="bg-white dark:bg-[#0f1829] rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm p-3 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-2 snap-x">
             
@@ -1274,8 +1289,11 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Right Content Area (Clean large rounded card) */}
+        {/* Right Content Area */}
         <div className="flex-1 min-w-0 w-full">
+          <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400 mb-4 animate-in fade-in">
+            {getHeaderTitle()}
+          </h2>
           {renderContent()}
         </div>
 
