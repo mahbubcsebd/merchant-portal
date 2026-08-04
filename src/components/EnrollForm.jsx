@@ -376,7 +376,7 @@ export function EnrollForm() {
                   <input
                     id="phone"
                     type="tel"
-                    placeholder="1886225492"
+                    placeholder="XXXXXXXXXX"
                     className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     aria-invalid={!!errors.phone}
                     {...register('phone')}
