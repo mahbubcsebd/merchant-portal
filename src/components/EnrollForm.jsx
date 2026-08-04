@@ -606,7 +606,7 @@ export function EnrollForm() {
                   <InputOTPSlot
                     key={idx}
                     index={idx}
-                    className="w-10 h-12 sm:w-12 sm:h-14 text-xl font-bold rounded-xl border-2 border-slate-200 dark:border-white/20 focus:border-[#2563eb] dark:focus:border-blue-500 bg-white dark:bg-white/5 text-slate-900 dark:text-white shadow-sm transition-all !rounded-xl !border-l !border-y !border-r"
+                    className="w-10 h-12 sm:w-12 sm:h-14 text-xl font-bold rounded-xl border border-slate-200 dark:border-white/20 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-[#2563eb]/20 bg-white dark:bg-white/5 text-slate-900 dark:text-white shadow-sm transition-all"
                   />
                 ))}
               </div>

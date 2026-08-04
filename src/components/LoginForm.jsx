@@ -268,7 +268,12 @@ export function LoginForm() {
                     <InputOTPSlot
                       key={i}
                       index={i}
-                      className={`w-11 h-12 text-lg font-bold rounded-lg border ${otpError ? "border-red-500 bg-red-500/5" : "border-slate-200 dark:border-white/10"} shadow-sm bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white !ring-0 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 transition-all`}
+                      className={cn(
+                        "w-11 h-12 text-lg font-bold rounded-xl border transition-all shadow-sm bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-white",
+                        otpError
+                          ? "border-red-500 bg-red-500/5 text-red-500"
+                          : "border-slate-200 dark:border-white/10 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-[#2563eb]/20"
+                      )}
                     />
                   ))}
                 </InputOTPGroup>
