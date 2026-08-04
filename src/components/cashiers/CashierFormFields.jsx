@@ -18,6 +18,8 @@ import GlobalSelect from "@/components/globals/GlobalSelect";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBranches } from "@/hooks/useBranches";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceNumeric, enforceAlphanumericSpace, enforceEmail, enforceNumericSpace } from "@/lib/utils/inputFormatters";
 
 export default function CashierFormFields({
   data,
@@ -25,10 +27,11 @@ export default function CashierFormFields({
   errors = {},
   clearError = () => {},
 }) {
-  const [mobileDial, setMobileDial] = useState(data?.phCountryCode || "+63");
+  const [mobileDial, setMobileDial] = useState(data?.phCountryCode || "");
   const [openMobileCountryBox, setOpenMobileCountryBox] = useState(false);
   const [merSubID, setMerSubID] = useState(data?.merSubID || "");
   const [cashierIDType, setCashierIDType] = useState(data?.cashierIDType || "");
+  const { t } = useLanguage();
 
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -46,53 +49,62 @@ export default function CashierFormFields({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-left w-full">
         <GlobalInput
           name="merCashierID"
-          label="Cashier User ID"
+          label={t("cashier_user_id", "Cashier User ID")}
           required
           defaultValue={data?.merCashierID || ""}
-          disabled={isView || !!data}
+          disabled={isView}
+          isReadOnly={!!data && !isView}
           error={errors.merCashierID}
           onChange={() => clearError("merCashierID")}
+          maxLength={20}
+          onInput={enforceAlphanumericSpace}
         />
 
         <GlobalInput
           name="cashierFName"
-          label="First Name"
+          label={t("ucFirstName", "First Name")}
           required
           defaultValue={data?.cashierFName || ""}
           disabled={isView}
           error={errors.cashierFName}
           onChange={() => clearError("cashierFName")}
+          maxLength={50}
+          onInput={enforceAlphanumericSpace}
         />
 
         <GlobalInput
           name="cashierLName"
-          label="Last Name"
+          label={t("ucLastName", "Last Name")}
           required
           defaultValue={data?.cashierLName || ""}
           disabled={isView}
           error={errors.cashierLName}
           onChange={() => clearError("cashierLName")}
+          maxLength={50}
+          onInput={enforceAlphanumericSpace}
         />
 
         <GlobalInput
           name="cashierEmail"
-          label="Email Address"
+          label={t("bp_email", "Email Address")}
           required
           defaultValue={data?.cashierEmail || ""}
           disabled={isView}
           error={errors.cashierEmail}
           onChange={() => clearError("cashierEmail")}
+          maxLength={80}
+          onInput={enforceEmail}
         />
 
         {/* Mobile Phone (Cashier) */}
         <div className="flex flex-col gap-1.5">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-0.5">
-            Mobile No. <span className="text-[#e65625]">*</span>
+            {t("global_mobile_no", "Mobile No.")} <span className="text-[#e65625]">*</span>
           </label>
           <div
             className={cn(
               "flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden",
-              errors.cashierMobile ? "border-red-500" : "",
+              errors.cashierMobile || errors.countryCode ? "border-red-500" : "",
             )}
           >
             <Popover
@@ -107,7 +119,9 @@ export default function CashierFormFields({
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span>{mobileDial}</span>
+                    <span className={!mobileDial ? "text-slate-400" : ""}>
+                      {mobileDial || t("select", "Select")}
+                    </span>
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
@@ -125,6 +139,7 @@ export default function CashierFormFields({
                           onSelect={() => {
                             setMobileDial(country.code);
                             setOpenMobileCountryBox(false);
+                            clearError("countryCode");
                           }}
                         >
                           <Check
@@ -156,7 +171,8 @@ export default function CashierFormFields({
                 id="cashierMobile"
                 name="cashierMobile"
                 type="tel"
-                placeholder="Enter mobile number"
+                maxLength={15}
+                placeholder={t("global_mobile_no", "Enter mobile number")}
                 defaultValue={
                   data?.cashierMobile
                     ? data.cashierMobile.replace(data.phCountryCode, "")
@@ -164,6 +180,7 @@ export default function CashierFormFields({
                 }
                 disabled={isView}
                 onChange={() => clearError("cashierMobile")}
+                onInput={enforceNumeric}
                 className={cn(
                   "w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium placeholder:text-slate-400 dark:placeholder:text-slate-650",
                   errors.cashierMobile
@@ -173,6 +190,12 @@ export default function CashierFormFields({
               />
             </div>
           </div>
+          {errors.countryCode && !errors.cashierMobile && (
+            <p className="mt-1.5 text-xs font-semibold flex items-center gap-1.5 text-red-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              {errors.countryCode}
+            </p>
+          )}
           {errors.cashierMobile && (
             <p className="mt-1.5 text-xs font-semibold flex items-center gap-1.5 text-red-500">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
@@ -183,7 +206,7 @@ export default function CashierFormFields({
 
         <GlobalSelect
           name="merSubID"
-          label="Branch"
+          label={t("myQr_subsidiary", "Branch")}
           required
           value={merSubID}
           disabled={isView}
@@ -200,7 +223,7 @@ export default function CashierFormFields({
 
         <GlobalSelect
           name="cashierIDType"
-          label="Cashier ID Type"
+          label={t("cashier_id_type", "Cashier ID Type")}
           required
           value={cashierIDType}
           disabled={isView}
@@ -217,12 +240,14 @@ export default function CashierFormFields({
 
         <GlobalInput
           name="cashierIDNum"
-          label="Cashier ID Number"
+          label={t("cashier_id_number", "Cashier ID Number")}
           required
           defaultValue={data?.cashierIDNum || ""}
           disabled={isView}
           error={errors.cashierIDNum}
           onChange={() => clearError("cashierIDNum")}
+          maxLength={30}
+          onInput={enforceNumericSpace}
         />
       </div>
 

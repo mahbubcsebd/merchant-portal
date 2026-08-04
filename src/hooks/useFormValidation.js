@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useLanguage } from '@/components/globals/LanguageProvider';
 
 export function useFormValidation() {
   const [errors, setErrors] = useState({});
+  const { t } = useLanguage();
 
   const validate = (fields) => {
     const newErrors = {};
@@ -9,7 +11,12 @@ export function useFormValidation() {
     
     fields.forEach(({ name, value, label, type = 'input', required = false, customValidation = null }) => {
       if (required && (value === null || value === undefined || String(value).trim() === '')) {
-        newErrors[name] = type === 'select' ? `Please select ${label}.` : `Please enter ${label}.`;
+        newErrors[name] = type === 'select' 
+          ? `${t("pleaseSelect", "Please select")} ${label}` 
+          : `${t("pleaseEnter", "Please enter")} ${label}`;
+        isValid = false;
+      } else if (type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        newErrors[name] = t("invalid_email", "Please enter a valid email address.");
         isValid = false;
       } else if (customValidation) {
         const customError = customValidation(value);

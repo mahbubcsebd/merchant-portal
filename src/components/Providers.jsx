@@ -1,6 +1,6 @@
-
 import { ThemeProvider } from "next-themes"
 import { DialogProvider } from "@/components/globals/DialogProvider"
+import { LanguageProvider } from "@/components/globals/LanguageProvider"
 
 export function Providers({ children }) {
   return (
@@ -10,9 +10,11 @@ export function Providers({ children }) {
       enableSystem={false}
       disableTransitionOnChange={false}
     >
-      <DialogProvider>
-        {children}
-      </DialogProvider>
+      <LanguageProvider>
+        <DialogProvider>
+          {children}
+        </DialogProvider>
+      </LanguageProvider>
     </ThemeProvider>
   )
 }

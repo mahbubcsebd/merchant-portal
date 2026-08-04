@@ -10,6 +10,8 @@ import { useDashboardContext } from "@/pages/dashboard/context";
 import { updateProfile } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceNumeric, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
+import { useFormValidation } from "@/hooks/useFormValidation";
 
 function Card({ title, children, className = "" }) {
   return (
@@ -57,6 +59,7 @@ export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const { validate, errors: validationErrors, clearError } = useFormValidation();
 
   // Get welcome API data (COUNTRYCODE)
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -92,7 +95,7 @@ export default function BusinessProfilePage() {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors: rhfErrors },
   } = useForm({
     values: {
       custName: p.custName || "",
@@ -148,6 +151,18 @@ export default function BusinessProfilePage() {
   });
 
   const onSubmit = (data) => {
+    const fields = [
+      { name: "addrStreetNo", value: data.addrStreetNo, label: t("street_no", "Street No"), required: true },
+      { name: "addrStreetName", value: data.addrStreetName, label: t("street_name", "Street Name"), required: true },
+      { name: "city", value: data.city, label: t("city", "City"), required: true },
+      { name: "state", value: data.state, label: t("state", "State"), required: true },
+      { name: "country", value: data.country, label: t("crCountry", "Country"), type: "select", required: true },
+      { name: "zipCode", value: data.zipCode, label: t("ucZipCode", "Zip Code"), required: true },
+    ];
+
+    const { isValid } = validate(fields);
+    if (!isValid) return;
+
     const payload = {
       custName: data.custName,
       mobilePhone: data.mobilePhone,
@@ -218,6 +233,7 @@ export default function BusinessProfilePage() {
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="xl:col-span-8 flex flex-col gap-6"
+          noValidate
         >
           {/* Business Profile */}
           <Card title={t("business_profile", "Business Profile")}>
@@ -249,25 +265,25 @@ export default function BusinessProfilePage() {
                   label={t("store_name", "Store Name")}
                   isReadOnly={true}
                   registration={register("custName")}
-                  error={errors.custName?.message}
+                  error={rhfErrors.custName?.message}
                 />
                 <InputField
                   label={t("businessUserID", "Business User ID")}
                   isReadOnly={true}
                   registration={register("userName")}
-                  error={errors.userName?.message}
+                  error={rhfErrors.userName?.message}
                 />
                 <InputField
                   label={t("businessPhone", "Business Phone Number")}
                   isReadOnly={true}
                   registration={register("mobilePhone")}
-                  error={errors.mobilePhone?.message}
+                  error={rhfErrors.mobilePhone?.message}
                 />
                 <InputField
                   label={t("businessEmail", "Business Email Address")}
                   isReadOnly={true}
                   registration={register("email")}
-                  error={errors.email?.message}
+                  error={rhfErrors.email?.message}
                 />
               </div>
             </div>
@@ -279,42 +295,46 @@ export default function BusinessProfilePage() {
               <InputField
                 label={t("street_no", "Street No")}
                 icon={MapPin}
-                registration={register("addrStreetNo")}
-                error={errors.addrStreetNo?.message}
+                required={true}
+                registration={register("addrStreetNo", {
+                  onChange: () => clearError("addrStreetNo")
+                })}
+                error={validationErrors.addrStreetNo}
                 maxLength={10}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                }}
+                onInput={enforceNumeric}
               />
               <InputField
                 label={t("street_name", "Street Name")}
                 icon={MapPin}
-                registration={register("addrStreetName")}
-                error={errors.addrStreetName?.message}
+                required={true}
+                registration={register("addrStreetName", {
+                  onChange: () => clearError("addrStreetName")
+                })}
+                error={validationErrors.addrStreetName}
                 maxLength={30}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
-                }}
+                onInput={enforceAlphanumericSpace}
               />
               <InputField
                 label={t("city", "City")}
                 icon={MapPin}
-                registration={register("city")}
-                error={errors.city?.message}
+                required={true}
+                registration={register("city", {
+                  onChange: () => clearError("city")
+                })}
+                error={validationErrors.city}
                 maxLength={30}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
-                }}
+                onInput={enforceAlphanumericSpace}
               />
               <InputField
                 label={t("state", "State")}
                 icon={Pencil}
-                registration={register("state")}
-                error={errors.state?.message}
+                required={true}
+                registration={register("state", {
+                  onChange: () => clearError("state")
+                })}
+                error={validationErrors.state}
                 maxLength={30}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
-                }}
+                onInput={enforceAlphanumericSpace}
               />
 
               <Controller
@@ -323,10 +343,15 @@ export default function BusinessProfilePage() {
                 render={({ field }) => (
                   <GlobalSelect
                     label={t("crCountry", "Country")}
+                    required={true}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      clearError("country");
+                    }}
                     labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                     options={countryOptions}
+                    error={validationErrors.country}
                   />
                 )}
               />
@@ -334,12 +359,13 @@ export default function BusinessProfilePage() {
               <InputField
                 label={t("ucZipCode", "Zip Code")}
                 icon={Pencil}
-                registration={register("zipCode")}
-                error={errors.zipCode?.message}
+                required={true}
+                registration={register("zipCode", {
+                  onChange: () => clearError("zipCode")
+                })}
+                error={validationErrors.zipCode}
                 maxLength={7}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                }}
+                onInput={enforceNumeric}
               />
             </div>
 

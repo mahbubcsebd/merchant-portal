@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCashierList,
   createCashier,
+  updateCashier,
   getCashierPermssionList,
   saveMerchantCashierPermission,
   unenrollCashier,
+  updateStatusCashier,
 } from "@/lib/api/endpoints";
 
 export function useCashiers() {
@@ -56,6 +58,22 @@ export function useCashiers() {
     },
   });
 
+  const updateCashierMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await updateCashier(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to update cashier");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cashiers"] });
+    },
+  });
+
   const savePermissionsMutation = useMutation({
     mutationFn: async (payload) => {
       const response = await saveMerchantCashierPermission(payload);
@@ -85,10 +103,28 @@ export function useCashiers() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await updateStatusCashier(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to update cashier status");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cashiers"] });
+    },
+  });
+
   return {
     cashiersQuery,
     permissionsQuery,
     createCashierMutation,
+    updateCashierMutation,
+    updateStatusMutation,
     savePermissionsMutation,
     deleteCashierMutation,
   };

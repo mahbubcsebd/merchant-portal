@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { welcomeApi } from '@/lib/api/endpoints';
 import { globalDefaultParams } from '@/lib/api/api';
 
-import { LanguageProvider } from '@/components/globals/LanguageProvider';
-
 // Layouts
 import RootAuthLayout from './pages/(root)/layout';
 import DashboardLayout from './pages/dashboard/layout';
@@ -67,11 +65,10 @@ function BootLoader({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <BootLoader>
-          <Routes>
-            {/* Auth routes */}
-            <Route element={<RootAuthLayout />}>
+      <BootLoader>
+        <Routes>
+          {/* Auth routes */}
+          <Route element={<RootAuthLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/enroll" element={<Enroll />} />
               <Route path="/forgot-pin" element={<ForgotPin />} />
@@ -96,9 +93,8 @@ export default function App() {
               <Route path="reports" element={<DashboardReports />} />
               <Route path="transfer" element={<DashboardTransfer />} />
             </Route>
-          </Routes>
-        </BootLoader>
-      </LanguageProvider>
+        </Routes>
+      </BootLoader>
     </BrowserRouter>
   );
 }

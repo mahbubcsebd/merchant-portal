@@ -250,9 +250,18 @@ export async function deleteUserBiller(payload = {}) {
 export async function createCashier(payload = {}) {
   return post("/createCashier", payload);
 }
+export async function updateCashier(payload = {}) {
+  return post("/updateCashier", payload);
+}
 
 export async function getCashierPermssionList(payload = {}) {
   return post("/getCashierPermssionList", payload);
+}
+export async function getCashierPermissionsByCashier(payload = {}) {
+  return post("/getCashierPermissionsByCashier", payload);
+}
+export async function updateStatusCashier(payload = {}) {
+  return post("/updateStatusCashier", payload);
 }
 
 export async function saveMerchantCashierPermission(payload = {}) {
