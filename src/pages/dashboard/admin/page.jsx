@@ -103,7 +103,7 @@ function MyQrView() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+    <div className="w-full h-full min-h-[450px] flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-slate-900 dark:text-white">
           {p.custName || "Merchant Store"}
@@ -220,7 +220,7 @@ function PaymentLimitsView() {
       cards: filteredLimits.map((item) => mapCard(item, "monthly")),
     },
     {
-      title: t("annual_limits", "Annual Limit"),
+      title: t("annualLimit", t("annual_limits", "Annual Limit")),
       cards: filteredLimits.map((item) => mapCard(item, "annual")),
     },
   ];
@@ -229,7 +229,7 @@ function PaymentLimitsView() {
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">
-          {t("payment_limits", "My Wallet Limits")}
+          {t("paymentLimits", "Payment Limits")}
         </h2>
         {currencyOptions.length > 1 && (
           <div className="w-full sm:w-48 shrink-0">
@@ -783,7 +783,7 @@ function SettlementSettingsView() {
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 overflow-hidden">
         <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">
-          {t("my_settlement_settings", "My Settlement Settings")}
+          {t("sl_title", t("settlement_settings", "My Settlement Settings"))}
         </h2>
         
         <div className="overflow-x-auto">
@@ -923,7 +923,7 @@ function ManageNotificationsView() {
           {[
             { id: 'sms', label: t("sms_notifications", "SMS Notifications") }, 
             { id: 'email', label: t("email_notifications", "Email Notifications") }, 
-            { id: 'whatsapp', label: t("whatsapp_notifications", "WhatsApp Notifications") }
+            { id: 'whatsapp', label: t("mn_wht", t("whatsapp_notifications", "WhatsApp Notifications")) }
           ].map((item) => (
             <div key={item.id} className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0">
               <span className="font-semibold text-[#1b55ad] dark:text-blue-400 text-sm">{item.label}</span>
@@ -1189,7 +1189,7 @@ function ChangePinView() {
             className="px-8 text-xs font-bold uppercase tracking-wider"
             isLoading={changePinMutation.isPending}
           >
-            {t("change_pin", "Change PIN")}
+            {t("change_wallet_pin", t("change_pin", "Change PIN"))}
           </GlobalButton>
         </div>
       </div>
@@ -1235,23 +1235,23 @@ export default function AdminPage() {
 
   const getHeaderTitle = () => {
     switch (activeTab) {
-      case 'my_qr': return t("store_qr_code", "Store QR Code")
-      case 'payment_limits': return t("payment_limits", "Payment Limits")
-      case 'settlement_settings': return t("my_settlement_settings", "My Settlement Settings")
-      case 'manage_notifications': return t("manage_notifications", "Manage Notifications")
+      case 'my_qr': return t("my_qr", t("manage_storeQR", "Store QR Code"))
+      case 'payment_limits': return t("paymentLimits", t("payment_limits", "Payment Limits"))
+      case 'settlement_settings': return t("sl_title", t("settlement_settings", "My Settlement Settings"))
+      case 'manage_notifications': return t("notifications_tlt", t("manage_notifications", "Manage Notifications"))
       case 'change_language': return t("change_language", "Change Language")
-      case 'change_pin': return t("change_pin", "Change PIN")
-      default: return t("admin", "Administration")
+      case 'change_pin': return t("change_wallet_pin", t("change_pin", "Change PIN"))
+      default: return t("adm_title", t("admin", "Administration"))
     }
   }
 
   const tabs = [
-    { id: 'my_qr', label: t("store_qr_code", "Store QR Code"), icon: QrCode },
-    { id: 'payment_limits', label: t("payment_limits", "Payment Limits"), icon: Wallet },
-    { id: 'settlement_settings', label: t("my_settlement_settings", "My Settlement Settings"), icon: Building2 },
-    { id: 'manage_notifications', label: t("manage_notifications", "Manage Notifications"), icon: Bell },
+    { id: 'my_qr', label: t("manage_storeQR", t("store_qr_code", "Store QR Code")), icon: QrCode },
+    { id: 'payment_limits', label: t("paymentLimits", t("payment_limits", "Payment Limits")), icon: Wallet },
+    { id: 'settlement_settings', label: t("sl_title", t("my_settlement_settings", "My Settlement Settings")), icon: Building2 },
+    { id: 'manage_notifications', label: t("notifications_tlt", t("manage_notifications", "Manage Notifications")), icon: Bell },
     { id: 'change_language', label: t("change_language", "Change Language"), icon: Languages },
-    { id: 'change_pin', label: t("change_pin", "Change PIN"), icon: KeyRound },
+    { id: 'change_pin', label: t("change_wallet_pin", t("change_pin", "Change PIN")), icon: KeyRound },
   ]
 
   return (
@@ -1261,7 +1261,7 @@ export default function AdminPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 pb-4 border-b border-slate-200 dark:border-white/10 gap-2">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            {t("admin", "Administration")}
+            {t("adm_title", t("admin", "Administration"))}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             {getHeaderTitle()}
