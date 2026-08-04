@@ -5,30 +5,24 @@ import GlobalSelect from "@/components/globals/GlobalSelect";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useBeneficiaries } from "@/hooks/useBeneficiaries";
 import { useCalculateFees } from "@/hooks/useCalculateFees";
-import { usePayToBank } from "@/hooks/usePayToBank";
+import { useTransfers } from "@/hooks/useTransfers";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { getBankRoutingByBankId } from "@/lib/api/endpoints";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
+import TransferBeneficiaryDetails from "./TransferBeneficiaryDetails";
+import TransferScheduledFields from "./TransferScheduledFields";
 
-export default function TransferFormView({ setView }) {
+export default function TransferForm({ setView }) {
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
   const { accounts } = useDashboardContext();
   const { beneficiariesQuery } = useBeneficiaries();
   const { calculateFeesMutation } = useCalculateFees();
-  const { payToBankMutation } = usePayToBank();
+  const { payToBankMutation } = useTransfers();
   const {
     openPreconfirmDialog,
     openSuccessDialog,
@@ -50,24 +44,6 @@ export default function TransferFormView({ setView }) {
     until: "",
     endDate: null,
   });
-
-  const getBankName = (bankId, fallbackName) => {
-    if (!bankId) return fallbackName || "N/A";
-    if (!welcomeData?.metaData?.SETTLEBANK) return fallbackName || bankId;
-    const bank = welcomeData.metaData.SETTLEBANK.find(
-      (b) => String(b.id).trim() === String(bankId).trim(),
-    );
-    return bank ? bank.title : fallbackName || bankId;
-  };
-
-  const getCurrencyLabel = (currencyId) => {
-    if (!currencyId || String(currencyId) === "0") currencyId = "XCG";
-    if (!welcomeData?.metaData?.CURRENCY) return currencyId;
-    const curr = welcomeData.metaData.CURRENCY.find(
-      (c) => String(c.id) === String(currencyId),
-    );
-    return curr ? curr.title : currencyId;
-  };
 
   // Derived options
   const accountOptions = (accounts || []).map((acc) => ({
@@ -94,10 +70,10 @@ export default function TransferFormView({ setView }) {
     if (selectedAccount?.CURCODE) {
       opts.push({
         value: selectedAccount.CURCODE,
-        label: getCurrencyLabel(selectedAccount.CURCODE),
+        label: getCurrencyLabel(welcomeData, selectedAccount.CURCODE),
       });
     } else {
-      opts.push({ value: "XCG", label: getCurrencyLabel("XCG") });
+      opts.push({ value: "XCG", label: getCurrencyLabel(welcomeData, "XCG") });
     }
 
     if (
@@ -105,7 +81,7 @@ export default function TransferFormView({ setView }) {
       String(selectedBen.payeeAcctCurr) !== "0" &&
       selectedBen.payeeAcctCurr !== (selectedAccount?.CURCODE || "XCG")
     ) {
-      const curTitle = getCurrencyLabel(selectedBen.payeeAcctCurr);
+      const curTitle = getCurrencyLabel(welcomeData, selectedBen.payeeAcctCurr);
       opts.push({ value: selectedBen.payeeAcctCurr, label: curTitle });
     }
     return opts;
@@ -265,6 +241,7 @@ export default function TransferFormView({ setView }) {
         const fromWalletLabel = `${selectedAccount.CURSHRTNAME || selectedAccount.CURCODE} Account`;
 
         const benBankName = getBankName(
+          welcomeData,
           selectedBen.payeeBankBIC,
           selectedBen.payeeBankName,
         );
@@ -417,11 +394,7 @@ export default function TransferFormView({ setView }) {
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <div className="flex flex-col gap-4">
             <GlobalSelect
               label="To"
@@ -434,48 +407,11 @@ export default function TransferFormView({ setView }) {
               error={errors.to}
             />
 
-            {/* Beneficiary Details Block - Refined to match PayBill style */}
-            {selectedBen && (
-              <div className="bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700 dark:text-white/80">
-                    Beneficiary Bank
-                  </span>
-                  <span className="text-slate-600 dark:text-white/60">
-                    {getBankName(
-                      selectedBen.payeeBankBIC,
-                      selectedBen.payeeBankName,
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700 dark:text-white/80">
-                    Beneficiary Name
-                  </span>
-                  <span className="text-slate-600 dark:text-white/60">
-                    {selectedBen.payeeName}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700 dark:text-white/80">
-                    Account No.
-                  </span>
-                  <span className="text-slate-600 dark:text-white/60">
-                    {selectedBen.payeeBankAccount}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700 dark:text-white/80">
-                    Currency
-                  </span>
-                  <span className="text-slate-600 dark:text-white/60">
-                    {String(selectedBen.payeeAcctCurr) !== "0"
-                      ? getCurrencyLabel(selectedBen.payeeAcctCurr)
-                      : "XCG"}
-                  </span>
-                </div>
-              </div>
-            )}
+            {/* Beneficiary Details Block - Extracted Component */}
+            <TransferBeneficiaryDetails
+              selectedBen={selectedBen}
+              welcomeData={welcomeData}
+            />
           </div>
 
           <GlobalSelect
@@ -539,152 +475,11 @@ export default function TransferFormView({ setView }) {
             error={errors.when}
           />
 
-          {formData.when === "Scheduled" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl mt-2 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex flex-col">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5">
-                  Start Date<span className="ml-1 text-[#e65625]">*</span>
-                </label>
-                <div className="relative w-full flex">
-                  <CalendarIcon
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"
-                  />
-                  <Popover>
-                    <PopoverTrigger
-                      type="button"
-                      className={cn(
-                        buttonVariants({ variant: "outline" }),
-                        "w-full pl-10 h-10 text-sm font-medium justify-start text-left bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:ring-1 focus:ring-[#2563eb] rounded-lg transition-all duration-150 shadow-none",
-                        !formData.startDate
-                          ? "text-slate-400 font-normal"
-                          : "text-slate-900 dark:text-white",
-                        errors.startDate &&
-                          "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20",
-                      )}
-                    >
-                      {formData.startDate ? (
-                        format(formData.startDate, "dd/MM/yyyy")
-                      ) : (
-                        <span>dd/mm/yyyy</span>
-                      )}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={formData.startDate}
-                        onSelect={(date) => {
-                          handleSelectChange("startDate", date);
-                        }}
-                        disabled={(date) =>
-                          date < new Date().setHours(0, 0, 0, 0)
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                {errors.startDate && (
-                  <p className="mt-1.5 text-xs font-semibold flex items-center gap-1.5 text-red-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                    {errors.startDate}
-                  </p>
-                )}
-              </div>
-
-              <GlobalSelect
-                label="How Often"
-                name="howOften"
-                required
-                value={formData.howOften}
-                onChange={(val) => handleSelectChange("howOften", val)}
-                labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-                options={[
-                  { value: "1", label: "Once" },
-                  { value: "2", label: "Weekly" },
-                  { value: "3", label: "Bi-weekly" },
-                  { value: "4", label: "Monthly" },
-                  { value: "5", label: "Quarterly" },
-                  { value: "6", label: "Half-yearly" },
-                  { value: "7", label: "Annual" },
-                ]}
-                error={errors.howOften}
-              />
-
-              {parseInt(formData.howOften) > 1 && (
-                <>
-                  <GlobalSelect
-                    label="Until"
-                    name="until"
-                    required
-                    value={formData.until}
-                    onChange={(val) => handleSelectChange("until", val)}
-                    labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-                    options={[
-                      { value: "N", label: "Further Notice" },
-                      { value: "Y", label: "Specified Date" },
-                    ]}
-                    error={errors.until}
-                  />
-
-                  {formData.until === "Y" && (
-                    <div className="flex flex-col">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5">
-                        End Date<span className="ml-1 text-[#e65625]">*</span>
-                      </label>
-                      <div className="relative w-full flex">
-                        <CalendarIcon
-                          size={16}
-                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"
-                        />
-                        <Popover>
-                          <PopoverTrigger
-                            type="button"
-                            className={cn(
-                              buttonVariants({ variant: "outline" }),
-                              "w-full pl-10 h-10 text-sm font-medium justify-start text-left bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:ring-1 focus:ring-[#2563eb] rounded-lg transition-all duration-150 shadow-none",
-                              !formData.endDate
-                                ? "text-slate-400 font-normal"
-                                : "text-slate-900 dark:text-white",
-                              errors.endDate &&
-                                "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20",
-                            )}
-                          >
-                            {formData.endDate ? (
-                              format(formData.endDate, "dd/MM/yyyy")
-                            ) : (
-                              <span>dd/mm/yyyy</span>
-                            )}
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={formData.endDate}
-                              onSelect={(date) => {
-                                handleSelectChange("endDate", date);
-                              }}
-                              disabled={(date) =>
-                                date < new Date().setHours(0, 0, 0, 0) ||
-                                (formData.startDate &&
-                                  date <= formData.startDate)
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      {errors.endDate && (
-                        <p className="mt-1.5 text-xs font-semibold flex items-center gap-1.5 text-red-500">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                          {errors.endDate}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+          <TransferScheduledFields
+            formData={formData}
+            handleSelectChange={handleSelectChange}
+            errors={errors}
+          />
 
           <div className="flex justify-center pt-4 border-t border-dashed border-slate-200 dark:border-white/10 mt-6">
             <GlobalButton

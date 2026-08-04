@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { payToBank } from "@/lib/api/endpoints";
 
-export function usePayToBank() {
+export function useTransfers() {
   const queryClient = useQueryClient();
 
   const payToBankMutation = useMutation({

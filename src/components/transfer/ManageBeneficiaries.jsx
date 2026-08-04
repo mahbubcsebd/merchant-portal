@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useBeneficiaries } from "@/hooks/useBeneficiaries";
 import { getBankRoutingByBankId } from "@/lib/api/endpoints";
@@ -23,22 +24,6 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
   const { validate } = useFormValidation();
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
-
-  const getBankName = (bankId) => {
-    if (!welcomeData?.metaData?.SETTLEBANK) return bankId;
-    const bank = welcomeData.metaData.SETTLEBANK.find(
-      (b) => String(b.id) === String(bankId),
-    );
-    return bank ? bank.title : bankId;
-  };
-
-  const getCurrencyLabel = (currencyId) => {
-    if (!welcomeData?.metaData?.CURRENCY) return currencyId;
-    const curr = welcomeData.metaData.CURRENCY.find(
-      (c) => String(c.id) === String(currencyId),
-    );
-    return curr ? curr.title : currencyId;
-  };
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -79,8 +64,8 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
           "Beneficiary Name": values.payeeName,
           Nickname: values.payeeNickName,
           "Account Number": values.payeeBankAccount,
-          Bank: getBankName(values.payeeBankId),
-          Currency: getCurrencyLabel(values.payeeAcctCurr),
+          Bank: getBankName(welcomeData, values.payeeBankId),
+          Currency: getCurrencyLabel(welcomeData, values.payeeAcctCurr),
         };
 
         openPreconfirmDialog({
@@ -166,8 +151,8 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
       "Beneficiary Name": beneficiary.payeeName,
       Nickname: beneficiary.payeeNickName,
       "Account Number": beneficiary.payeeBankAccount,
-      Bank: getBankName(beneficiary.payeeBankBIC),
-      Currency: getCurrencyLabel(beneficiary.payeeAcctCurr),
+      Bank: getBankName(welcomeData, beneficiary.payeeBankBIC),
+      Currency: getCurrencyLabel(welcomeData, beneficiary.payeeAcctCurr),
     };
 
     openPreconfirmDialog({
@@ -267,8 +252,8 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
                           { label: "Beneficiary Name", value: b.payeeName },
                           { label: "Nickname", value: b.payeeNickName },
                           { label: "Account Number", value: b.payeeBankAccount },
-                          { label: "Bank", value: getBankName(b.payeeBankBIC) },
-                          { label: "Currency", value: getCurrencyLabel(b.payeeAcctCurr) },
+                          { label: "Bank", value: getBankName(welcomeData, b.payeeBankBIC) },
+                          { label: "Currency", value: getCurrencyLabel(welcomeData, b.payeeAcctCurr) },
                         ],
                         doneText: "Close",
                       });

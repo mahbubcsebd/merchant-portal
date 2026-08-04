@@ -4,6 +4,7 @@ import { useDialog } from "@/components/globals/DialogProvider";
 import ScheduledTransfersList from "./scheduled/ScheduledTransfersList";
 import ScheduledTransfersForm from "./scheduled/ScheduledTransfersForm";
 import { useScheduledTransfers } from "@/hooks/useScheduledTransfers";
+import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 
 export default function ManageScheduledTransfers({ setView: setParentView }) {
   const [localView, setLocalView] = useState("list"); // 'list', 'form'
@@ -37,24 +38,6 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
     return map[val] || val;
   };
 
-  const getCurrencyLabel = (val) => {
-    if (!val) return val;
-    if (!welcomeData?.metaData?.CURRENCY) return val;
-    const curr = welcomeData.metaData.CURRENCY.find(
-      (c) => String(c.id) === String(val),
-    );
-    return curr ? curr.title : val;
-  };
-
-  const getBankName = (val) => {
-    if (!val) return val;
-    if (!welcomeData?.metaData?.SETTLEBANK) return val;
-    const bank = welcomeData.metaData.SETTLEBANK.find(
-      (b) => String(b.id) === String(val),
-    );
-    return bank ? bank.title : val;
-  };
-
   const translateDate = (dateStr) => {
     if (!dateStr || dateStr.length !== 8) return dateStr;
     // YYYYMMDD to YYYY-MM-DD
@@ -75,11 +58,11 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
       title: "View Scheduled Transfer",
       details: [
         { label: "Beneficiary Name", value: transfer.BENFNAME },
-        { label: "Bank Name", value: getBankName(transfer.BENFBNKID) },
+        { label: "Bank Name", value: getBankName(welcomeData, transfer.BENFBNKID) },
         { label: "Account No.", value: transfer.BENFACC },
         {
           label: "Amount",
-          value: `${transfer.TXNAMOUNT} ${getCurrencyLabel(transfer.BENFACCUR)}`,
+          value: `${transfer.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
         },
         { label: "Start Date", value: translateDate(transfer.STRDATE) },
         { label: "How Often", value: getFrequencyLabel(transfer.FREQUENCY) },
@@ -126,7 +109,7 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
       message: "Are you sure you want to update this scheduled transfer?",
       details: {
         "Beneficiary Name": formData.BENFNAME,
-        "Amount": `${formData.TXNAMOUNT} ${getCurrencyLabel(formData.BENFACCUR)}`,
+        "Amount": `${formData.TXNAMOUNT} ${getCurrencyLabel(welcomeData, formData.BENFACCUR)}`,
         "Start Date": formData.STRDATE,
         "How Often": getFrequencyLabel(formData.FREQUENCY),
         "Until": formData.ENDDATE || "-",
@@ -156,9 +139,9 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
 
     const details = {
       "Beneficiary Name": transfer.BENFNAME,
-      "Bank Name": getBankName(transfer.BENFBNKID),
+      "Bank Name": getBankName(welcomeData, transfer.BENFBNKID),
       "Account No.": transfer.BENFACC,
-      "Amount": `${transfer.TXNAMOUNT} ${getCurrencyLabel(transfer.BENFACCUR)}`,
+      "Amount": `${transfer.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
       "Start Date": translateDate(transfer.STRDATE),
       "How Often": getFrequencyLabel(transfer.FREQUENCY),
       "Until": transfer.ENDDATE && transfer.ENDDATE !== "0" ? translateDate(transfer.ENDDATE) : "-",
@@ -216,8 +199,8 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
       transfers={
         transfersQuery.data?.map((t) => ({
           ...t,
-          currency: getCurrencyLabel(t.BENFACCUR),
-          bank: getBankName(t.BENFBNKID),
+          currency: getCurrencyLabel(welcomeData, t.BENFACCUR),
+          bank: getBankName(welcomeData, t.BENFBNKID),
           howOften: getFrequencyLabel(t.FREQUENCY),
           until: t.ENDDATE === "0" ? "" : translateDate(t.ENDDATE),
         })) || []

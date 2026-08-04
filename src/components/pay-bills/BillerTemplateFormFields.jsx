@@ -18,7 +18,6 @@ export default function BillerTemplateFormFields({
   const [billerName, setBillerName] = useState(data?.billerName || "");
   const [currency, setCurrency] = useState(data?.currency || "");
 
-  // If creating new template, try to default to local currency (XCG / "0")
   useEffect(() => {
     if (!data && !currency) {
       setCurrency("0");
@@ -31,7 +30,6 @@ export default function BillerTemplateFormFields({
     currency: b.BLRWALCUR,
   }));
 
-  // Auto-fill currency when billerId changes
   useEffect(() => {
     if (billerId) {
       const selectedBiller = billerOptions.find((b) => b.value === billerId);
@@ -40,7 +38,6 @@ export default function BillerTemplateFormFields({
         setBillerName(selectedBiller.label);
       }
     } else if (!data) {
-      // If we deselect biller during creation, reset back to local currency (XCG / "0")
       setCurrency("0");
       setBillerName("");
     }

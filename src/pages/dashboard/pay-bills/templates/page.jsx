@@ -1,9 +1,9 @@
-
 import { Eye, Pencil, Trash2 } from "lucide-react"
 import { Link } from 'react-router-dom';
 import { useDialog } from "@/components/globals/DialogProvider"
 import GlobalButton from "@/components/globals/GlobalButton"
 import BillerTemplateFormFields from "@/components/pay-bills/BillerTemplateFormFields"
+import { getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import { usePayBills } from "@/hooks/usePayBills"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -12,12 +12,6 @@ export default function ManageBillTemplatesPage() {
   const { userBillersQuery, createBillTemplateMutation, updateBillTemplateMutation, deleteBillTemplateMutation } = usePayBills()
   const queryClient = useQueryClient()
   const welcomeData = queryClient.getQueryData(["welcome"])
-
-  const getCurrencyLabel = (currencyId) => {
-    if (!welcomeData?.metaData?.CURRENCY) return currencyId;
-    const curr = welcomeData.metaData.CURRENCY.find(c => String(c.id) === String(currencyId));
-    return curr ? curr.title : currencyId;
-  };
 
   const templates = (userBillersQuery.data || []).map((b, index) => ({
     id: b.BILLID || index,
@@ -31,6 +25,8 @@ export default function ManageBillTemplatesPage() {
 
   const handleAddClick = (initialValues = null) => {
     const isEdit = !!initialValues?.id;
+    const billerTitle = initialValues?.billerName || "Unknown";
+
     openFormDialog({
       title: isEdit ? "Edit Bill Template" : "Create Bill Template",
       isView: false,
@@ -41,10 +37,10 @@ export default function ManageBillTemplatesPage() {
         openPreconfirmDialog({
           title: "Confirm Bill Template",
           details: {
-            "Biller Name": values.billerName,
+            "Biller Name": billerTitle,
             "Bill Template Name": values.billName,
             "Reference No": values.refNum,
-            "Currency": getCurrencyLabel(values.currency)
+            "Currency": getCurrencyLabel(welcomeData, values.currency)
           },
           onChange: () => {
             handleAddClick(values);
@@ -68,9 +64,9 @@ export default function ManageBillTemplatesPage() {
                   message: `Your bill template has been successfully ${isEdit ? "updated" : "created"}.`,
                   details: {
                     "Bill Template Name": values.billName,
-                    "Biller Name": values.billerName,
+                    "Biller Name": billerTitle,
                     "Reference No": values.refNum,
-                    "Currency": getCurrencyLabel(values.currency)
+                    "Currency": getCurrencyLabel(welcomeData, values.currency)
                   }
                 });
               },
@@ -85,8 +81,6 @@ export default function ManageBillTemplatesPage() {
           }
         });
         
-        // Return false to prevent the FormDialogShell from calling onClose() 
-        // and overriding our openPreconfirmDialog state.
         return false;
       }
     });
@@ -94,7 +88,6 @@ export default function ManageBillTemplatesPage() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
-      {/* ── Page Header ─────────────────────────────────── */}
       <div className="mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
           Manage Bill Templates
@@ -103,7 +96,6 @@ export default function ManageBillTemplatesPage() {
 
       <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
         
-        {/* Top Controls */}
         <div className="flex justify-end mb-6">
           <GlobalButton 
             onClick={() => handleAddClick()}
@@ -114,7 +106,6 @@ export default function ManageBillTemplatesPage() {
           </GlobalButton>
         </div>
 
-        {/* Data Table — Desktop View (Hidden on mobile) */}
         <div className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 mb-8">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
@@ -137,7 +128,7 @@ export default function ManageBillTemplatesPage() {
                               { label: "Biller Name", value: template.billerName },
                               { label: "Bill Template Name", value: template.templateName },
                               { label: "Reference No", value: template.referenceNo },
-                              { label: "Currency", value: getCurrencyLabel(template.currency) }
+                              { label: "Currency", value: getCurrencyLabel(welcomeData, template.currency) }
                             ],
                             doneText: "Back"
                           })
@@ -163,7 +154,7 @@ export default function ManageBillTemplatesPage() {
                               "Biller Name": template.billerName,
                               "Bill Template Name": template.templateName,
                               "Reference No": template.referenceNo,
-                              "Currency": getCurrencyLabel(template.currency)
+                              "Currency": getCurrencyLabel(welcomeData, template.currency)
                             },
                             confirmText: "Delete",
                             iconType: "danger",
@@ -207,21 +198,18 @@ export default function ManageBillTemplatesPage() {
           </table>
         </div>
 
-        {/* Card Feed — Mobile View (Hidden on desktop) */}
         <div className="md:hidden space-y-3 mb-8">
           {templates.map((template) => (
             <div 
               key={template.id}
               className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
             >
-              {/* Row 1: Template Info */}
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">{template.templateName}</h4>
                 <p className="text-xs text-slate-400 dark:text-white/45 mt-1">Biller: {template.billerName}</p>
                 <p className="text-[10px] text-slate-400 dark:text-white/30 mt-0.5">Ref: {template.referenceNo} · {template.currency}</p>
               </div>
 
-              {/* Row 2: Action Buttons */}
               <div className="flex items-center justify-start gap-4 pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
                 <button 
                   onClick={() => {
@@ -231,7 +219,7 @@ export default function ManageBillTemplatesPage() {
                         { label: "Biller Name", value: template.billerName },
                         { label: "Bill Template Name", value: template.templateName },
                         { label: "Reference No", value: template.referenceNo },
-                        { label: "Currency", value: getCurrencyLabel(template.currency) }
+                        { label: "Currency", value: getCurrencyLabel(welcomeData, template.currency) }
                       ],
                       doneText: "Back"
                     })
@@ -257,7 +245,7 @@ export default function ManageBillTemplatesPage() {
                         "Biller Name": template.billerName,
                         "Bill Template Name": template.templateName,
                         "Reference No": template.referenceNo,
-                        "Currency": getCurrencyLabel(template.currency)
+                        "Currency": getCurrencyLabel(welcomeData, template.currency)
                       },
                       confirmText: "Delete",
                       iconType: "danger",

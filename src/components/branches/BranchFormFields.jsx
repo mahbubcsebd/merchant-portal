@@ -26,7 +26,6 @@ export default function BranchFormFields({
   errors = {},
   clearError = () => {},
 }) {
-  // Metadata from react-query
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
   const countryOptions = (welcomeData?.metaData?.COUNTRYCODE || []).map(
@@ -41,7 +40,7 @@ export default function BranchFormFields({
 
   // Dial code options mapped from COUNTRYCODE
   const dialOptions = (welcomeData?.metaData?.COUNTRYCODE || []).map((c) => ({
-    code: `+${c.id}`, // e.g., "+1" or "+63"
+    code: `+${c.id}`,
     name: c.title,
   }));
 
@@ -52,10 +51,18 @@ export default function BranchFormFields({
   const [openBusinessCountryBox, setOpenBusinessCountryBox] = useState(false);
 
   // Form selections state
-  const [country, setCountry] = useState(data?.subCountry != null ? String(data.subCountry).trim() : "");
-  const [category, setCategory] = useState(data?.subCategory != null ? String(data.subCategory).trim() : "");
-  const [idType, setIdType] = useState(data?.businessIdType != null ? String(data.businessIdType).trim() : "");
-  const [status, setStatus] = useState(data?.subStatus != null ? String(data.subStatus).trim() : "A");
+  const [country, setCountry] = useState(
+    data?.subCountry != null ? String(data.subCountry).trim() : "",
+  );
+  const [category, setCategory] = useState(
+    data?.subCategory != null ? String(data.subCategory).trim() : "",
+  );
+  const [idType, setIdType] = useState(
+    data?.businessIdType != null ? String(data.businessIdType).trim() : "",
+  );
+  const [status, setStatus] = useState(
+    data?.subStatus != null ? String(data.subStatus).trim() : "A",
+  );
   const [profilePic, setProfilePic] = useState(data?.proImgId || null);
   const [docPic, setDocPic] = useState(data?.businessIdImg || null);
 
