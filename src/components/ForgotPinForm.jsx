@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Mail, Calendar as CalendarIcon, AlertCircle } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { format } from "date-fns"
 import { buttonVariants } from "@/components/ui/button"
 import GlobalButton from "@/components/globals/GlobalButton"
@@ -25,10 +25,11 @@ const formSchema = z.object({
 })
 
 export function ForgotPinForm() {
+  const navigate = useNavigate()
   const { t } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState("")
-  const { openSuccessDialog } = useDialog()
+  const { openConfirmDialog } = useDialog()
 
   const {
     register,
@@ -58,11 +59,17 @@ export function ForgotPinForm() {
       const res = await forgotPin(payload)
 
       if (res?.status === "success" || res?.statusCode === 0) {
-        openSuccessDialog({
+        openConfirmDialog({
           title: t("request_submitted", "Request Submitted"),
-          description: res?.message || t("forgot_pin_success_desc", "If the details match, instructions to reset your PIN have been sent."),
+          description: res?.message || t("forgot_pin_success_desc", "If the details match, instructions to reset your PIN have been sent to your email."),
+          confirmText: t("back_to_login", t("authenticateSignIn", "Back to Login")),
+          iconType: "success",
+          hideCancel: true,
+          onConfirm: () => {
+            reset()
+            navigate("/")
+          },
         })
-        reset()
       } else {
         setApiError(res?.message || t("invalid_details_try_again", "Invalid details. Please try again"))
       }
