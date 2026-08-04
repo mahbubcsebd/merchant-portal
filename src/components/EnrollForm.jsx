@@ -29,23 +29,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
-
-const DEFAULT_COUNTRY_CODES = [
-  { code: '355', flag: '🇦🇱', country: 'Albania (+355)' },
-  { code: '1', flag: '🇺🇸', country: 'USA (+1)' },
-  { code: '124', flag: '🇨🇦', country: 'Canada (+124)' },
-  { code: '880', flag: '🇧🇩', country: 'Bangladesh (+880)' },
-  { code: '91', flag: '🇮🇳', country: 'India (+91)' },
-  { code: '44', flag: '🇬🇧', country: 'UK (+44)' },
-  { code: '93', flag: '🇦🇫', country: 'Afghanistan (+93)' },
-  { code: '12', flag: '🇩🇿', country: 'Algeria (+12)' },
-  { code: '54', flag: '🇦🇷', country: 'Argentina (+54)' },
-  { code: '358', flag: '🇫🇮', country: 'Finland (+358)' },
-  { code: '81', flag: '🇯🇵', country: 'Japan (+81)' },
-  { code: '92', flag: '🇵🇰', country: 'Pakistan (+92)' },
-  { code: '63', flag: '🇵🇭', country: 'Philippines (+63)' },
-  { code: '82', flag: '🇰🇷', country: 'South Korea (+82)' },
-];
+import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
 
 const formSchema = z.object({
   storeName: z
@@ -93,7 +77,7 @@ export function EnrollForm() {
         };
       });
     }
-    return DEFAULT_COUNTRY_CODES;
+    return COUNTRY_OPTIONS;
   }, [welcomeData]);
 
   const {
