@@ -6,6 +6,7 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
+import { useProfileImage } from "@/hooks/useProfileImage";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import {
   updateProfile,
@@ -103,26 +104,8 @@ export default function BusinessProfilePage() {
 
   // Fallback to empty if profile is somehow missing
   const p = profile || {};
-  const imageId =
-    p.profileImageID ||
-    p.custPhotoId ||
-    p.CUSTPHOTOID ||
-    p.PROFILEIMAGEID ||
-    p.profileImageId ||
-    p.custphotoid ||
-    null;
-
-  // Fetch profile image if exists
-  const profileImageQuery = useQuery({
-    queryKey: ["profileImage", imageId],
-    queryFn: async () => {
-      if (!imageId) return null;
-      const res = await getDocumentContent({ imgId: imageId });
-      return res?.data || null;
-    },
-    enabled: !!imageId,
-    retry: false,
-  });
+  const profileImageQuery = useProfileImage(profile);
+  const displayImage = profileImageQuery.data;
 
   useEffect(() => {
     if (profileImageQuery.data) {
@@ -152,14 +135,12 @@ export default function BusinessProfilePage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (values) => {
-      // 1. uploadDocument
       const res = await uploadDocument(values);
       const imgId = res?.data?.[0]?.IMGIDNUM;
       if (!imgId) {
         throw new Error("Failed to retrieve image ID after upload.");
       }
 
-      // 2. updateProfile (Using the original 'p' context to prevent dirty form state from overriding)
       const payload = {
         custName: p.custName || "",
         mobilePhone: p.mobilePhone || p.PHONE || "",
@@ -176,7 +157,6 @@ export default function BusinessProfilePage() {
       };
       await updateProfile(payload);
 
-      // 3. getDocumentContent to fetch the final image base64
       const docRes = await getDocumentContent({ imgId: imgId });
 
       return {
@@ -186,7 +166,6 @@ export default function BusinessProfilePage() {
       };
     },
     onSuccess: (res) => {
-      // 4. loadUserProfile (invalidate query)
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
       openConfirmDialog({
@@ -412,7 +391,8 @@ export default function BusinessProfilePage() {
               <div className="flex flex-col items-center gap-3 shrink-0">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#2563eb] p-1">
                   {profileImage ? (
-                    <img src={profileImage}
+                    <img
+                      src={profileImage}
                       alt="Profile"
                       className="w-full h-full rounded-full object-cover"
                     />

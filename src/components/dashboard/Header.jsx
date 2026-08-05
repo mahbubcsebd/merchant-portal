@@ -1,7 +1,9 @@
 import { Bell, Moon, Sun, Menu, AlertCircle, CreditCard, QrCode, PhoneCall, Mail, ScanLine, ImageIcon, Landmark, CheckCheck } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { useDashboardContext } from '@/pages/dashboard/context';
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { useProfileImage } from "@/hooks/useProfileImage";
+// remove old from '@/pages/dashboard/context';
 import { useQuery } from '@tanstack/react-query';
 import { getPortalNotifications } from '@/lib/api/endpoints';
 import { useDialog } from '@/components/globals/DialogProvider';
@@ -34,6 +36,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { profile } = useDashboardContext();
+  const { data: profileImage } = useProfileImage(profile);
   const { openConfirmDialog } = useDialog();
 
   const userName = profile?.custName || profile?.FIRSTNAME || 'Merchant';
@@ -255,8 +258,12 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
         </DropdownMenu>
 
         {/* Avatar */}
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs select-none">
-          {userInitials}
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs select-none overflow-hidden">
+          {profileImage ? (
+            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            userInitials
+          )}
         </div>
       </div>
     </header>
