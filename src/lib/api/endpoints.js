@@ -117,7 +117,8 @@ export async function generateReportBalanceStatement(payload = {}) {
 
 // Get Document Content
 export async function getDocumentContent(payload = {}) {
-  return post("/getDocumentContent", payload);
+  const url = payload.imgId ? `/getDocumentContent?imgId=${payload.imgId}` : "/getDocumentContent";
+  return post(url, payload);
 }
 
 // Logout

@@ -7,10 +7,17 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
 import { useDashboardContext } from "@/pages/dashboard/context";
-import { updateProfile } from "@/lib/api/endpoints";
+import {
+  updateProfile,
+  uploadDocument,
+  getDocumentContent,
+} from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { enforceNumeric, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
+import {
+  enforceNumeric,
+  enforceAlphanumericSpace,
+} from "@/lib/utils/inputFormatters";
 import { useFormValidation } from "@/hooks/useFormValidation";
 
 function Card({ title, children, className = "" }) {
@@ -59,7 +66,11 @@ export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const { validate, errors: validationErrors, clearError } = useFormValidation();
+  const {
+    validate,
+    errors: validationErrors,
+    clearError,
+  } = useFormValidation();
 
   // Get welcome API data (COUNTRYCODE)
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -74,6 +85,8 @@ export default function BusinessProfilePage() {
   const { openConfirmDialog } = useDialog();
   const qrRef = useRef(null);
   const qrCodeInstance = useRef(null);
+  const fileInputRef = useRef(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState("");
 
   // Initialize selected account ID when accounts load
@@ -90,12 +103,38 @@ export default function BusinessProfilePage() {
 
   // Fallback to empty if profile is somehow missing
   const p = profile || {};
+  const imageId =
+    p.profileImageID ||
+    p.custPhotoId ||
+    p.CUSTPHOTOID ||
+    p.PROFILEIMAGEID ||
+    p.profileImageId ||
+    p.custphotoid ||
+    null;
 
+  // Fetch profile image if exists
+  const profileImageQuery = useQuery({
+    queryKey: ["profileImage", imageId],
+    queryFn: async () => {
+      if (!imageId) return null;
+      const res = await getDocumentContent({ imgId: imageId });
+      return res?.data || null;
+    },
+    enabled: !!imageId,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (profileImageQuery.data) {
+      setProfileImage(profileImageQuery.data);
+    }
+  }, [profileImageQuery.data]);
   const {
     register,
     handleSubmit,
     control,
     formState: { errors: rhfErrors },
+    getValues,
   } = useForm({
     values: {
       custName: p.custName || "",
@@ -110,6 +149,106 @@ export default function BusinessProfilePage() {
       zipCode: p.zipCode || "",
     },
   });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (values) => {
+      // 1. uploadDocument
+      const res = await uploadDocument(values);
+      const imgId = res?.data?.[0]?.IMGIDNUM;
+      if (!imgId) {
+        throw new Error("Failed to retrieve image ID after upload.");
+      }
+
+      // 2. updateProfile (Using the original 'p' context to prevent dirty form state from overriding)
+      const payload = {
+        custName: p.custName || "",
+        mobilePhone: p.mobilePhone || p.PHONE || "",
+        email: p.email || p.EMAIL || "",
+        country: p.country || "",
+        resCountry: p.resCountry || p.country || "",
+        state: p.state || "",
+        city: p.city || "",
+        addrStreetNo: p.addrStreetNo || "",
+        addrStreetName: p.addrStreetName || "",
+        zipCode: p.zipCode || "",
+        citCountry: p.citCountry || p.country || "",
+        custphotoid: imgId,
+      };
+      await updateProfile(payload);
+
+      // 3. getDocumentContent to fetch the final image base64
+      const docRes = await getDocumentContent({ imgId: imgId });
+
+      return {
+        imgId,
+        finalImage: docRes?.data || values.imgData,
+        message: res.message,
+      };
+    },
+    onSuccess: (res) => {
+      // 4. loadUserProfile (invalidate query)
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+
+      openConfirmDialog({
+        title: "Success",
+        description: res.message || "Profile image updated successfully.",
+        confirmText: "Close",
+        iconType: "success",
+        hideCancel: true,
+      });
+
+      setProfileImage(res.finalImage);
+    },
+    onError: (err) => {
+      openConfirmDialog({
+        title: "Error",
+        description:
+          err?.response?.data?.message ||
+          err.message ||
+          "Failed to upload image.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+    },
+  });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      openConfirmDialog({
+        title: "Invalid File",
+        description: "Please upload a valid image file (JPEG, PNG).",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+      return;
+    }
+
+    // Validate file size (e.g. max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      openConfirmDialog({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 5MB.",
+        confirmText: "Close",
+        iconType: "danger",
+        hideCancel: true,
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      uploadMutation.mutate({ imgData: base64, imgType: "custphotoid" });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = null;
+  };
 
   const updateMutation = useMutation({
     mutationFn: (values) => updateProfile(values),
@@ -152,12 +291,43 @@ export default function BusinessProfilePage() {
 
   const onSubmit = (data) => {
     const fields = [
-      { name: "addrStreetNo", value: data.addrStreetNo, label: t("street_no", "Street No"), required: true },
-      { name: "addrStreetName", value: data.addrStreetName, label: t("street_name", "Street Name"), required: true },
-      { name: "city", value: data.city, label: t("city", "City"), required: true },
-      { name: "state", value: data.state, label: t("state", "State"), required: true },
-      { name: "country", value: data.country, label: t("crCountry", "Country"), type: "select", required: true },
-      { name: "zipCode", value: data.zipCode, label: t("ucZipCode", "Zip Code"), required: true },
+      {
+        name: "addrStreetNo",
+        value: data.addrStreetNo,
+        label: t("street_no", "Street No"),
+        required: true,
+      },
+      {
+        name: "addrStreetName",
+        value: data.addrStreetName,
+        label: t("street_name", "Street Name"),
+        required: true,
+      },
+      {
+        name: "city",
+        value: data.city,
+        label: t("city", "City"),
+        required: true,
+      },
+      {
+        name: "state",
+        value: data.state,
+        label: t("state", "State"),
+        required: true,
+      },
+      {
+        name: "country",
+        value: data.country,
+        label: t("crCountry", "Country"),
+        type: "select",
+        required: true,
+      },
+      {
+        name: "zipCode",
+        value: data.zipCode,
+        label: t("ucZipCode", "Zip Code"),
+        required: true,
+      },
     ];
 
     const { isValid } = validate(fields);
@@ -241,12 +411,19 @@ export default function BusinessProfilePage() {
               {/* Logo Upload Section */}
               <div className="flex flex-col items-center gap-3 shrink-0">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#2563eb] p-1">
-                  <div className="w-full h-full rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[#2563eb] dark:text-white">
-                    <User
-                      className="w-10 h-10 sm:w-12 sm:h-12"
-                      strokeWidth={1.5}
+                  {profileImage ? (
+                    <img src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover"
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[#2563eb] dark:text-white">
+                      <User
+                        className="w-10 h-10 sm:w-12 sm:h-12"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  )}
                 </div>
                 <span className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40">
                   {t("uploadLogo", "Upload Company Logo")}
@@ -254,9 +431,18 @@ export default function BusinessProfilePage() {
                 <GlobalButton
                   variant="primary"
                   className="px-5 py-1.5 h-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
+                  onClick={() => fileInputRef.current?.click()}
+                  isLoading={uploadMutation.isPending}
                 >
                   {t("fileUploadButton", "Upload")}
                 </GlobalButton>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg, image/png, image/jpg"
+                  style={{ display: "none" }}
+                />
               </div>
 
               {/* Form Fields */}
@@ -297,7 +483,7 @@ export default function BusinessProfilePage() {
                 icon={MapPin}
                 required={true}
                 registration={register("addrStreetNo", {
-                  onChange: () => clearError("addrStreetNo")
+                  onChange: () => clearError("addrStreetNo"),
                 })}
                 error={validationErrors.addrStreetNo}
                 maxLength={10}
@@ -308,7 +494,7 @@ export default function BusinessProfilePage() {
                 icon={MapPin}
                 required={true}
                 registration={register("addrStreetName", {
-                  onChange: () => clearError("addrStreetName")
+                  onChange: () => clearError("addrStreetName"),
                 })}
                 error={validationErrors.addrStreetName}
                 maxLength={30}
@@ -319,7 +505,7 @@ export default function BusinessProfilePage() {
                 icon={MapPin}
                 required={true}
                 registration={register("city", {
-                  onChange: () => clearError("city")
+                  onChange: () => clearError("city"),
                 })}
                 error={validationErrors.city}
                 maxLength={30}
@@ -330,7 +516,7 @@ export default function BusinessProfilePage() {
                 icon={Pencil}
                 required={true}
                 registration={register("state", {
-                  onChange: () => clearError("state")
+                  onChange: () => clearError("state"),
                 })}
                 error={validationErrors.state}
                 maxLength={30}
@@ -361,7 +547,7 @@ export default function BusinessProfilePage() {
                 icon={Pencil}
                 required={true}
                 registration={register("zipCode", {
-                  onChange: () => clearError("zipCode")
+                  onChange: () => clearError("zipCode"),
                 })}
                 error={validationErrors.zipCode}
                 maxLength={7}
