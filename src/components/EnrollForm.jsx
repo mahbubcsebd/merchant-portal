@@ -37,7 +37,10 @@ const formSchema = z.object({
     .min(2, { message: 'Store name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   countryCode: z.string().min(1, { message: 'Select a country code.' }),
-  phone: z.string().min(6, { message: 'Enter a valid phone number.' }),
+  phone: z
+    .string()
+    .min(6, { message: 'Enter a valid phone number.' })
+    .regex(/^[0-9]+$/, { message: 'Phone number must contain digits only.' }),
   acceptTerms: z.boolean().refine((v) => v === true, {
     message: 'You must accept the Terms and Conditions.',
   }),
@@ -252,7 +255,7 @@ export function EnrollForm() {
           {/* Heading */}
           <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
             <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-              {t("registerMerchant", "Merchant Registration").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+              {t("merNewToMobileBanking", t("registerMerchant", "Merchant Registration"))}
             </h2>
             <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
               {t("register_subtitle", "Register your business on mPay Merchant Portal")}
@@ -267,7 +270,7 @@ export function EnrollForm() {
             {/* Store Name */}
             <GlobalInput
               id="storeName"
-              label={t("storeName", "Store Name")}
+              label={t("crMerchantname", t("storeName", "Store Name"))}
               required
               placeholder="Your Business Name"
               leftIcon={<Building2 size={16} />}
@@ -280,7 +283,7 @@ export function EnrollForm() {
             <GlobalInput
               id="email"
               type="email"
-              label={t("crEmail", "Business Email Address")}
+              label={t("merCrEmail", t("crEmail", "Business Email Address"))}
               required
               placeholder="business@example.com"
               leftIcon={<Mail size={16} />}
@@ -292,7 +295,7 @@ export function EnrollForm() {
             {/* Phone Number */}
             <div className="w-full">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t("mobile_phone", "Business Phone Number")} <span className="text-[#e65625]">*</span>
+                {t("merCrPhoneNo", t("mobile_phone", "Business Phone Number"))} <span className="text-[#e65625]">*</span>
               </label>
               <div
                 className={cn(

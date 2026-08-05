@@ -150,19 +150,19 @@ export default function Home() {
 
             {/* Below-form note */}
             <p className="mt-8 text-xs text-center text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              By signing in, you agree to mPay Network&apos;s{' '}
+              {t('agree_login_prefix', 'By signing in, you agree to mPay Network\'s')}{' '}
               <a
                 href="/terms-and-conditions"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
-                Terms of Service
+                {t('term_cond', 'Terms of Service')}
               </a>{' '}
-              and{' '}
+              {t('and', 'and')}{' '}
               <a
                 href="/privacy-policy"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
-                Privacy Policy
+                {t('privacy_policy', 'Privacy Policy')}
               </a>
               .
             </p>

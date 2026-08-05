@@ -1,60 +1,62 @@
-
 import { Phone, PhoneCall, Printer, MapPin, Globe } from "lucide-react"
-
-const CONTACT_DATA = [
-  {
-    id: 'phone',
-    title: 'Phone',
-    value: '416-572-2191',
-    icon: Phone,
-    colorClass: 'text-sky-500',
-    bgClass: 'bg-sky-50 dark:bg-sky-500/10',
-    link: 'tel:4165722191',
-    description: 'Call us directly'
-  },
-  {
-    id: 'whatsapp',
-    title: 'WhatsApp',
-    value: '416-572-2191',
-    icon: PhoneCall,
-    colorClass: 'text-emerald-500',
-    bgClass: 'bg-emerald-50 dark:bg-emerald-500/10',
-    link: 'https://wa.me/14165722191',
-    description: 'Chat with our support'
-  },
-  {
-    id: 'fax',
-    title: 'Fax',
-    value: '416-352-7754',
-    icon: Printer,
-    colorClass: 'text-violet-500',
-    bgClass: 'bg-violet-50 dark:bg-violet-500/10',
-    link: 'tel:4163527754',
-    description: 'Send us a fax'
-  },
-  {
-    id: 'website',
-    title: 'Website',
-    value: 'www.mpaynetwork.com',
-    icon: Globe,
-    colorClass: 'text-blue-500',
-    bgClass: 'bg-blue-50 dark:bg-blue-500/10',
-    link: 'https://www.mpaynetwork.com',
-    description: 'Visit our homepage'
-  },
-  {
-    id: 'address',
-    title: 'Address',
-    value: 'mPayNetwork Inc, Corporate Office, TD Canada Trust Tower, 161 Bay St., 27th Floor Toronto, ON M5J2S1',
-    icon: MapPin,
-    colorClass: 'text-rose-500',
-    bgClass: 'bg-rose-50 dark:bg-rose-500/10',
-    link: 'https://maps.google.com/?q=161+Bay+St,+Toronto,+ON+M5J+2S1,+Canada',
-    description: 'Visit our corporate office'
-  }
-]
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export default function ContactPage() {
+  const { t } = useLanguage();
+
+  const CONTACT_DATA = [
+    {
+      id: 'phone',
+      title: t("bp_phone", t("phone", "Phone")),
+      value: '416-572-2191',
+      icon: Phone,
+      colorClass: 'text-sky-500',
+      bgClass: 'bg-sky-50 dark:bg-sky-500/10',
+      link: 'tel:4165722191',
+      description: t("call_us_directly", "Call us directly")
+    },
+    {
+      id: 'whatsapp',
+      title: t("whatsapp", "WhatsApp"),
+      value: '416-572-2191',
+      icon: PhoneCall,
+      colorClass: 'text-emerald-500',
+      bgClass: 'bg-emerald-50 dark:bg-emerald-500/10',
+      link: 'https://wa.me/14165722191',
+      description: t("chat_with_support", "Chat with our support")
+    },
+    {
+      id: 'fax',
+      title: t("fax", "Fax"),
+      value: '416-352-7754',
+      icon: Printer,
+      colorClass: 'text-violet-500',
+      bgClass: 'bg-violet-50 dark:bg-violet-500/10',
+      link: 'tel:4163527754',
+      description: t("send_us_fax", "Send us a fax")
+    },
+    {
+      id: 'website',
+      title: t("contactus.website", t("website", "Website")),
+      value: 'www.mpaynetwork.com',
+      icon: Globe,
+      colorClass: 'text-blue-500',
+      bgClass: 'bg-blue-50 dark:bg-blue-500/10',
+      link: 'https://www.mpaynetwork.com',
+      description: t("visit_our_homepage", "Visit our homepage")
+    },
+    {
+      id: 'address',
+      title: t("contact_address", t("address", "Address")),
+      value: 'mPayNetwork Inc, Corporate Office, TD Canada Trust Tower, 161 Bay St., 27th Floor Toronto, ON M5J2S1',
+      icon: MapPin,
+      colorClass: 'text-rose-500',
+      bgClass: 'bg-rose-50 dark:bg-rose-500/10',
+      link: 'https://maps.google.com/?q=161+Bay+St,+Toronto,+ON+M5J+2S1,+Canada',
+      description: t("visit_corporate_office", "Visit our corporate office")
+    }
+  ]
+
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10 flex flex-col items-center pt-8">
       
@@ -63,10 +65,10 @@ export default function ContactPage() {
         {/* Title */}
         <div className="mb-10 w-full text-center border-b border-slate-200 dark:border-white/10 pb-6">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-            Get In Touch
+            {t("contact_us", t("get_in_touch", "Get In Touch"))}
           </h2>
           <p className="text-slate-500 dark:text-white/60 max-w-lg mx-auto">
-            Have questions or need assistance? Reach out to us through any of the channels below. We're here to help!
+            {t("contact_desc", "Have questions or need assistance? Reach out to us through any of the channels below. We're here to help!")}
           </p>
         </div>
 

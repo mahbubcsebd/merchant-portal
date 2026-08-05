@@ -85,7 +85,7 @@ export function ForgotPinForm() {
       {/* Heading */}
       <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          {t("beforeLoginForgotPIN", "Forgot Wallet PIN")}
+          {t("beforeLoginForgotPIN", t("changePassword", "Forgot Wallet PIN"))}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
           {t("forgot_pin_subtitle", "Enter your registered email address and date of birth to reset your PIN.")}
@@ -110,7 +110,7 @@ export function ForgotPinForm() {
         <GlobalInput
           id="email"
           type="email"
-          label={t("crEmail", "Email Address")}
+          label={t("merCrEmail", t("crEmail", "Email Address"))}
           required
           placeholder="business@example.com"
           leftIcon={<Mail size={16} />}
@@ -122,7 +122,7 @@ export function ForgotPinForm() {
         {/* Date of Birth */}
         <div className="space-y-2">
           <label htmlFor="dob" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            {t("crDOB", t("date_of_birth", "Date of Birth"))} <span className="text-[#e65625]">*</span>
+            {t("crDateOfBirth", t("date_of_birth", "Date of Birth"))} <span className="text-[#e65625]">*</span>
           </label>
           <div className="relative w-full flex">
             <CalendarIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
@@ -183,7 +183,7 @@ export function ForgotPinForm() {
           to="/"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] hover:underline transition-colors"
         >
-          {t("authenticateSignIn", "Sign In")}
+          {t("back_to_login", t("authenticateSignIn", "Sign In"))}
         </Link>
       </p>
     </div>

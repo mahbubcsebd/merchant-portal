@@ -102,13 +102,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         {/* Logo Section / Toggle Section */}
         {isMobile ? (
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
-            <img
-              src="/images/logo.svg"
-              alt="mPay Network"
-              width={110}
-              height={42}
-              className="h-auto dark:invert-0"
-            />
+            <Link to="/dashboard" onClick={onClose} className="cursor-pointer">
+              <img
+                src="/images/logo.svg"
+                alt="mPay Network"
+                width={110}
+                height={42}
+                className="h-auto dark:invert-0 hover:opacity-90 transition-opacity"
+              />
+            </Link>
             <button 
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -129,13 +131,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           </div>
         ) : (
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
-            <img
-              src="/images/logo.svg"
-              alt="mPay Network"
-              width={110}
-              height={42}
-              className="h-auto dark:invert-0"
-            />
+            <Link to="/dashboard" className="cursor-pointer">
+              <img
+                src="/images/logo.svg"
+                alt="mPay Network"
+                width={110}
+                height={42}
+                className="h-auto dark:invert-0 hover:opacity-90 transition-opacity"
+              />
+            </Link>
             <button 
               onClick={() => setIsCollapsed(true)}
               className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"

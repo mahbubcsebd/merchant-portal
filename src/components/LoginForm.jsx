@@ -25,7 +25,7 @@ import {
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  pin: z.string().min(4, { message: 'PIN must be at least 4 digits.' }),
+  pin: z.string().min(6, { message: 'Wallet PIN must be 6 digits.' }),
 });
 
 export function LoginForm() {
@@ -155,12 +155,12 @@ export function LoginForm() {
       {/* ── Heading ─────────────────────────────── */}
       <div className="mb-8 xl:mb-10 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          {t('wallet_pin_login', t('login_with_pin', 'Welcome back'))}
+          {t('authenticateTitle', t('wallet_pin_login', t('welcome_back', 'Welcome back')))}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
           {t(
-            'enter_pin_to_continue',
-            'Sign in to your Merchant Portal account',
+            'authenticateSubTitle',
+            t('enter_pin_to_continue', 'Sign in to your Merchant Portal account')
           )}
         </p>
       </div>
@@ -175,7 +175,7 @@ export function LoginForm() {
         <GlobalInput
           id="email"
           type="email"
-          label={t('crEmail', 'Email Address')}
+          label={t('crEmail', t('authenticateUserID', 'Email Address'))}
           required
           placeholder="merchant@example.com"
           leftIcon={<Mail size={16} />}
@@ -191,7 +191,7 @@ export function LoginForm() {
               htmlFor="pin"
               className="text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              {t('enter_your_pin', t('enter_pin', 'Wallet PIN'))}{' '}
+              {t('crPassword', t('enter_your_pin', 'Wallet PIN'))}{' '}
               <span className="text-[#e65625]">*</span>
             </label>
             <Link
@@ -230,7 +230,7 @@ export function LoginForm() {
           loadingText={t('verifying', 'Signing in…')}
           className="mt-2"
         >
-          {t('authenticateSignIn', 'Sign In')}
+          {t('authenticateSignIn', 'SIGN IN')}
         </GlobalButton>
       </form>
 
@@ -241,9 +241,7 @@ export function LoginForm() {
           to="/enroll"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors capitalize"
         >
-          {t('registerMerchant', 'Merchant Registration')
-            .toLowerCase()
-            .replace(/\b\w/g, (c) => c.toUpperCase())}
+          {t('merNewToMobileBanking', t('registerMerchant', 'Merchant Registration'))}
         </Link>
       </p>
 

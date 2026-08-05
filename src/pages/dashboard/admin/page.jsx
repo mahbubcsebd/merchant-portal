@@ -218,11 +218,11 @@ function PaymentLimitsView() {
 
   const columns = [
     {
-      title: t("daily_limits", "Daily Limits"),
+      title: t("dailyLimit", t("daily_limits", "Daily Limits")),
       cards: filteredLimits.map((item) => mapCard(item, "daily")),
     },
     {
-      title: t("monthly_limits", "Monthly Limit"),
+      title: t("MonthlyLimit", t("monthly_limits", "Monthly Limit")),
       cards: filteredLimits.map((item) => mapCard(item, "monthly")),
     },
     {
@@ -233,11 +233,8 @@ function PaymentLimitsView() {
 
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">
-          {t("paymentLimits", "Payment Limits")}
-        </h2>
-        {currencyOptions.length > 1 && (
+      {currencyOptions.length > 1 && (
+        <div className="flex justify-end">
           <div className="w-full sm:w-48 shrink-0">
             <GlobalSelect
               value={selectedCurrency}
@@ -246,8 +243,8 @@ function PaymentLimitsView() {
               placeholder={t("selectCurrency", "Select Currency")}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {columns.map((col, colIdx) => (
@@ -263,7 +260,7 @@ function PaymentLimitsView() {
                 return (
                   <div key={cardIdx} className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm">
                     <h4 className="font-bold text-slate-900 dark:text-white mb-1">{card.title}</h4>
-                    <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">{t("limit_max", "Maximum Balance allowed on")} {card.title}</p>
                     
                     <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
                       {card.currency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {t("remaining", "Remaining")}
@@ -569,12 +566,12 @@ function SettlementSettingsView() {
       <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
         <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 max-w-xl mx-auto w-full">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
-            {editIndex !== null ? t("edit_bank_account", "Edit Bank Account") : t("add_bank_account", "Add Bank Account")}
+            {editIndex !== null ? t("edit.beneficiary", t("edit_bank_account", "Edit Bank Account")) : t("mba_addAcc", t("add_bank_account", "Add Bank Account"))}
           </h2>
           
           <div className="flex flex-col gap-5">
             <GlobalSelect
-              label={t("bank_name", "Bank Name")}
+              label={t("transfers.bankName", t("mba_bank", t("bank_name", "Bank Name")))}
               required
               value={formData.bankName}
               onChange={(val) => handleSelectChange('bankName', val)}
@@ -593,7 +590,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalInput
-              label={t("account_number", "Account Number")}
+              label={t("mba_accountNo", t("account_number", "Account Number"))}
               required
               type="text"
               name="accountNumber"
@@ -604,7 +601,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalSelect
-              label={t("currency", "Currency")}
+              label={t("mba_currency", t("currency", "Currency"))}
               required
               value={formData.currency}
               onChange={(val) => handleSelectChange('currency', val)}
@@ -625,7 +622,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalSelect
-              label={t("account_type", "Account Type")}
+              label={t("mba_accountType", t("account_type", "Account Type"))}
               required
               value={formData.accountType}
               onChange={(val) => handleSelectChange('accountType', val)}
@@ -788,17 +785,14 @@ function SettlementSettingsView() {
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 overflow-hidden">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">
-          {t("sl_title", t("settlement_settings", "My Settlement Settings"))}
-        </h2>
         
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-slate-700 dark:text-white/70 uppercase border-b border-slate-200 dark:border-white/10">
               <tr>
-                <th className="px-4 py-3 font-bold">{t("bank_name", "Bank Name")}</th>
-                <th className="px-4 py-3 font-bold">{t("account_number", "Account Number")}</th>
-                <th className="px-4 py-3 font-bold text-right">{t("action", "Action")}</th>
+                <th className="px-4 py-3 font-bold">{t("transfers.bankName", t("mba_bank", t("bank_name", "Bank Name")))}</th>
+                <th className="px-4 py-3 font-bold">{t("mba_accountNo", t("account_number", "Account Number"))}</th>
+                <th className="px-4 py-3 font-bold text-right">{t("teAction", t("myqr_action", t("action", "Action")))}</th>
               </tr>
             </thead>
             <tbody>
@@ -829,7 +823,7 @@ function SettlementSettingsView() {
             leftIcon={<Plus size={18} />}
             className="px-6 text-xs font-bold uppercase tracking-wider"
           >
-            {t("add_bank_account", "Add Bank Account")}
+            {t("mba_addAcc", t("add_bank_account", "Add Bank Account"))}
           </GlobalButton>
         </div>
       </div>
@@ -927,8 +921,8 @@ function ManageNotificationsView() {
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
         <div className="flex flex-col gap-4 mb-2">
           {[
-            { id: 'sms', label: t("sms_notifications", "SMS Notifications") }, 
-            { id: 'email', label: t("email_notifications", "Email Notifications") }, 
+            { id: 'sms', label: t("mn_sms", t("sms_notifications", "SMS Notifications")) }, 
+            { id: 'email', label: t("mn_email", t("email_notifications", "Email Notifications")) }, 
             { id: 'whatsapp', label: t("mn_wht", t("whatsapp_notifications", "WhatsApp Notifications")) }
           ].map((item) => (
             <div key={item.id} className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0">
@@ -972,9 +966,9 @@ function ChangeLanguageView() {
 
   const languages = [
     { key: "Dutch", label: t("lang_dutch", "Dutch") },
-    { key: "English", label: t("lang_english", "English") },
-    { key: "French", label: t("lang_french", "French") },
-    { key: "Spanish", label: t("lang_spanish", "Spanish") }
+    { key: "English", label: t("chl_english", t("lang_english", "English")) },
+    { key: "French", label: t("chl_franch", t("lang_french", "French")) },
+    { key: "Spanish", label: t("chl_spanish", t("lang_spanish", "Spanish")) }
   ];
 
   const [selectedLang, setSelectedLang] = useState('English');
@@ -1241,22 +1235,22 @@ export default function AdminPage() {
 
   const getHeaderTitle = () => {
     switch (activeTab) {
-      case 'my_qr': return t("my_qr", t("manage_storeQR", "Mijn QR"))
-      case 'payment_limits': return t("paymentLimits", t("payment_limits", "Payment Limits"))
+      case 'my_qr': return t("my_qr", t("manage_storeQR", "Manage Store QR"))
+      case 'payment_limits': return t("walletLimit", t("paymentLimits", "My Wallet Limits"))
       case 'settlement_settings': return t("sl_title", t("settlement_settings", "My Settlement Settings"))
-      case 'manage_notifications': return t("notifications_tlt", t("manage_notifications", "Manage Notifications"))
-      case 'change_language': return t("change_language", "Change Language")
+      case 'manage_notifications': return t("ps_manageNotification", t("notifications_tlt", "Manage Notifications"))
+      case 'change_language': return t("ps_changeLang", t("change_language", "Change Language"))
       case 'change_pin': return t("change_wallet_pin", t("change_pin", "Change PIN"))
-      default: return t("adm_title", t("admin", "Administration"))
+      default: return t("adm_title", t("lmAdministration", "Administration"))
     }
   }
 
   const tabs = [
-    { id: 'my_qr', label: t("manage_storeQR", t("store_qr_code", "Store QR Code")), icon: QrCode },
+    { id: 'my_qr', label: t("manage_storeQR", t("myqr_title", t("store_qr_code", "Manage Store QR"))), icon: QrCode },
     { id: 'payment_limits', label: t("paymentLimits", t("payment_limits", "Payment Limits")), icon: Wallet },
     { id: 'settlement_settings', label: t("sl_title", t("my_settlement_settings", "My Settlement Settings")), icon: Building2 },
-    { id: 'manage_notifications', label: t("notifications_tlt", t("manage_notifications", "Manage Notifications")), icon: Bell },
-    { id: 'change_language', label: t("change_language", "Change Language"), icon: Languages },
+    { id: 'manage_notifications', label: t("ps_manageNotification", t("notifications_tlt", t("manage_notifications", "Manage Notifications"))), icon: Bell },
+    { id: 'change_language', label: t("ps_changeLang", t("change_language", "Change Language")), icon: Languages },
     { id: 'change_pin', label: t("change_wallet_pin", t("change_pin", "Change PIN")), icon: KeyRound },
   ]
 
