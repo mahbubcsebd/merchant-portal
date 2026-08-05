@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDialog } from "@/components/globals/DialogProvider";
 import ScheduledTransfersList from "./scheduled/ScheduledTransfersList";
-import ScheduledTransfersForm from "./scheduled/ScheduledTransfersForm";
+import ScheduledTransferFormFields from "./scheduled/ScheduledTransferFormFields";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { useFormValidation } from "@/hooks/useFormValidation";
 import { useScheduledTransfers } from "@/hooks/useScheduledTransfers";
 import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
+import { format, parse } from "date-fns";
+import { useDashboardContext } from "@/pages/dashboard/context";
 
 export default function ManageScheduledTransfers({ setView: setParentView }) {
-  const [localView, setLocalView] = useState("list"); // 'list', 'form'
-  const [formData, setFormData] = useState({});
+  const { accounts } = useDashboardContext();
+  const { t } = useLanguage();
+  const { validate } = useFormValidation();
   const {
     openPreconfirmDialog,
     openSuccessDialog,
@@ -26,14 +31,14 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
   // Helper functions
   const getFrequencyLabel = (val) => {
     const map = {
-      1: "Once",
-      2: "Daily",
-      3: "Weekly",
-      4: "Bi-Weekly",
-      5: "Monthly",
-      6: "Quarterly",
-      7: "Half-Yearly",
-      8: "Annually",
+      1: t("schedule_once", "Once"),
+      2: t("schedule_daily", "Daily"),
+      3: t("schedule_weekly", "Weekly"),
+      4: t("schedule_biweekly", "Bi-Weekly"),
+      5: t("schedule_monthly", "Monthly"),
+      6: t("schedule_quarterly", "Quarterly"),
+      7: t("schedule_halfyearly", "Half-Yearly"),
+      8: t("schedule_annual", "Annually"),
     };
     return map[val] || val;
   };
@@ -55,81 +60,139 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
 
   const handleView = (transfer) => {
     openDetailDialog({
-      title: "View Scheduled Transfer",
+      title: t("view.scheduled", "View Scheduled Transfer"),
       details: [
-        { label: "Beneficiary Name", value: transfer.BENFNAME },
-        { label: "Bank Name", value: getBankName(welcomeData, transfer.BENFBNKID) },
-        { label: "Account No.", value: transfer.BENFACC },
+        { label: t("p2b_benname", "Beneficiary Name"), value: transfer.BENFNAME },
+        { label: t("p2b_benbank", "Bank Name"), value: getBankName(welcomeData, transfer.BENFBNKID) },
+        { label: t("p2b_accno", "Account No."), value: transfer.BENFBNKAC },
         {
-          label: "Amount",
+          label: t("teAmount", "Amount"),
           value: `${transfer.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
         },
-        { label: "Start Date", value: translateDate(transfer.STRDATE) },
-        { label: "How Often", value: getFrequencyLabel(transfer.FREQUENCY) },
+        { label: t("schedule_start", "Start Date"), value: translateDate(transfer.STRDATE) },
+        { label: t("schedule_often", "How Often"), value: getFrequencyLabel(transfer.FREQUENCY) },
         {
-          label: "Until",
+          label: t("schedule_until", "Until"),
           value:
             transfer.ENDDATE && transfer.ENDDATE !== "0"
               ? translateDate(transfer.ENDDATE)
               : "-",
         },
-        { label: "Status", value: transfer.TXNSTATUS },
-        { label: "Description", value: transfer.TXNDESC },
+        { label: t("status", "Status"), value: transfer.TXNSTATUS },
+        { label: t("ptb_description", "Description"), value: transfer.TXNDESC },
       ],
-      doneText: "Close",
+      doneText: t("button_close", "Close"),
     });
   };
 
-  const handleEdit = (transfer) => {
+    const handleEdit = (transfer) => {
     if (transfer.TXNSTATUS === "CANCELLED") return;
 
-    setFormData({
+    const initialValues = {
       ...transfer,
       STRDATE: translateDate(transfer.STRDATE),
       ENDDATE: transfer.ENDDATE === "0" ? "" : translateDate(transfer.ENDDATE),
-    });
-    setLocalView("form");
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-
-    // Map to API required payload
-    const payload = {
-      scheduledTxnId: formData.SCHEDULEDTXNID,
-      amount: formData.TXNAMOUNT,
-      description: formData.TXNDESC,
-      startDate: formatDateForApi(formData.STRDATE),
-      howOften: formData.FREQUENCY,
-      endDate: formData.ENDDATE ? formatDateForApi(formData.ENDDATE) : "0",
     };
 
-    openPreconfirmDialog({
-      title: "Confirm Update",
-      message: "Are you sure you want to update this scheduled transfer?",
-      details: {
-        "Beneficiary Name": formData.BENFNAME,
-        "Amount": `${formData.TXNAMOUNT} ${getCurrencyLabel(welcomeData, formData.BENFACCUR)}`,
-        "Start Date": formData.STRDATE,
-        "How Often": getFrequencyLabel(formData.FREQUENCY),
-        "Until": formData.ENDDATE || "-",
-      },
-      onChange: () => closeDialog(),
-      onSubmit: async () => {
-        try {
-          await updateTransferMutation.mutateAsync(payload);
-          setLocalView("list");
-          openSuccessDialog({
-            title: "Success",
-            message: "Scheduled transfer updated successfully.",
-          });
-        } catch (error) {
-          openGlobalPopup({
-            title: "Error",
-            description: error.message || "Failed to update scheduled transfer.",
-            type: "error",
-          });
+    openFormDialog({
+      title: t("ptb_title_edit", "Edit Scheduled Transfer"),
+      isView: false,
+      submitText: t("buttonUpdate", "Update"),
+      size: "sm:max-w-xl",
+      disableAutoValidation: true,
+      content: <ScheduledTransferFormFields data={initialValues} accounts={accounts} />,
+      onSave: (values, setErrors) => {
+        const fieldsToValidate = [
+          { name: "TXNAMOUNT", value: values.TXNAMOUNT, label: t("teAmount", "Amount"), required: true },
+          { name: "STRDATE", value: values.STRDATE, label: t("schedule_start", "Start Date"), required: true },
+          { name: "FREQUENCY", value: values.FREQUENCY, label: t("schedule_often", "How Often"), required: true },
+        ];
+
+        if (parseInt(values.FREQUENCY) > 1) {
+          fieldsToValidate.push({ name: "ENDDATE", value: values.ENDDATE, label: t("schedule_end", "End Date"), required: true });
         }
+
+        const { isValid, errors } = validate(fieldsToValidate);
+        if (!isValid) {
+          setErrors(errors);
+          return false;
+        }
+
+        const formatForApi = (dateStr) => {
+          if (!dateStr || dateStr === "0") return "";
+          const parsed = parse(dateStr, "yyyyMMdd", new Date());
+          return format(parsed, "MM/dd/yyyy");
+        };
+
+        const startDateFormatted = formatForApi(values.STRDATE);
+        const endDateFormatted = formatForApi(values.ENDDATE);
+
+        const payload = {
+          HowOften_label: getFrequencyLabel(values.FREQUENCY),
+          amount: values.TXNAMOUNT,
+          benName: transfer.BENFNAME || "",
+          coordLat: "1.1",
+          coordLong: "1.1",
+          custType: "C",
+          date_start: startDateFormatted,
+          description: values.TXNDESC,
+          endDate: endDateFormatted,
+          end_date: endDateFormatted,
+          fromAccNum: values.FROMACC,
+          fromAccountNumber: values.FROMACC,
+          howOften: values.FREQUENCY,
+          institutionID: welcomeData?.user?.institutionId || "1",
+          langId: welcomeData?.user?.language || "en",
+          scheduledTxnId: values.SCHEDULEDTXNID,
+          startDate: startDateFormatted,
+          until: parseInt(values.FREQUENCY) > 1 ? "Y" : "N",
+          when: "N"
+        };
+
+        
+        const rawPreconfirmDetails = {
+          [t("from_account", "From Account")]: values.FROMACC,
+          [t("p2b_benname", "Beneficiary Name")]: transfer.BENFNAME,
+          [t("p2b_benbank", "Bank Name")]: getBankName(welcomeData, transfer.BENFBNKID),
+          [t("p2b_accno", "Account No.")]: transfer.BENFBNKAC,
+          [t("p2b_currency", "Currency")]: getCurrencyLabel(welcomeData, transfer.BENFACCUR),
+          [t("teAmount", "Amount")]: `${values.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
+          [t("ptb_description", "Description")]: values.TXNDESC,
+          [t("schedule_start", "Start Date")]: startDateFormatted,
+          [t("schedule_often", "How Often")]: getFrequencyLabel(values.FREQUENCY),
+          [t("schedule_until", "Until")]: parseInt(values.FREQUENCY) > 1 ? endDateFormatted : "-",
+        };
+        const preconfirmDetails = Object.fromEntries(
+          Object.entries(rawPreconfirmDetails).filter(([_, v]) => v && v !== "-")
+        );
+
+        openPreconfirmDialog({
+          title: t("ptb_title_edit", "Confirm Update"),
+          message: t("confirm_update_desc", "Are you sure you want to update this scheduled transfer?"),
+          details: preconfirmDetails,
+          onChange: () => {
+             // Let them go back to the dialog
+             handleEdit(transfer);
+          },
+          onSubmit: async () => {
+            try {
+              await updateTransferMutation.mutateAsync(payload);
+              openSuccessDialog({
+                title: t("success_title", "Success"),
+                message: t("update_success_desc", "Scheduled transfer updated successfully."),
+                details: preconfirmDetails
+              });
+            } catch (error) {
+              openGlobalPopup({
+                title: t("error_title", "Error"),
+                description: error.message || "Failed to update scheduled transfer.",
+                type: "error",
+              });
+            }
+          },
+        });
+
+        return false;
       },
     });
   };
@@ -138,34 +201,34 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
     if (transfer.TXNSTATUS === "CANCELLED") return;
 
     const details = {
-      "Beneficiary Name": transfer.BENFNAME,
-      "Bank Name": getBankName(welcomeData, transfer.BENFBNKID),
-      "Account No.": transfer.BENFACC,
-      "Amount": `${transfer.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
-      "Start Date": translateDate(transfer.STRDATE),
-      "How Often": getFrequencyLabel(transfer.FREQUENCY),
-      "Until": transfer.ENDDATE && transfer.ENDDATE !== "0" ? translateDate(transfer.ENDDATE) : "-",
-      "Status": transfer.TXNSTATUS,
-      "Description": transfer.TXNDESC,
+      [t("p2b_benname", "Beneficiary Name")]: transfer.BENFNAME,
+      [t("p2b_benbank", "Bank Name")]: getBankName(welcomeData, transfer.BENFBNKID),
+      [t("p2b_accno", "Account No.")]: transfer.BENFBNKAC,
+      [t("teAmount", "Amount")]: `${transfer.TXNAMOUNT} ${getCurrencyLabel(welcomeData, transfer.BENFACCUR)}`,
+      [t("schedule_start", "Start Date")]: translateDate(transfer.STRDATE),
+      [t("schedule_often", "How Often")]: getFrequencyLabel(transfer.FREQUENCY),
+      [t("schedule_until", "Until")]: transfer.ENDDATE && transfer.ENDDATE !== "0" ? translateDate(transfer.ENDDATE) : "-",
+      [t("status", "Status")]: transfer.TXNSTATUS,
+      [t("ptb_description", "Description")]: transfer.TXNDESC,
     };
 
     openPreconfirmDialog({
-      title: "Confirm Cancellation",
-      message: "Are you sure you want to cancel this scheduled transfer? This action cannot be undone.",
+      title: t("cancel_transfer_title", "Confirm Cancellation"),
+      message: t("del_payment_confirm", "Are you sure you want to cancel this scheduled transfer? This action cannot be undone."),
       details,
-      confirmText: "Yes, Cancel Transfer",
+      confirmText: t("button_confirm", "Yes, Cancel Transfer"),
       iconType: "danger",
       onChange: () => closeDialog(),
       onSubmit: async () => {
         try {
           await deleteTransferMutation.mutateAsync(transfer.SCHEDULEDTXNID);
           openSuccessDialog({
-            title: "Transfer Cancelled",
-            message: "The scheduled transfer has been successfully cancelled.",
+            title: t("success_title", "Transfer Cancelled"),
+            message: t("cancel_transfer_success", "The scheduled transfer has been successfully cancelled."),
           });
         } catch (error) {
           openGlobalPopup({
-            title: "Error",
+            title: t("error_title", "Error"),
             description: error.message || "Failed to cancel transfer.",
             type: "error",
           });
@@ -182,18 +245,6 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
   // -------------------------------------------------------------
   // Render
   // -------------------------------------------------------------
-  if (localView === "form") {
-    return (
-      <ScheduledTransfersForm
-        formData={formData}
-        setFormData={setFormData}
-        handleFormSubmit={handleFormSubmit}
-        setLocalView={setLocalView}
-        isPending={updateTransferMutation.isPending}
-      />
-    );
-  }
-
   return (
     <ScheduledTransfersList
       transfers={

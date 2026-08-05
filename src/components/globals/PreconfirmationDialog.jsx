@@ -29,7 +29,7 @@ export default function PreconfirmationDialog({ title = "Confirm Details", detai
             return (
               <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 bg-white dark:bg-transparent">
                 <span className="text-xs font-semibold text-slate-500 dark:text-white/50 w-1/3 uppercase tracking-wider mb-1 sm:mb-0">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
+                  {key.replace(/([A-Z])/g, " $1").replace(/\s*\*\s*$/, '').trim()}
                 </span>
                 <span className="text-sm font-medium text-slate-900 dark:text-white w-2/3 sm:text-right break-words">
                   {String(value)}
