@@ -1,6 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import GlobalButton from "./GlobalButton";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ViewDetailDialog({
   title,
@@ -10,6 +11,7 @@ export default function ViewDetailDialog({
   doneText = "Done",
   onClose,
 }) {
+  const { t } = useLanguage();
   const validDetails = details.filter(detail => 
     detail.value !== null && 
     detail.value !== undefined && 
@@ -64,7 +66,7 @@ export default function ViewDetailDialog({
           onClick={onClose}
           className="uppercase tracking-wider font-bold h-10 text-xs px-8"
         >
-          {doneText}
+          {doneText === "Done" ? t("buttonDone", "Done") : doneText}
         </GlobalButton>
       </div>
     </div>

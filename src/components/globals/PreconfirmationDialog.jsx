@@ -1,8 +1,10 @@
 import React from "react";
 import { X } from "lucide-react";
 import GlobalButton from "./GlobalButton";
+import { useLanguage } from "./LanguageProvider";
 
 export default function PreconfirmationDialog({ title = "Confirm Details", details = {}, onSubmit, onChange, onClose }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col max-h-[85vh]">
       <div className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 px-6 py-5 flex items-center justify-between shrink-0">
@@ -42,10 +44,10 @@ export default function PreconfirmationDialog({ title = "Confirm Details", detai
 
       <div className="px-6 py-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] flex items-center justify-end gap-3 shrink-0">
         <GlobalButton variant="outline" onClick={onChange} className="uppercase font-bold tracking-wider h-10 px-6 text-xs">
-          Change
+          {t("buttonChange", "Change")}
         </GlobalButton>
         <GlobalButton variant="primary" onClick={onSubmit} className="uppercase font-bold tracking-wider h-10 px-6 text-xs">
-          Submit
+          {t("buttonSubmit", "Submit")}
         </GlobalButton>
       </div>
     </div>

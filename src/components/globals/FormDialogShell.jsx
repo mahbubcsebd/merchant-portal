@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import GlobalButton from "./GlobalButton";
+import { useLanguage } from "./LanguageProvider";
 
 export default function FormDialogShell({
   title,
@@ -12,6 +13,7 @@ export default function FormDialogShell({
   children,
   disableAutoValidation = false,
 }) {
+  const { t } = useLanguage();
   const [formErrors, setFormErrors] = useState({});
 
   const handleSubmit = (e) => {
@@ -117,7 +119,7 @@ export default function FormDialogShell({
           onClick={onClose}
           className="uppercase tracking-wider font-bold h-10 text-xs px-6"
         >
-          {isView ? "Close" : cancelText}
+          {isView ? t("buttonsClose", "Close") : (cancelText === "Cancel" ? t("buttonCancel", "Cancel") : cancelText)}
         </GlobalButton>
         {!isView && (
           <GlobalButton
@@ -125,7 +127,7 @@ export default function FormDialogShell({
             variant="primary"
             className="uppercase tracking-wider font-bold h-10 text-xs px-6"
           >
-            {submitText}
+            {submitText === "Save" ? t("buttonSubmit", "Save") : submitText}
           </GlobalButton>
         )}
       </div>
