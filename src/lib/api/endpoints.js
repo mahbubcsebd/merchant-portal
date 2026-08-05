@@ -9,6 +9,11 @@ export async function welcomeApi(payload = {}) {
   return post("/welcome", payload);
 }
 
+// Fetch Countries List
+export async function getCountries() {
+  return get("/merchantportal/js/countries.js");
+}
+
 // Authenticate / Login
 export async function loginWithPin(payload = {}) {
   return post("/loginWithPin", payload);

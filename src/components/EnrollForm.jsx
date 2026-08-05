@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Building2, Check, Mail, Phone, AlertCircle, ChevronsUpDown } from 'lucide-react';
+import { Building2, Check, Mail, Phone, AlertCircle, ChevronsUpDown, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 import GlobalButton from '@/components/globals/GlobalButton';
 import GlobalInput from '@/components/globals/GlobalInput';
 import { registerMerchant, verifyMerchantOTP, resendOTP } from '@/lib/api/endpoints';
+import { useLanguage } from '@/components/globals/LanguageProvider';
+import { useDialog } from '@/components/globals/DialogProvider';
 import {
   Command,
   CommandEmpty,
@@ -26,23 +29,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
-
-const COUNTRY_CODES = [
-  { code: '355', flag: '🇦🇱', country: 'Albania (+355)' },
-  { code: '1', flag: '🇺🇸', country: 'USA (+1)' },
-  { code: '124', flag: '🇨🇦', country: 'Canada (+124)' },
-  { code: '880', flag: '🇧🇩', country: 'Bangladesh (+880)' },
-  { code: '91', flag: '🇮🇳', country: 'India (+91)' },
-  { code: '44', flag: '🇬🇧', country: 'UK (+44)' },
-  { code: '93', flag: '🇦🇫', country: 'Afghanistan (+93)' },
-  { code: '12', flag: '🇩🇿', country: 'Algeria (+12)' },
-  { code: '54', flag: '🇦🇷', country: 'Argentina (+54)' },
-  { code: '358', flag: '🇫🇮', country: 'Finland (+358)' },
-  { code: '81', flag: '🇯🇵', country: 'Japan (+81)' },
-  { code: '92', flag: '🇵🇰', country: 'Pakistan (+92)' },
-  { code: '63', flag: '🇵🇭', country: 'Philippines (+63)' },
-  { code: '82', flag: '🇰🇷', country: 'South Korea (+82)' },
-];
+import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
 
 const formSchema = z.object({
   storeName: z
@@ -50,7 +37,10 @@ const formSchema = z.object({
     .min(2, { message: 'Store name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   countryCode: z.string().min(1, { message: 'Select a country code.' }),
-  phone: z.string().min(6, { message: 'Enter a valid phone number.' }),
+  phone: z
+    .string()
+    .min(6, { message: 'Enter a valid phone number.' })
+    .regex(/^[0-9]+$/, { message: 'Phone number must contain digits only.' }),
   acceptTerms: z.boolean().refine((v) => v === true, {
     message: 'You must accept the Terms and Conditions.',
   }),
@@ -64,6 +54,10 @@ const formSchema = z.object({
 
 export function EnrollForm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { t } = useLanguage();
+  const { openConfirmDialog } = useDialog();
+
   const [step, setStep] = useState('form'); // 'form' | 'confirm' | 'otp' | 'success'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -71,6 +65,21 @@ export function EnrollForm() {
   const [openCountryBox, setOpenCountryBox] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const countryCodesList = COUNTRY_OPTIONS;
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery) return countryCodesList;
+    const q = searchQuery.toLowerCase().trim();
+    return countryCodesList.filter(
+      (c) =>
+        c.country.toLowerCase().includes(q) ||
+        c.code.includes(q) ||
+        (c.isoCode && c.isoCode.toLowerCase().includes(q))
+    );
+  }, [countryCodesList, searchQuery]);
 
   const {
     register,
@@ -91,6 +100,24 @@ export function EnrollForm() {
       appConsent: 'Y',
     },
   });
+
+  const handleOpenTermsModal = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openConfirmDialog({
+      title: t("terms_and_conditions", "Terms and Conditions"),
+      description: t(
+        "terms_and_conditions_full_text",
+        "By enrolling a Merchant Account, you agree to comply with all applicable terms, conditions, and regulatory policies governing payment processing on the mPay Network platform. Enrolling a new merchant account on this device will remove the existing customer account linked to this device."
+      ),
+      confirmText: t("accept", "I Agree & Accept"),
+      iconType: "info",
+      onConfirm: () => {
+        setValue("acceptTerms", true, { shouldValidate: true });
+        setValue("acceptDevice", true, { shouldValidate: true });
+      },
+    });
+  };
 
   const formValues = watch();
 
@@ -127,10 +154,10 @@ export function EnrollForm() {
       if (res?.status === 'success' || res?.statusCode === 0) {
         setStep('otp');
       } else {
-        setApiError(res?.message || 'Registration failed. Please try again.');
+        setApiError(res?.message || t("registration_failed_try_again", "Registration failed. Please try again."));
       }
     } catch (err) {
-      setApiError(err?.message || 'Something went wrong. Please try again.');
+      setApiError(err?.message || t("something_went_wrong_try_again", "Something went wrong. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -152,13 +179,13 @@ export function EnrollForm() {
       const res = await resendOTP(payload);
 
       if (res?.status === 'success' || res?.statusCode === 0) {
-        setResendSuccessMsg(res?.message || 'The OTP has been successfully resent.');
+        setResendSuccessMsg(res?.message || t("otp_resent_success", "The OTP has been successfully resent."));
         setTimeout(() => setResendSuccessMsg(''), 5000);
       } else {
-        setApiError(res?.message || 'Failed to resend OTP. Please try again.');
+        setApiError(res?.message || t("failed_resend_otp", "Failed to resend OTP. Please try again."));
       }
     } catch (err) {
-      setApiError(err?.message || 'Failed to resend OTP. Please try again.');
+      setApiError(err?.message || t("failed_resend_otp", "Failed to resend OTP. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +194,7 @@ export function EnrollForm() {
   // Step 3 OTP Verification → Trigger /walletmc/verifyMerchantOTP API
   async function handleVerifyOTP() {
     if (!otpCode || otpCode.length < 6) {
-      setApiError('Please enter the complete 6-digit OTP code.');
+      setApiError(t("enter_complete_otp", "Please enter the complete 6-digit OTP code."));
       return;
     }
 
@@ -191,14 +218,14 @@ export function EnrollForm() {
       if (res?.status === 'success' || res?.statusCode === 0) {
         setSuccessMessage(
           res?.message ||
-            'Merchant verification link has been sent to your registered email address. Please check your inbox to complete enrollment.'
+            t("verification_link_sent_email", "Merchant verification link has been sent to your registered email address. Please check your inbox to complete enrollment.")
         );
         setStep('success');
       } else {
-        setApiError(res?.message || 'Invalid OTP code. Please try again.');
+        setApiError(res?.message || t("invalid_otp_code", "Invalid OTP code. Please try again."));
       }
     } catch (err) {
-      setApiError(err?.message || 'OTP verification failed. Please try again.');
+      setApiError(err?.message || t("otp_verification_failed", "OTP verification failed. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -228,10 +255,10 @@ export function EnrollForm() {
           {/* Heading */}
           <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
             <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-              MERCHANT REGISTRATION
+              {t("merNewToMobileBanking", t("registerMerchant", "Merchant Registration"))}
             </h2>
             <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-              Register your business on mPay Merchant Portal
+              {t("register_subtitle", "Register your business on mPay Merchant Portal")}
             </p>
           </div>
 
@@ -243,7 +270,7 @@ export function EnrollForm() {
             {/* Store Name */}
             <GlobalInput
               id="storeName"
-              label="Store Name"
+              label={t("crMerchantname", t("storeName", "Store Name"))}
               required
               placeholder="Your Business Name"
               leftIcon={<Building2 size={16} />}
@@ -256,7 +283,7 @@ export function EnrollForm() {
             <GlobalInput
               id="email"
               type="email"
-              label="Business Email Address"
+              label={t("merCrEmail", t("crEmail", "Business Email Address"))}
               required
               placeholder="business@example.com"
               leftIcon={<Mail size={16} />}
@@ -268,7 +295,7 @@ export function EnrollForm() {
             {/* Phone Number */}
             <div className="w-full">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Business Phone Number <span className="text-[#e65625]">*</span>
+                {t("merCrPhoneNo", t("mobile_phone", "Business Phone Number"))} <span className="text-[#e65625]">*</span>
               </label>
               <div
                 className={cn(
@@ -279,57 +306,66 @@ export function EnrollForm() {
                 )}
               >
                 <Popover open={openCountryBox} onOpenChange={setOpenCountryBox}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-expanded={openCountryBox}
-                      className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <span>
-                          {
-                            COUNTRY_CODES.find(
-                              (c) => c.code === watch('countryCode')
-                            )?.flag
-                          }
-                        </span>
-                        <span>+{watch('countryCode')}</span>
+                  <PopoverTrigger
+                    type="button"
+                    aria-expanded={openCountryBox}
+                    className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>
+                        {
+                          countryCodesList.find(
+                            (c) => c.code === watch('countryCode')
+                          )?.flag || '🌐'
+                        }
                       </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
-                    </button>
+                      <span>+{watch('countryCode')}</span>
+                    </span>
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                   </PopoverTrigger>
-                  <PopoverContent className="w-[240px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search country..." />
-                      <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
-                        <CommandGroup>
-                          {COUNTRY_CODES.map((country) => (
-                            <CommandItem
-                              key={country.code}
-                              value={country.country + ' ' + country.code}
-                              onSelect={() => {
-                                setValue('countryCode', country.code);
-                                setOpenCountryBox(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  watch('countryCode') === country.code
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                )}
-                              />
-                              <span className="flex items-center gap-2">
-                                <span>{country.flag}</span>
-                                <span>{country.country}</span>
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
+                  <PopoverContent className="w-[280px] p-2 bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-[100]" align="start">
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search country..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-8 pl-8 pr-3 text-xs bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
+                      {filteredCountries.length === 0 ? (
+                        <div className="py-4 text-center text-xs text-slate-400">No country found</div>
+                      ) : (
+                        filteredCountries.map((country, idx) => (
+                          <button
+                            key={`${country.code}-${country.isoCode || idx}`}
+                            type="button"
+                            onClick={() => {
+                              setValue('countryCode', country.code, { shouldValidate: true });
+                              setOpenCountryBox(false);
+                              setSearchQuery('');
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors hover:bg-blue-50 dark:hover:bg-white/10 text-left cursor-pointer",
+                              watch('countryCode') === country.code
+                                ? "bg-blue-50/80 dark:bg-white/10 text-[#2563eb] dark:text-blue-400 font-bold"
+                                : "text-slate-700 dark:text-slate-200"
+                            )}
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <span className="text-base leading-none">{country.flag}</span>
+                              <span className="truncate">{country.country}</span>
+                            </span>
+                            {watch('countryCode') === country.code && (
+                              <Check className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-400 shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </PopoverContent>
                 </Popover>
 
@@ -341,7 +377,7 @@ export function EnrollForm() {
                   <input
                     id="phone"
                     type="tel"
-                    placeholder="1886225492"
+                    placeholder="XXXXXXXXXX"
                     className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     aria-invalid={!!errors.phone}
                     {...register('phone')}
@@ -374,13 +410,14 @@ export function EnrollForm() {
                   />
                 </div>
                 <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
-                  Accept{' '}
-                  <Link
-                    to="/terms-and-conditions"
-                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline"
+                  {t("accept_terms", "Accept")}{' '}
+                  <button
+                    type="button"
+                    onClick={handleOpenTermsModal}
+                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 inline"
                   >
-                    Terms and Conditions
-                  </Link>{' '}
+                    {t("terms_and_conditions", "Terms and Conditions")}
+                  </button>{' '}
                   <span className="text-[#e65625]">*</span>
                 </span>
               </label>
@@ -407,8 +444,7 @@ export function EnrollForm() {
                   />
                 </div>
                 <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
-                  I agree that enrolling a new customer will remove the existing
-                  account linked on this device. <span className="text-[#e65625]">*</span>
+                  {t("device_consent_text", "I agree that enrolling a new customer will remove the existing account linked on this device.")} <span className="text-[#e65625]">*</span>
                 </span>
               </label>
               {errors.acceptDevice && (
@@ -422,13 +458,12 @@ export function EnrollForm() {
             {/* App Consent Radio */}
             <div className="space-y-2.5 pt-2">
               <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
-                Do you agree that your email and phone number may be used for both
-                the Merchant and Consumer Wallet apps?
+                {t("app_consent_question", "Do you agree that your email and phone number may be used for both the Merchant and Consumer Wallet apps?")}
               </p>
               <div className="flex gap-6">
                 {[
-                  { label: 'Yes', value: 'Y' },
-                  { label: 'No', value: 'N' },
+                  { label: t("yes", "Yes"), value: 'Y' },
+                  { label: t("no", "No"), value: 'N' },
                 ].map((opt) => (
                   <label
                     key={opt.value}
@@ -459,18 +494,18 @@ export function EnrollForm() {
               fullWidth
               className="mt-4"
             >
-              Next →
+              {t("next", "Next →")}
             </GlobalButton>
           </form>
 
           {/* Sign In Link */}
           <p className="mt-7 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
-            Already have an account?{' '}
+            {t("already_have_account", "Already have an account?")}{' '}
             <Link
               to="/"
               className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline"
             >
-              SIGN IN
+              {t("authenticateSignIn", "SIGN IN")}
             </Link>
           </p>
         </div>
@@ -480,14 +515,14 @@ export function EnrollForm() {
       {step === 'confirm' && (
         <div className="w-full bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-6 sm:p-8 animate-[fade-up_0.4s_ease-out_both]">
           <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-6">
-            Confirm Details
+            {t("confirm_details", "Confirm Details")}
           </h2>
 
           <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/10 mb-8">
             {/* Store Name */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-blue-50/60 dark:bg-white/5 gap-1">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
-                Store Name
+                {t("storeName", "Store Name")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium">
                 {formValues.storeName}
@@ -497,7 +532,7 @@ export function EnrollForm() {
             {/* Business Email */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
-                Business Email Address
+                {t("crEmail", "Business Email Address")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium break-all">
                 {formValues.email}
@@ -507,7 +542,7 @@ export function EnrollForm() {
             {/* Business Phone */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-blue-50/60 dark:bg-white/5 gap-1">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
-                Business Phone Number
+                {t("mobile_phone", "Business Phone Number")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium">
                 +{formValues.countryCode} {formValues.phone}
@@ -517,11 +552,10 @@ export function EnrollForm() {
             {/* Cross App Consent */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">
               <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-2/3 leading-relaxed">
-                Do you agree that your email and phone number may be used for both
-                the Merchant and Consumer Wallet apps?
+                {t("app_consent_question", "Do you agree that your email and phone number may be used for both the Merchant and Consumer Wallet apps?")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/3 text-left sm:text-right font-semibold">
-                {formValues.appConsent === 'Y' ? 'Yes' : 'No'}
+                {formValues.appConsent === 'Y' ? t("yes", "Yes") : t("no", "No")}
               </span>
             </div>
           </div>
@@ -534,17 +568,17 @@ export function EnrollForm() {
               onClick={() => setStep('form')}
               className="flex-1 max-w-[160px] uppercase font-bold"
             >
-              CHANGE
+              {t("buttonChange", t("change", "CHANGE"))}
             </GlobalButton>
             <GlobalButton
               type="button"
               variant="primary"
               onClick={handleRegisterSubmit}
               isLoading={isSubmitting}
-              loadingText="Submitting…"
+              loadingText={t("submitting", "Submitting…")}
               className="flex-1 max-w-[160px] uppercase font-bold"
             >
-              SUBMIT
+              {t("buttonSubmit", t("submit", "SUBMIT"))}
             </GlobalButton>
           </div>
         </div>
@@ -554,10 +588,10 @@ export function EnrollForm() {
       {step === 'otp' && (
         <div className="w-full bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-6 sm:p-10 text-center animate-[fade-up_0.4s_ease-out_both]">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#1b55ad] dark:text-blue-400 mb-3">
-            Verify Registration
+            {t("verify_registration", "Verify Registration")}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-8 max-w-[340px] mx-auto leading-relaxed">
-            We have just sent you a One-time PIN via SMS and to your email.
+            {t("otp_text", "We have just sent you a One-time PIN via SMS and to your email.")}
           </p>
 
           {/* 6 Standalone Individual Rounded Boxes for OTP */}
@@ -573,7 +607,7 @@ export function EnrollForm() {
                   <InputOTPSlot
                     key={idx}
                     index={idx}
-                    className="w-10 h-12 sm:w-12 sm:h-14 text-xl font-bold rounded-xl border-2 border-slate-200 dark:border-white/20 focus:border-[#2563eb] dark:focus:border-blue-500 bg-white dark:bg-white/5 text-slate-900 dark:text-white shadow-sm transition-all !rounded-xl !border-l !border-y !border-r"
+                    className="w-10 h-12 sm:w-12 sm:h-14 text-xl font-bold rounded-xl border border-slate-200 dark:border-white/20 data-[active=true]:border-[#2563eb] dark:data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-[#2563eb]/20 bg-white dark:bg-white/5 text-slate-900 dark:text-white shadow-sm transition-all"
                   />
                 ))}
               </div>
@@ -587,10 +621,10 @@ export function EnrollForm() {
               variant="primary"
               onClick={handleVerifyOTP}
               isLoading={isSubmitting}
-              loadingText="Verifying…"
+              loadingText={t("verifying", "Verifying…")}
               className="flex-1 max-w-[160px] uppercase font-bold"
             >
-              CONTINUE
+              {t("buttonContinue", "CONTINUE")}
             </GlobalButton>
             <GlobalButton
               type="button"
@@ -598,20 +632,20 @@ export function EnrollForm() {
               onClick={() => setStep('confirm')}
               className="flex-1 max-w-[160px] uppercase font-bold"
             >
-              CANCEL
+              {t("buttonCancel", "CANCEL")}
             </GlobalButton>
           </div>
 
           {/* Resend Link */}
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Didn't receive code?{' '}
+            {t("otp_notReceive", "Didn't receive code?")}{' '}
             <button
               type="button"
               onClick={handleResendOTP}
               disabled={isSubmitting}
               className="font-bold text-[#e65625] hover:underline ml-1 cursor-pointer disabled:opacity-50"
             >
-              Resend Code
+              {t("otp_resend", "Resend Code")}
             </button>
           </div>
         </div>
@@ -626,12 +660,12 @@ export function EnrollForm() {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-            Registration Successful
+            {t("registration_successful", "Registration Successful")}
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[340px] leading-relaxed mb-8">
             {successMessage ||
-              'Please check your email for verification link and upload documents to process your request.'}
+              t("verification_link_sent_email", "Please check your email for verification link and upload documents to process your request.")}
           </p>
 
           <GlobalButton
@@ -640,7 +674,7 @@ export function EnrollForm() {
             onClick={() => navigate('/')}
             className="px-8 uppercase font-bold text-xs tracking-wider"
           >
-            GO TO LOGIN PAGE
+            {t("go_to_login", "GO TO LOGIN PAGE")}
           </GlobalButton>
         </div>
       )}

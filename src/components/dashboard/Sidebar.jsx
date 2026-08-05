@@ -21,46 +21,48 @@ import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDashboardContext } from '@/pages/dashboard/context';
 import { useDialog } from '@/components/globals/DialogProvider';
+import { useLanguage } from '@/components/globals/LanguageProvider';
 import { logout } from '@/lib/api/endpoints';
 
-export const MENU_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  {
-    label: 'Business Profile',
-    href: '/dashboard/business-profile',
-    icon: Briefcase,
-  },
-  {
-    label: 'Live Transactions',
-    href: '/dashboard/live-transactions',
-    icon: RefreshCcw,
-  },
-  { label: 'Manage Cashiers', href: '/dashboard/manage-cashiers', icon: Users },
-  { label: 'Branches', href: '/dashboard/branches', icon: Store },
-  { label: 'Reports', href: '/dashboard/reports', icon: FileText },
-  { label: 'Pay Bills', href: '/dashboard/pay-bills', icon: CreditCard },
-  { label: 'Transfer To Bank', href: '/dashboard/transfer', icon: Landmark },
-  { label: 'Administration', href: '/dashboard/admin', icon: Settings },
-];
-
-export const BOTTOM_MENU_ITEMS = [
-  { label: 'Sign Out', href: '/', icon: LogOut },
-  { label: 'Help', href: '/dashboard/help', icon: HelpCircle },
-  { label: 'Contact Us', href: '/dashboard/contact', icon: Phone },
-];
-
 export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
+  const { t } = useLanguage();
   const pathname = useLocation().pathname;
   const navigate = useNavigate();
   const { profile } = useDashboardContext();
   const { openConfirmDialog } = useDialog();
 
+  const MENU_ITEMS = [
+    { label: t("dashboard", "Dashboard"), href: '/dashboard', icon: LayoutDashboard },
+    {
+      label: t("business_profile", "Business Profile"),
+      href: '/dashboard/business-profile',
+      icon: Briefcase,
+    },
+    {
+      label: t("live_transactions", "Live Transactions"),
+      href: '/dashboard/live-transactions',
+      icon: RefreshCcw,
+    },
+    { label: t("manage_cashiers", "Manage Cashiers"), href: '/dashboard/manage-cashiers', icon: Users },
+    { label: t("branches", "Branches"), href: '/dashboard/branches', icon: Store },
+    { label: t("reports", "Reports"), href: '/dashboard/reports', icon: FileText },
+    { label: t("pay_bills", "Pay Bills"), href: '/dashboard/pay-bills', icon: CreditCard },
+    { label: t("transfer_to_bank", "Transfer To Bank"), href: '/dashboard/transfer', icon: Landmark },
+    { label: t("admin", "Administration"), href: '/dashboard/admin', icon: Settings },
+  ];
+
+  const BOTTOM_MENU_ITEMS = [
+    { label: t("sign_out", "Sign Out"), href: '/', icon: LogOut },
+    { label: t("help", "Help"), href: '/dashboard/help', icon: HelpCircle },
+    { label: t("contact_us", "Contact Us"), href: '/dashboard/contact', icon: Phone },
+  ];
+
   const handleLogout = (e) => {
     e.preventDefault();
     openConfirmDialog({
-      title: "Sign Out",
-      description: "Are you sure you want to sign out of your account?",
-      confirmText: "Yes, Sign Out",
+      title: t("sign_out", "Sign Out"),
+      description: t("sign_out_confirm_text", "Are you sure you want to sign out of your account?"),
+      confirmText: t("yes_sign_out", "Yes, Sign Out"),
       iconType: "danger",
       onConfirm: async () => {
         try {
@@ -100,13 +102,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         {/* Logo Section / Toggle Section */}
         {isMobile ? (
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
-            <img
-              src="/images/logo.svg"
-              alt="mPay Network"
-              width={110}
-              height={42}
-              className="h-auto dark:invert-0"
-            />
+            <Link to="/dashboard" onClick={onClose} className="cursor-pointer">
+              <img
+                src="/images/logo.svg"
+                alt="mPay Network"
+                width={110}
+                height={42}
+                className="h-auto dark:invert-0 hover:opacity-90 transition-opacity"
+              />
+            </Link>
             <button 
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -127,13 +131,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           </div>
         ) : (
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
-            <img
-              src="/images/logo.svg"
-              alt="mPay Network"
-              width={110}
-              height={42}
-              className="h-auto dark:invert-0"
-            />
+            <Link to="/dashboard" className="cursor-pointer">
+              <img
+                src="/images/logo.svg"
+                alt="mPay Network"
+                width={110}
+                height={42}
+                className="h-auto dark:invert-0 hover:opacity-90 transition-opacity"
+              />
+            </Link>
             <button 
               onClick={() => setIsCollapsed(true)}
               className="text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/80 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -163,7 +169,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
                 {userName}
               </p>
               <p className="text-[11px] font-medium text-slate-400 dark:text-white/40 truncate mt-0.5">
-                Merchant
+                {t("merchant", "Merchant")}
               </p>
             </div>
           )}
@@ -179,7 +185,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           const isActive = pathname === item.href;
           return (
             <Link
-              key={item.label}
+              key={item.href}
               to={item.href}
               className={cn(
                 'flex items-center rounded-lg text-sm font-medium transition-all duration-150',
@@ -217,10 +223,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         {BOTTOM_MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           
-          if (item.label === 'Sign Out') {
+          if (item.href === '/') {
             return (
               <button
-                key={item.label}
+                key={item.href}
                 onClick={handleLogout}
                 className={cn(
                   'flex items-center rounded-lg text-sm font-medium transition-all duration-150 w-full',
@@ -251,7 +257,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
 
           return (
             <Link
-              key={item.label}
+              key={item.href}
               to={item.href}
               className={cn(
                 'flex items-center rounded-lg text-sm font-medium transition-all duration-150',
