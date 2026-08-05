@@ -19,7 +19,12 @@ import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBranches } from "@/hooks/useBranches";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { enforceNumeric, enforceAlphanumericSpace, enforceEmail, enforceNumericSpace } from "@/lib/utils/inputFormatters";
+import {
+  enforceNumeric,
+  enforceAlphanumericSpace,
+  enforceEmail,
+  enforceNumericSpace,
+} from "@/lib/utils/inputFormatters";
 
 export default function CashierFormFields({
   data,
@@ -99,12 +104,15 @@ export default function CashierFormFields({
         {/* Mobile Phone (Cashier) */}
         <div className="flex flex-col gap-1.5">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-0.5">
-            {t("global_mobile_no", "Mobile No.")} <span className="text-[#e65625]">*</span>
+            {t("global_mobile_no", "Mobile No.")}{" "}
+            <span className="text-[#e65625]">*</span>
           </label>
           <div
             className={cn(
               "flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden",
-              errors.cashierMobile || errors.countryCode ? "border-red-500" : "",
+              errors.cashierMobile || errors.countryCode
+                ? "border-red-500"
+                : "",
             )}
           >
             <Popover

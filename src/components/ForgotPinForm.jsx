@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Mail, Calendar as CalendarIcon, AlertCircle } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { format } from "date-fns"
 import { buttonVariants } from "@/components/ui/button"
 import GlobalButton from "@/components/globals/GlobalButton"
@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 import { forgotPin } from "@/lib/api/endpoints"
 import { useDialog } from "@/components/globals/DialogProvider"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -24,9 +25,11 @@ const formSchema = z.object({
 })
 
 export function ForgotPinForm() {
+  const navigate = useNavigate()
+  const { t } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState("")
-  const { openSuccessDialog } = useDialog()
+  const { openConfirmDialog } = useDialog()
 
   const {
     register,
@@ -56,16 +59,22 @@ export function ForgotPinForm() {
       const res = await forgotPin(payload)
 
       if (res?.status === "success" || res?.statusCode === 0) {
-        openSuccessDialog({
-          title: "Request Submitted",
-          description: res?.message || "If the details match, instructions to reset your PIN have been sent.",
+        openConfirmDialog({
+          title: t("request_submitted", "Request Submitted"),
+          description: res?.message || t("forgot_pin_success_desc", "If the details match, instructions to reset your PIN have been sent to your email."),
+          confirmText: t("back_to_login", t("authenticateSignIn", "Back to Login")),
+          iconType: "success",
+          hideCancel: true,
+          onConfirm: () => {
+            reset()
+            navigate("/")
+          },
         })
-        reset()
       } else {
-        setApiError(res?.message || "Invalid details. Please try again")
+        setApiError(res?.message || t("invalid_details_try_again", "Invalid details. Please try again"))
       }
     } catch (err) {
-      setApiError(err?.message || "Something went wrong. Please try again.")
+      setApiError(err?.message || t("something_went_wrong_try_again", "Something went wrong. Please try again."))
     } finally {
       setIsSubmitting(false)
     }
@@ -76,10 +85,10 @@ export function ForgotPinForm() {
       {/* Heading */}
       <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          Forgot Wallet PIN
+          {t("beforeLoginForgotPIN", "Forgot Wallet PIN")}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
-          Enter your registered email address and date of birth to reset your PIN.
+          {t("forgot_pin_subtitle", "Enter your registered email address and date of birth to reset your PIN.")}
         </p>
       </div>
 
@@ -101,7 +110,7 @@ export function ForgotPinForm() {
         <GlobalInput
           id="email"
           type="email"
-          label="Email Address"
+          label={t("crEmail", "Email Address")}
           required
           placeholder="business@example.com"
           leftIcon={<Mail size={16} />}
@@ -113,7 +122,7 @@ export function ForgotPinForm() {
         {/* Date of Birth */}
         <div className="space-y-2">
           <label htmlFor="dob" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Date of Birth <span className="text-[#e65625]">*</span>
+            {t("crDOB", t("date_of_birth", "Date of Birth"))} <span className="text-[#e65625]">*</span>
           </label>
           <div className="relative w-full flex">
             <CalendarIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
@@ -160,21 +169,21 @@ export function ForgotPinForm() {
           variant="primary"
           fullWidth
           isLoading={isSubmitting}
-          loadingText="Submitting…"
+          loadingText={t("submitting", "Submitting…")}
           className="mt-2"
         >
-          Submit
+          {t("buttonSubmit", t("submit", "Submit"))}
         </GlobalButton>
       </form>
 
       {/* Bottom link */}
       <p className="mt-8 text-center text-sm font-medium text-slate-500 dark:text-slate-400 animate-[fade-up_0.6s_ease-out_0.2s_both]">
-        Remembered your PIN?{" "}
+        {t("remembered_pin", "Remembered your PIN?")}{" "}
         <Link
           to="/"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] hover:underline transition-colors"
         >
-          Sign In
+          {t("authenticateSignIn", "Sign In")}
         </Link>
       </p>
     </div>

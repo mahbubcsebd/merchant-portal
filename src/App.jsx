@@ -7,10 +7,12 @@ import { globalDefaultParams } from '@/lib/api/api';
 import RootAuthLayout from './pages/(root)/layout';
 import DashboardLayout from './pages/dashboard/layout';
 
-// Auth Pages
+// Auth & Legal Pages
 import Home from './pages/(root)/page';
 import Enroll from './pages/(root)/enroll/page';
 import ForgotPin from './pages/(root)/forgot-pin/page';
+import TermsAndConditions from './pages/(root)/terms-and-conditions/page';
+import PrivacyPolicy from './pages/(root)/privacy-policy/page';
 
 // Root Pages
 import Contact from './pages/contact/page';
@@ -75,6 +77,8 @@ export default function App() {
             </Route>
 
             {/* Other Root routes without auth layout */}
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/help" element={<Help />} />
 

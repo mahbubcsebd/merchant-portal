@@ -5,12 +5,14 @@ import { useDashboardContext } from '@/pages/dashboard/context';
 import { useQuery } from '@tanstack/react-query';
 import { getPortalNotifications } from '@/lib/api/endpoints';
 import { useDialog } from '@/components/globals/DialogProvider';
+import { useLanguage } from '@/components/globals/LanguageProvider';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from '@/components/ui/dropdown-menu';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Map notification types to icons and colors
 const notificationMeta = {
@@ -28,6 +30,7 @@ const notificationMeta = {
 };
 
 export function Header({ title = 'Dashboard', setIsMobileOpen }) {
+  const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { profile } = useDashboardContext();
@@ -90,27 +93,30 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
   };
 
   return (
-    <header className="h-16 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 flex-shrink-0 transition-colors duration-300">
-      <div className="flex items-center gap-2">
+    <header className="h-16 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-3 sm:px-4 md:px-8 sticky top-0 z-10 flex-shrink-0 transition-colors duration-300">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
         {/* Mobile Hamburger menu */}
         <button
           onClick={() => setIsMobileOpen?.(true)}
-          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all shrink-0"
           aria-label="Open menu"
         >
           <Menu size={18} />
         </button>
-        <div>
-          <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">
+        <div className="min-w-0">
+          <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
             {title}
           </h1>
           <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 dark:text-white/70 font-semibold">
-            Welcome back, {userName}
+            {t("welcome_back", "Welcome back")}, {userName}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Theme Toggle */}
         {mounted && (
           <button
@@ -124,18 +130,16 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
 
         {/* Notification Bell using shadcn DropdownMenu */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
-              aria-label="Notifications"
-            >
-              <Bell size={14} className="sm:size-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#e65625] text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-[#0a0f1c] flex items-center justify-center animate-in zoom-in duration-200">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
+          <DropdownMenuTrigger
+            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all cursor-pointer"
+            aria-label="Notifications"
+          >
+            <Bell size={14} className="sm:size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#e65625] text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-[#0a0f1c] flex items-center justify-center animate-in zoom-in duration-200">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
@@ -147,7 +151,9 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
             {/* Panel Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/10 shrink-0">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Notifications</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {t("notifications", "Notifications")}
+                </h2>
                 <p className="text-[11px] text-slate-500 dark:text-white/50 mt-0.5">
                   {unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : `${notifications.length} total messages`}
                 </p>
@@ -158,7 +164,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
                   className="flex items-center gap-1 text-[11px] font-semibold text-[#2563eb] dark:text-blue-400 hover:underline transition-all"
                 >
                   <CheckCheck size={13} />
-                  Mark all as read
+                  {t("mark_all_as_read", "Mark all as read")}
                 </button>
               )}
             </div>
@@ -168,14 +174,18 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
               {notifLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent" />
-                  <p className="text-xs text-slate-400 dark:text-white/40">Loading notifications...</p>
+                  <p className="text-xs text-slate-400 dark:text-white/40">
+                    {t("loading_notifications", "Loading notifications...")}
+                  </p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center">
                     <Bell size={20} className="text-slate-400 dark:text-white/30" />
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-white/50 font-medium">No notifications</p>
+                  <p className="text-sm text-slate-500 dark:text-white/50 font-medium">
+                    {t("no_notifications", "No notifications")}
+                  </p>
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100 dark:divide-white/5">
@@ -189,7 +199,7 @@ export function Header({ title = 'Dashboard', setIsMobileOpen }) {
                         onClick={() => {
                           markAsRead(notif.msgId);
                           openConfirmDialog({
-                            title: notif.notificationTypeName || 'Notification',
+                            title: notif.notificationTypeName || t("notifications", "Notification"),
                             description: notif.notificationMsg,
                             confirmText: 'OK',
                             hideCancel: true,

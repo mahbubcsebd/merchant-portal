@@ -12,10 +12,12 @@ import {
   updateSession,
 } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 import { DashboardContext } from "./context";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { openConfirmDialog } = useDialog();
   const [period, setPeriod] = useState("last3months");
   const [currency, setCurrency] = useState("");
@@ -56,11 +58,11 @@ export default function DashboardLayout() {
       setSessionExpiredShown(true);
       localStorage.removeItem("is_authenticated");
       openConfirmDialog({
-        title: "Session Expired",
+        title: t("session_expired", "Session Expired"),
         description:
           sessionResponse?.message ||
-          "Your session has expired or is invalid. Please sign in again to continue.",
-        confirmText: "Sign In",
+          t("session_expired_desc", "Your session has expired or is invalid. Please sign in again to continue."),
+        confirmText: t("authenticateSignIn", "Sign In"),
         iconType: "danger",
         hideCancel: true,
         onConfirm: () => {
@@ -76,6 +78,7 @@ export default function DashboardLayout() {
     sessionResponse,
     openConfirmDialog,
     navigate,
+    t,
   ]);
 
   // 2. Profile & Accounts queries (Only executed if session is valid)
@@ -141,7 +144,7 @@ export default function DashboardLayout() {
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Verifying Dashboard Session...
+            {t("verifying_session", "Verifying Dashboard Session...")}
           </p>
         </div>
       </div>

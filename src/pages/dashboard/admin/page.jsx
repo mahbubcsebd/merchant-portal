@@ -38,6 +38,7 @@ import GlobalButton from "@/components/globals/GlobalButton"
 // ----------------------------------------------------------------------
 
 function MyQrView() {
+  const { t } = useLanguage();
   const { profile } = useDashboardContext();
   const p = profile || {};
   const qrList = p.qrcode || [];
@@ -101,47 +102,54 @@ function MyQrView() {
     }
   };
 
+  const btnText = (t("buttonsDownloadQR", t("download_qr", "QR DOWNLOADEN"))).toUpperCase();
+
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          {p.custName || "Merchant Store"}
+    <div className="w-full min-h-[480px] flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+      
+      {/* Merchant Details */}
+      <div className="text-center mb-5">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+          {p.custName || p.FIRSTNAME || "Merchant Store"}
         </h3>
-        <p className="text-sm font-medium text-slate-500 dark:text-white/60">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
           {p.userName ? `@${p.userName}` : ""}
         </p>
       </div>
 
+      {/* Currency Select */}
       {qrOptions.length > 1 && (
         <div className="w-full max-w-[260px] mb-6">
           <GlobalSelect
             value={selectedCurrency}
             onChange={(val) => setSelectedCurrency(val)}
             options={qrOptions}
-            placeholder="Select Currency"
+            placeholder={t("selectCurrency", "Select Currency")}
           />
         </div>
       )}
 
-      <div className="relative mb-8 p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center w-64 h-64">
-        {/* Render QR code here */}
+      {/* QR Code White Box */}
+      <div className="relative mb-6 p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center w-[250px] h-[250px]">
         <div ref={qrRef} className="w-[220px] h-[220px] flex items-center justify-center" />
       </div>
 
-      <GlobalButton 
-        variant="primary"
-        leftIcon={<Download size={18} />}
-        className="px-6 text-xs font-bold uppercase tracking-wider"
+      {/* Download Button */}
+      <button 
+        type="button"
+        className="px-6 py-2.5 bg-[#1b55ad] hover:bg-[#184994] text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
         onClick={handleDownloadQR}
         disabled={!qrValue}
       >
-        Download QR
-      </GlobalButton>
+        {btnText}
+      </button>
+
     </div>
   )
 }
 
 function PaymentLimitsView() {
+  const { t } = useLanguage();
   const { data: limitsData, isLoading } = useQuery({
     queryKey: ["transactionLimits"],
     queryFn: () => getTransactionLimits(),
@@ -152,10 +160,10 @@ function PaymentLimitsView() {
   // Extract unique currency names
   const currencies = Array.from(new Set(limitsList.map((item) => item.CURRNAME))).filter(Boolean);
   const currencyOptions = [
-    { value: "all", label: "All Currencies" },
+    { value: "all", label: t("all_currencies", "All Currencies") },
     ...currencies.map((curr) => ({
       value: curr,
-      label: `${curr} Limits`,
+      label: `${curr} ${t("limits", "Limits")}`,
     })),
   ];
 
@@ -167,7 +175,7 @@ function PaymentLimitsView() {
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Loading Wallet Limits...
+            {t("loading", "Loading...")}
           </p>
         </div>
       </div>
@@ -210,15 +218,15 @@ function PaymentLimitsView() {
 
   const columns = [
     {
-      title: "Daily Limits",
+      title: t("daily_limits", "Daily Limits"),
       cards: filteredLimits.map((item) => mapCard(item, "daily")),
     },
     {
-      title: "Monthly Limit",
+      title: t("monthly_limits", "Monthly Limit"),
       cards: filteredLimits.map((item) => mapCard(item, "monthly")),
     },
     {
-      title: "Annual Limit",
+      title: t("annualLimit", t("annual_limits", "Annual Limit")),
       cards: filteredLimits.map((item) => mapCard(item, "annual")),
     },
   ];
@@ -226,14 +234,16 @@ function PaymentLimitsView() {
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">My Wallet Limits</h2>
+        <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400">
+          {t("paymentLimits", "Payment Limits")}
+        </h2>
         {currencyOptions.length > 1 && (
           <div className="w-full sm:w-48 shrink-0">
             <GlobalSelect
               value={selectedCurrency}
               onChange={(val) => setSelectedCurrency(val)}
               options={currencyOptions}
-              placeholder="Select Currency"
+              placeholder={t("selectCurrency", "Select Currency")}
             />
           </div>
         )}
@@ -245,7 +255,7 @@ function PaymentLimitsView() {
             <h3 className="font-bold text-slate-800 dark:text-white mb-2">{col.title}</h3>
             {col.cards.length === 0 ? (
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400 p-4 text-center">
-                No limits configured
+                {t("no_limits_configured", "No limits configured")}
               </p>
             ) : (
               col.cards.map((card, cardIdx) => {
@@ -256,7 +266,7 @@ function PaymentLimitsView() {
                     <p className="text-[11px] text-slate-500 dark:text-white/50 mb-2">Maximum Balance allowed on {card.title}</p>
                     
                     <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">
-                      {card.currency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} Remaining
+                      {card.currency} {card.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {t("remaining", "Remaining")}
                     </div>
                     
                     {/* Progress Bar */}
@@ -268,7 +278,7 @@ function PaymentLimitsView() {
                     </div>
                     
                     <p className="text-[11px] text-slate-500 dark:text-white/50">
-                      {card.currency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} used (max: {card.currency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
+                      {card.currency} {card.used.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {t("used", "used")} (max: {card.currency} {card.max.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})
                     </p>
                   </div>
                 )
@@ -312,6 +322,7 @@ const accountTypeMap = {
 };
 
 function SettlementSettingsView() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
@@ -357,9 +368,9 @@ function SettlementSettingsView() {
         setView('success');
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to add bank account.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true
         });
@@ -367,9 +378,9 @@ function SettlementSettingsView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
       });
@@ -385,9 +396,9 @@ function SettlementSettingsView() {
         setView('success');
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to update bank account.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true
         });
@@ -395,9 +406,9 @@ function SettlementSettingsView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
       });
@@ -411,14 +422,14 @@ function SettlementSettingsView() {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
         openSuccessDialog({
-          title: "Deleted",
+          title: t("deleted", "Deleted"),
           message: data.message || "Settlement account deleted successfully.",
         });
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to delete bank account.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true
         });
@@ -426,9 +437,9 @@ function SettlementSettingsView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
       });
@@ -483,10 +494,10 @@ function SettlementSettingsView() {
 
   const handleDelete = (bank) => {
     openConfirmDialog({
-      title: "Confirm Delete",
+      title: t("confirm_delete", "Confirm Delete"),
       description: `Are you sure you want to delete account ending in ${bank.account.slice(-4)}?`,
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      confirmText: t("delete", "Delete"),
+      cancelText: t("buttonCancel", t("cancel", "Cancel")),
       iconType: "danger",
       onConfirm: async () => {
         await deleteMutation.mutateAsync({ bankAccount: bank.rawAccount });
@@ -546,7 +557,7 @@ function SettlementSettingsView() {
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Loading Bank Accounts...
+            {t("loading", "Loading Bank Accounts...")}
           </p>
         </div>
       </div>
@@ -558,12 +569,12 @@ function SettlementSettingsView() {
       <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
         <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 max-w-xl mx-auto w-full">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
-            {editIndex !== null ? "Edit Bank Account" : "Add Bank Account"}
+            {editIndex !== null ? t("edit_bank_account", "Edit Bank Account") : t("add_bank_account", "Add Bank Account")}
           </h2>
           
           <div className="flex flex-col gap-5">
             <GlobalSelect
-              label="Bank Name"
+              label={t("bank_name", "Bank Name")}
               required
               value={formData.bankName}
               onChange={(val) => handleSelectChange('bankName', val)}
@@ -582,7 +593,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalInput
-              label="Account Number"
+              label={t("account_number", "Account Number")}
               required
               type="text"
               name="accountNumber"
@@ -593,7 +604,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalSelect
-              label="Currency"
+              label={t("currency", "Currency")}
               required
               value={formData.currency}
               onChange={(val) => handleSelectChange('currency', val)}
@@ -614,7 +625,7 @@ function SettlementSettingsView() {
             />
 
             <GlobalSelect
-              label="Account Type"
+              label={t("account_type", "Account Type")}
               required
               value={formData.accountType}
               onChange={(val) => handleSelectChange('accountType', val)}
@@ -633,14 +644,14 @@ function SettlementSettingsView() {
               variant="secondary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
             >
-              Cancel
+              {t("buttonCancel", t("cancel", "Cancel"))}
             </GlobalButton>
             <GlobalButton 
               onClick={handleSubmit} 
               variant="primary"
               className="px-6 text-xs font-bold uppercase tracking-wider"
             >
-              Submit
+              {t("buttonSubmit", t("submit", "Submit"))}
             </GlobalButton>
           </div>
         </div>
@@ -652,27 +663,37 @@ function SettlementSettingsView() {
     return (
       <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
         <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 max-w-xl mx-auto w-full text-center">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Confirm Details</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
+            {t("confirm_details", "Confirm Details")}
+          </h2>
           
           <div className="flex flex-col gap-0 text-sm">
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-t-lg border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("bank_name", "Bank Name")}
+              </span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {bankNamesMap[formData.bankName] || formData.bankName}
               </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("account_number", "Account No")}
+              </span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("currency", "Currency")}
+              </span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {currencyMap[formData.currency] || formData.currency}
               </span>
             </div>
             <div className="flex items-center py-3 px-4 bg-white dark:bg-[#0a0f1c] rounded-b-lg">
-              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
+              <span className="w-1/3 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("account_type", "Account Type")}
+              </span>
               <span className="w-2/3 text-slate-900 dark:text-white font-semibold text-left">
                 {accountTypeMap[formData.accountType] || formData.accountType}
               </span>
@@ -686,7 +707,7 @@ function SettlementSettingsView() {
               className="px-6 text-xs font-bold uppercase tracking-wider"
               disabled={createMutation.isPending || updateMutation.isPending}
             >
-              Change
+              {t("buttonChange", t("change", "Change"))}
             </GlobalButton>
             <GlobalButton 
               onClick={handleConfirm} 
@@ -694,7 +715,7 @@ function SettlementSettingsView() {
               className="px-6 text-xs font-bold uppercase tracking-wider"
               isLoading={createMutation.isPending || updateMutation.isPending}
             >
-              Confirm
+              {t("buttonConfirm", t("confirm", "Confirm"))}
             </GlobalButton>
           </div>
         </div>
@@ -713,27 +734,37 @@ function SettlementSettingsView() {
             </svg>
           </div>
 
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white mt-12 mb-6">Bank Account Details Successfully Updated</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white mt-12 mb-6">
+            {t("bank_account_updated_success", "Bank Account Details Successfully Updated")}
+          </h2>
           
           <div className="flex flex-col gap-0 text-sm max-w-md mx-auto">
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Bank Name</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("bank_name", "Bank Name")}
+              </span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {bankNamesMap[formData.bankName] || formData.bankName}
               </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 border-b border-white/40 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account No</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("account_number", "Account No")}
+              </span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">{formData.accountNumber}</span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-transparent border-b border-slate-100 dark:border-white/5">
-              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Currency</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("currency", "Currency")}
+              </span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {currencyMap[formData.currency] || formData.currency}
               </span>
             </div>
             <div className="flex items-center py-2.5 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-b-lg">
-              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">Account Type</span>
+              <span className="w-1/2 text-[#1b55ad] dark:text-blue-400 font-semibold text-right pr-6">
+                {t("account_type", "Account Type")}
+              </span>
               <span className="w-1/2 text-slate-900 dark:text-white font-semibold text-left">
                 {accountTypeMap[formData.accountType] || formData.accountType}
               </span>
@@ -746,7 +777,7 @@ function SettlementSettingsView() {
               variant="primary"
               className="px-8 text-xs font-bold uppercase tracking-wider"
             >
-              Done
+              {t("done", "Done")}
             </GlobalButton>
           </div>
         </div>
@@ -757,15 +788,17 @@ function SettlementSettingsView() {
   return (
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 overflow-hidden">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">My Settlement Settings</h2>
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">
+          {t("sl_title", t("settlement_settings", "My Settlement Settings"))}
+        </h2>
         
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-slate-700 dark:text-white/70 uppercase border-b border-slate-200 dark:border-white/10">
               <tr>
-                <th className="px-4 py-3 font-bold">Bank Name</th>
-                <th className="px-4 py-3 font-bold">Account Number</th>
-                <th className="px-4 py-3 font-bold text-right">Action</th>
+                <th className="px-4 py-3 font-bold">{t("bank_name", "Bank Name")}</th>
+                <th className="px-4 py-3 font-bold">{t("account_number", "Account Number")}</th>
+                <th className="px-4 py-3 font-bold text-right">{t("action", "Action")}</th>
               </tr>
             </thead>
             <tbody>
@@ -796,7 +829,7 @@ function SettlementSettingsView() {
             leftIcon={<Plus size={18} />}
             className="px-6 text-xs font-bold uppercase tracking-wider"
           >
-            Add Bank Account
+            {t("add_bank_account", "Add Bank Account")}
           </GlobalButton>
         </div>
       </div>
@@ -805,6 +838,7 @@ function SettlementSettingsView() {
 }
 
 function ManageNotificationsView() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
@@ -851,14 +885,14 @@ function ManageNotificationsView() {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["alertNotificationSetting"] });
         openSuccessDialog({
-          title: "Success",
+          title: t("success", "Success"),
           message: data.message || "Alert notification updated successfully.",
         });
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to update notification settings.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true,
         });
@@ -866,9 +900,9 @@ function ManageNotificationsView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
       });
@@ -881,7 +915,7 @@ function ManageNotificationsView() {
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563eb] border-t-transparent"></div>
           <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Loading Notification Settings...
+            {t("loading", "Loading Notification Settings...")}
           </p>
         </div>
       </div>
@@ -893,9 +927,9 @@ function ManageNotificationsView() {
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
         <div className="flex flex-col gap-4 mb-2">
           {[
-            { id: 'sms', label: 'SMS Notifications' }, 
-            { id: 'email', label: 'Email Notifications' }, 
-            { id: 'whatsapp', label: 'WhatsApp Notifications' }
+            { id: 'sms', label: t("sms_notifications", "SMS Notifications") }, 
+            { id: 'email', label: t("email_notifications", "Email Notifications") }, 
+            { id: 'whatsapp', label: t("mn_wht", t("whatsapp_notifications", "WhatsApp Notifications")) }
           ].map((item) => (
             <div key={item.id} className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0">
               <span className="font-semibold text-[#1b55ad] dark:text-blue-400 text-sm">{item.label}</span>
@@ -916,6 +950,7 @@ function ManageNotificationsView() {
 }
 
 function ChangeLanguageView() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
   const { profile } = useDashboardContext();
@@ -935,7 +970,13 @@ function ChangeLanguageView() {
     "Spanish": "es"
   };
 
-  const languages = ['Dutch', 'English', 'French', 'Spanish'];
+  const languages = [
+    { key: "Dutch", label: t("lang_dutch", "Dutch") },
+    { key: "English", label: t("lang_english", "English") },
+    { key: "French", label: t("lang_french", "French") },
+    { key: "Spanish", label: t("lang_spanish", "Spanish") }
+  ];
+
   const [selectedLang, setSelectedLang] = useState('English');
 
   // Initialize selected language from user profile
@@ -952,14 +993,14 @@ function ChangeLanguageView() {
         setLanguage(variables.languageId);
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         openSuccessDialog({
-          title: "Success",
+          title: t("success", "Success"),
           message: data.message || "Preferred language updated successfully.",
         });
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to update language.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true,
         });
@@ -967,18 +1008,18 @@ function ChangeLanguageView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
       });
     },
   });
 
-  const handleSelectLanguage = (item) => {
-    setSelectedLang(item);
-    const languageCode = reverseLangMap[item] || "en";
+  const handleSelectLanguage = (itemKey) => {
+    setSelectedLang(itemKey);
+    const languageCode = reverseLangMap[itemKey] || "en";
     updateMutation.mutate({ languageId: languageCode });
   };
 
@@ -986,16 +1027,18 @@ function ChangeLanguageView() {
     <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-6 lg:p-8">
         <div className="flex flex-col gap-2 mb-2">
-          {languages.map((item, idx) => (
+          {languages.map((item) => (
             <button 
-              key={idx} 
+              key={item.key} 
               type="button"
-              onClick={() => handleSelectLanguage(item)}
+              onClick={() => handleSelectLanguage(item.key)}
               disabled={updateMutation.isPending}
               className="w-full flex items-center justify-between py-4 border-b border-slate-100 dark:border-white/5 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors text-left"
             >
-              <span className={`font-semibold text-sm ${selectedLang === item ? 'text-[#1b55ad] dark:text-blue-400' : 'text-slate-800 dark:text-white/90'}`}>{item}</span>
-              {selectedLang === item && (
+              <span className={`font-semibold text-sm ${selectedLang === item.key ? 'text-[#1b55ad] dark:text-blue-400' : 'text-slate-800 dark:text-white/90'}`}>
+                {item.label}
+              </span>
+              {selectedLang === item.key && (
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#1b55ad] dark:text-blue-400">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -1009,6 +1052,7 @@ function ChangeLanguageView() {
 }
 
 function ChangePinView() {
+  const { t } = useLanguage();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
   const [formData, setFormData] = useState({
@@ -1035,7 +1079,7 @@ function ChangePinView() {
     onSuccess: (data) => {
       if (data.status === "success") {
         openSuccessDialog({
-          title: "Success",
+          title: t("success", "Success"),
           message: data.message || "PIN changed successfully.",
         });
         setFormData({
@@ -1045,9 +1089,9 @@ function ChangePinView() {
         });
       } else {
         openConfirmDialog({
-          title: "Error",
+          title: t("error", "Error"),
           description: data.message || "Failed to change PIN.",
-          confirmText: "Close",
+          confirmText: t("close", "Close"),
           iconType: "danger",
           hideCancel: true,
         });
@@ -1055,9 +1099,9 @@ function ChangePinView() {
     },
     onError: (err) => {
       openConfirmDialog({
-        title: "Error",
+        title: t("error", "Error"),
         description: err?.response?.data?.message || "Something went wrong.",
-        confirmText: "Close",
+        confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
       });
@@ -1102,7 +1146,7 @@ function ChangePinView() {
         <div className="flex flex-col gap-6 mb-8 max-w-lg mx-auto w-full mt-4">
           
           <GlobalInput
-            label="Old Wallet PIN"
+            label={t("old_wallet_pin", "Old Wallet PIN")}
             required
             type="password"
             name="oldPin"
@@ -1116,7 +1160,7 @@ function ChangePinView() {
           />
 
           <GlobalInput
-            label="New Wallet PIN"
+            label={t("new_wallet_pin", "New Wallet PIN")}
             required
             type="password"
             name="newPin"
@@ -1130,7 +1174,7 @@ function ChangePinView() {
           />
 
           <GlobalInput
-            label="Confirm PIN"
+            label={t("confirm_pin", "Confirm PIN")}
             required
             type="password"
             name="confirmPin"
@@ -1151,7 +1195,7 @@ function ChangePinView() {
             className="px-8 text-xs font-bold uppercase tracking-wider"
             isLoading={changePinMutation.isPending}
           >
-            Change PIN
+            {t("change_wallet_pin", t("change_pin", "Change PIN"))}
           </GlobalButton>
         </div>
       </div>
@@ -1164,6 +1208,7 @@ function ChangePinView() {
 // ----------------------------------------------------------------------
 
 export default function AdminPage() {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "my_qr";
 
@@ -1188,7 +1233,7 @@ export default function AdminPage() {
       default:
         return (
           <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-8 text-slate-500">
-            Content for this section is under construction.
+            {t("under_construction", "Content for this section is under construction.")}
           </div>
         )
     }
@@ -1196,45 +1241,32 @@ export default function AdminPage() {
 
   const getHeaderTitle = () => {
     switch (activeTab) {
-      case 'my_qr': return 'Store QR Code'
-      case 'payment_limits': return 'Payment Limits'
-      case 'settlement_settings': return 'My Settlement Settings'
-      case 'manage_notifications': return 'Manage Notifications'
-      case 'change_language': return 'Change Language'
-      case 'change_pin': return 'Change PIN'
-      default: return 'Administration'
+      case 'my_qr': return t("my_qr", t("manage_storeQR", "Mijn QR"))
+      case 'payment_limits': return t("paymentLimits", t("payment_limits", "Payment Limits"))
+      case 'settlement_settings': return t("sl_title", t("settlement_settings", "My Settlement Settings"))
+      case 'manage_notifications': return t("notifications_tlt", t("manage_notifications", "Manage Notifications"))
+      case 'change_language': return t("change_language", "Change Language")
+      case 'change_pin': return t("change_wallet_pin", t("change_pin", "Change PIN"))
+      default: return t("adm_title", t("admin", "Administration"))
     }
   }
 
   const tabs = [
-    { id: 'my_qr', label: 'Store QR Code', icon: QrCode },
-    { id: 'payment_limits', label: 'Payment Limits', icon: Wallet },
-    { id: 'settlement_settings', label: 'My Settlement Settings', icon: Building2 },
-    { id: 'manage_notifications', label: 'Manage Notifications', icon: Bell },
-    { id: 'change_language', label: 'Change Language', icon: Languages },
-    { id: 'change_pin', label: 'Change PIN', icon: KeyRound },
+    { id: 'my_qr', label: t("manage_storeQR", t("store_qr_code", "Store QR Code")), icon: QrCode },
+    { id: 'payment_limits', label: t("paymentLimits", t("payment_limits", "Payment Limits")), icon: Wallet },
+    { id: 'settlement_settings', label: t("sl_title", t("my_settlement_settings", "My Settlement Settings")), icon: Building2 },
+    { id: 'manage_notifications', label: t("notifications_tlt", t("manage_notifications", "Manage Notifications")), icon: Bell },
+    { id: 'change_language', label: t("change_language", "Change Language"), icon: Languages },
+    { id: 'change_pin', label: t("change_wallet_pin", t("change_pin", "Change PIN")), icon: KeyRound },
   ]
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">
-      
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 pb-4 border-b border-slate-200 dark:border-white/10 gap-2">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Administration
-          </p>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            {getHeaderTitle()}
-          </h1>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         
-        {/* Left Sidebar Tabs - Responsive (Horizontal scroll on mobile, Vertical on Desktop) */}
+        {/* Left Sidebar Tabs */}
         <div className="w-full lg:w-72 shrink-0">
-          <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-2 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-1.5 snap-x">
+          <div className="bg-white dark:bg-[#0f1829] rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm p-3 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-2 snap-x">
             
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id
@@ -1242,14 +1274,14 @@ export default function AdminPage() {
                 <button 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center shrink-0 lg:w-full gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${
+                  className={`flex items-center shrink-0 lg:w-full gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${
                     isActive
-                      ? 'bg-[#1b55ad] text-white shadow-md'
-                      : 'text-slate-600 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1b55ad] dark:hover:text-blue-400'
+                      ? 'bg-[#2563eb] text-white shadow-md shadow-blue-500/20'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <tab.icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-white/40'} />
-                  {tab.label}
+                  <tab.icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               )
             })}
@@ -1258,7 +1290,10 @@ export default function AdminPage() {
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full">
+          <h2 className="text-xl font-bold text-[#1b55ad] dark:text-blue-400 mb-4 animate-in fade-in">
+            {getHeaderTitle()}
+          </h2>
           {renderContent()}
         </div>
 
