@@ -1,6 +1,7 @@
 import React from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import {
   Popover,
@@ -12,13 +13,14 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export default function TransferScheduledFields({ formData, handleSelectChange, errors }) {
+  const { t } = useLanguage();
   if (formData.when !== "Scheduled") return null;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl mt-2 animate-in fade-in zoom-in-95 duration-200">
       <div className="flex flex-col">
         <label className="block text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5">
-          Start Date<span className="ml-1 text-[#e65625]">*</span>
+          {t("schedule_start", "Start Date")}<span className="ml-1 text-[#e65625]">*</span>
         </label>
         <div className="relative w-full flex">
           <CalendarIcon
@@ -68,20 +70,20 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
       </div>
 
       <GlobalSelect
-        label="How Often"
+        label={t("schedule_often", "How Often")}
         name="howOften"
         required
         value={formData.howOften}
         onChange={(val) => handleSelectChange("howOften", val)}
         labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
         options={[
-          { value: "1", label: "Once" },
-          { value: "2", label: "Weekly" },
-          { value: "3", label: "Bi-weekly" },
-          { value: "4", label: "Monthly" },
-          { value: "5", label: "Quarterly" },
-          { value: "6", label: "Half-yearly" },
-          { value: "7", label: "Annual" },
+          { value: "1", label: t("schedule_once", "Once") },
+          { value: "2", label: t("schedule_weekly", "Weekly") },
+          { value: "3", label: t("schedule_biweekly", "Bi-weekly") },
+          { value: "4", label: t("schedule_monthly", "Monthly") },
+          { value: "5", label: t("schedule_quarterly", "Quarterly") },
+          { value: "6", label: t("schedule_halfyearly", "Half-yearly") },
+          { value: "7", label: t("schedule_annual", "Annual") },
         ]}
         error={errors.howOften}
       />
@@ -89,15 +91,15 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
       {parseInt(formData.howOften) > 1 && (
         <>
           <GlobalSelect
-            label="Until"
+            label={t("schedule_until", "Until")}
             name="until"
             required
             value={formData.until}
             onChange={(val) => handleSelectChange("until", val)}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={[
-              { value: "N", label: "Further Notice" },
-              { value: "Y", label: "Specified Date" },
+              { value: "N", label: t("schedule_FN", "Further Notice") },
+              { value: "Y", label: t("schedule_SD", "Specified Date") },
             ]}
             error={errors.until}
           />
@@ -105,7 +107,7 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
           {formData.until === "Y" && (
             <div className="flex flex-col">
               <label className="block text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5">
-                End Date<span className="ml-1 text-[#e65625]">*</span>
+                {t("schedule_end", "End Date")}<span className="ml-1 text-[#e65625]">*</span>
               </label>
               <div className="relative w-full flex">
                 <CalendarIcon

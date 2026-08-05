@@ -10,6 +10,8 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceNumericSpace, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
 import { getBankRoutingByBankId } from "@/lib/api/endpoints";
 import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import TransferBeneficiaryDetails from "./TransferBeneficiaryDetails";
@@ -31,6 +33,7 @@ export default function TransferForm({ setView }) {
   } = useDialog();
 
   const { errors, validate, clearError, clearAllErrors } = useFormValidation();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     to: "",
@@ -247,42 +250,42 @@ export default function TransferForm({ setView }) {
         );
 
         const details = {
-          "From Wallet": fromWalletLabel,
-          "Beneficiary Name": selectedBen.payeeName,
-          "Bank Name": benBankName,
-          "Account No.": selectedBen.payeeBankAccount,
-          Amount: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(formData.amount))} ${currencyOptions.find((c) => c.value === formData.currency)?.label || formData.currency}`,
+          [t("from_account", "From Wallet")]: fromWalletLabel,
+          [t("p2b_benname", "Beneficiary Name")]: selectedBen.payeeName,
+          [t("p2b_benbank", "Bank Name")]: benBankName,
+          [t("p2b_accno", "Account No.")]: selectedBen.payeeBankAccount,
+          [t("teAmount", "Amount")]: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(formData.amount))} ${currencyOptions.find((c) => c.value === formData.currency)?.label || formData.currency}`,
         };
 
         if (!isSameCurrency && data.exchangeRate) {
-          details["Exchange Rate"] = data.exchangeRate;
+          details[t("exchange_rate", "Exchange Rate")] = data.exchangeRate;
         }
 
-        details["Total Fees"] = totalFeesText;
-        details["Description"] = formData.description || "N/A";
+        details[t("total_fees", "Total Fees")] = totalFeesText;
+        details[t("ptb_description", "Description")] = formData.description || "N/A";
 
         if (formData.when === "Scheduled") {
-          details["Start Date"] = format(formData.startDate, "MM/dd/yyyy");
-          details["How Often"] = {
-            1: "Once",
-            2: "Weekly",
-            3: "Bi-weekly",
-            4: "Monthly",
-            5: "Quarterly",
-            6: "Half-yearly",
-            7: "Annual",
+          details[t("schedule_start", "Start Date")] = format(formData.startDate, "MM/dd/yyyy");
+          details[t("schedule_often", "How Often")] = {
+            1: t("schedule_once", "Once"),
+            2: t("schedule_weekly", "Weekly"),
+            3: t("schedule_biweekly", "Bi-weekly"),
+            4: t("schedule_monthly", "Monthly"),
+            5: t("schedule_quarterly", "Quarterly"),
+            6: t("schedule_halfyearly", "Half-yearly"),
+            7: t("schedule_annual", "Annual"),
           }[formData.howOften];
 
           if (parseInt(formData.howOften) > 1) {
-            details["Until"] =
+            details[t("schedule_until", "Until")] =
               formData.until === "Y"
                 ? format(formData.endDate, "MM/dd/yyyy")
-                : "Further Notice";
+                : t("schedule_FN", "Further Notice");
           }
         }
 
         openPreconfirmDialog({
-          title: "Confirm Bank Transfer",
+          title: t("ptb_title", "Confirm Bank Transfer"),
           details: details,
           onChange: () => {
             closeDialog();
@@ -334,7 +337,7 @@ export default function TransferForm({ setView }) {
             payToBankMutation.mutate(payPayload, {
               onSuccess: () => {
                 openSuccessDialog({
-                  title: "Transfer Successful",
+                  title: t("ptb_title", "Transfer Successful"),
                   message:
                     "Your bank transfer has been successfully processed.",
                   details: details,
@@ -355,7 +358,7 @@ export default function TransferForm({ setView }) {
               },
               onError: (err) => {
                 openGlobalPopup({
-                  title: "Error",
+                  title: t("error_title", "Error"),
                   description:
                     err.message || "Failed to process bank transfer.",
                   type: "error",
@@ -367,7 +370,7 @@ export default function TransferForm({ setView }) {
       },
       onError: (err) => {
         openGlobalPopup({
-          title: "Fee Calculation Error",
+          title: t("error_title", "Fee Calculation Error"),
           description:
             err.message || "Failed to calculate fees. Please try again.",
           type: "error",
@@ -383,21 +386,17 @@ export default function TransferForm({ setView }) {
           <button
             onClick={() => setView("manage_scheduled")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
-          >
-            Manage Scheduled Transfers
-          </button>
+          >{t("manage_scheduled_transfer2", "Manage Scheduled Transfers")}</button>
           <button
             onClick={() => setView("manage_beneficiaries")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
-          >
-            Manage Beneficiaries
-          </button>
+          >{t("manage.beneficiaries", "Manage Beneficiaries")}</button>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <div className="flex flex-col gap-4">
             <GlobalSelect
-              label="To"
+              label={t("ptb_account", "To")}
               name="to"
               value={formData.to}
               required
@@ -415,7 +414,7 @@ export default function TransferForm({ setView }) {
           </div>
 
           <GlobalSelect
-            label="From"
+            label={t("from_account", "From")}
             name="from"
             required
             value={formData.from}
@@ -427,10 +426,12 @@ export default function TransferForm({ setView }) {
 
           <div className="flex flex-col sm:flex-row gap-5">
             <GlobalInput
-              label="Amount"
+              label={t("teAmount", "Amount")}
               name="amount"
               required
-              type="number"
+              type="text"
+              maxLength={17}
+              onInput={enforceNumericSpace}
               value={formData.amount}
               onChange={handleChange}
               containerClassName="flex-1"
@@ -439,7 +440,7 @@ export default function TransferForm({ setView }) {
             />
 
             <GlobalSelect
-              label="Currency"
+              label={t("currency", "Currency")}
               name="currency"
               required
               value={formData.currency}
@@ -453,23 +454,25 @@ export default function TransferForm({ setView }) {
           </div>
 
           <GlobalInput
-            label="Description"
+            label={t("ptb_description", "Description")}
             name="description"
             type="text"
+            maxLength={30}
+            onInput={enforceAlphanumericSpace}
             value={formData.description}
             onChange={handleChange}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
           />
 
           <GlobalSelect
-            label="When"
+            label={t("schedule_when", "When")}
             name="when"
             required
             value={formData.when}
             onChange={(val) => handleSelectChange("when", val)}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={[
-              { value: "Immediate", label: "Immediate" },
+              { value: "Immediate", label: t("schedule_now", "Immediate") },
               { value: "Scheduled", label: "Scheduled" },
             ]}
             error={errors.when}
@@ -491,9 +494,7 @@ export default function TransferForm({ setView }) {
                 payToBankMutation.isPending ||
                 isFetchingRouting
               }
-            >
-              Submit
-            </GlobalButton>
+            >{t("buttonPayNow", "Submit")}</GlobalButton>
           </div>
         </form>
       </div>
