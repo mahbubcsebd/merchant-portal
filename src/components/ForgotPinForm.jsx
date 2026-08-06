@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -19,14 +19,15 @@ import { forgotPin } from "@/lib/api/endpoints"
 import { useDialog } from "@/components/globals/DialogProvider"
 import { useLanguage } from "@/components/globals/LanguageProvider"
 
-const formSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email Address is required." })
-    .email({ message: "Please enter a valid Email Address." })
-    .max(80, { message: "Email Address cannot exceed 80 characters." }),
-  dob: z.date({ required_error: "Date of Birth is required." }),
-})
+const getFormSchema = (t) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t("email_required", "Email Address is required.") })
+      .email({ message: t("invalid_email", "Please enter a valid Email Address.") })
+      .max(80, { message: t("email_max_error", "Email Address cannot exceed 80 characters.") }),
+    dob: z.date({ required_error: t("dob_required", "Date of Birth is required.") }),
+  })
 
 export function ForgotPinForm() {
   const navigate = useNavigate()
@@ -34,6 +35,8 @@ export function ForgotPinForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState("")
   const { openConfirmDialog } = useDialog()
+
+  const schema = useMemo(() => getFormSchema(t), [t])
 
   const {
     register,
@@ -43,7 +46,7 @@ export function ForgotPinForm() {
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: "" },
   })
 

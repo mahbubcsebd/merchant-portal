@@ -3,7 +3,7 @@ import { loginWithPin, resendOTP, verifyOTP } from '@/lib/api/endpoints';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Lock, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import * as z from 'zod';
@@ -23,18 +23,19 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 
-const formSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'User ID / Email Address is required.' })
-    .email({ message: 'Please enter a valid Email Address.' })
-    .max(80, { message: 'Email Address cannot exceed 80 characters.' }),
-  pin: z
-    .string()
-    .min(1, { message: 'Wallet PIN is required.' })
-    .length(6, { message: 'Wallet PIN must be exactly 6 digits.' })
-    .regex(/^[0-9]+$/, { message: 'Wallet PIN must contain numbers only.' }),
-});
+const getFormSchema = (t) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t('usernameRequired', 'User ID / Email Address is required.') })
+      .email({ message: t('invalid_email', 'Please enter a valid Email Address.') })
+      .max(80, { message: t('email_max_error', 'Email Address cannot exceed 80 characters.') }),
+    pin: z
+      .string()
+      .min(1, { message: t('enter_pin', 'Wallet PIN is required.') })
+      .length(6, { message: t('pin_digit_error', 'Wallet PIN must be exactly 6 digits.') })
+      .regex(/^[0-9]+$/, { message: t('pin_numeric_error', 'Wallet PIN must contain numbers only.') }),
+  });
 
 export function LoginForm() {
   const router = useNavigate();
@@ -45,13 +46,15 @@ export function LoginForm() {
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
   const [resendSuccessMsg, setResendSuccessMsg] = useState('');
 
+  const schema = useMemo(() => getFormSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: 'kyeontan154@gmail.com', pin: '111111' },
   });
 

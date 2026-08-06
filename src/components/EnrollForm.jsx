@@ -31,34 +31,35 @@ import {
 import { cn } from '@/lib/utils';
 import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
 
-const formSchema = z.object({
-  storeName: z
-    .string()
-    .min(1, { message: 'Store Name is required.' })
-    .min(2, { message: 'Store Name must be at least 2 characters.' })
-    .max(100, { message: 'Store Name cannot exceed 100 characters.' }),
-  email: z
-    .string()
-    .min(1, { message: 'Business Email Address is required.' })
-    .email({ message: 'Please enter a valid Email Address.' })
-    .max(80, { message: 'Email Address cannot exceed 80 characters.' }),
-  countryCode: z.string().min(1, { message: 'Select a country code.' }),
-  phone: z
-    .string()
-    .min(1, { message: 'Business Phone Number is required.' })
-    .min(6, { message: 'Phone number must be at least 6 digits.' })
-    .max(20, { message: 'Phone number cannot exceed 20 digits.' })
-    .regex(/^[0-9]+$/, { message: 'Phone number must contain digits only.' }),
-  acceptTerms: z.boolean().refine((v) => v === true, {
-    message: 'You must accept the Terms and Conditions.',
-  }),
-  acceptDevice: z.boolean().refine((v) => v === true, {
-    message: 'You must agree to the device account agreement.',
-  }),
-  appConsent: z.enum(['Y', 'N'], {
-    required_error: 'Please select an option.',
-  }),
-});
+const getFormSchema = (t) =>
+  z.object({
+    storeName: z
+      .string()
+      .min(1, { message: t('store_name_required', 'Store Name is required.') })
+      .min(2, { message: t('store_name_min_error', 'Store Name must be at least 2 characters.') })
+      .max(100, { message: t('store_name_max_error', 'Store Name cannot exceed 100 characters.') }),
+    email: z
+      .string()
+      .min(1, { message: t('email_required', 'Business Email Address is required.') })
+      .email({ message: t('invalid_email', 'Please enter a valid Email Address.') })
+      .max(80, { message: t('email_max_error', 'Email Address cannot exceed 80 characters.') }),
+    countryCode: z.string().min(1, { message: t('country_code_required', 'Select a country code.') }),
+    phone: z
+      .string()
+      .min(1, { message: t('phone_required', 'Business Phone Number is required.') })
+      .min(6, { message: t('phone_min_error', 'Phone number must be at least 6 digits.') })
+      .max(20, { message: t('phone_max_error', 'Phone number cannot exceed 20 digits.') })
+      .regex(/^[0-9]+$/, { message: t('phone_numeric_error', 'Phone number must contain digits only.') }),
+    acceptTerms: z.boolean().refine((v) => v === true, {
+      message: t('accept_terms_required', 'You must accept the Terms and Conditions.'),
+    }),
+    acceptDevice: z.boolean().refine((v) => v === true, {
+      message: t('accept_device_required', 'You must agree to the device account agreement.'),
+    }),
+    appConsent: z.enum(['Y', 'N'], {
+      required_error: t('app_consent_required', 'Please select an option.'),
+    }),
+  });
 
 export function EnrollForm() {
   const navigate = useNavigate();
@@ -89,6 +90,8 @@ export function EnrollForm() {
     );
   }, [countryCodesList, searchQuery]);
 
+  const schema = useMemo(() => getFormSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
@@ -97,7 +100,7 @@ export function EnrollForm() {
     getValues,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       storeName: '',
       email: '',
