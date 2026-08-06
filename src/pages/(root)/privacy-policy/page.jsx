@@ -26,14 +26,14 @@ export default function PrivacyPolicyPage() {
           <Link to="/">
             <GlobalButton variant="outline" className="h-9 px-3 text-xs gap-1.5">
               <ArrowLeft size={14} />
-              {t("back", "Back")}
+              {t("buttonBack", t("back", "Back"))}
             </GlobalButton>
           </Link>
         </div>
 
         <div className="space-y-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           <p className="font-semibold text-slate-900 dark:text-white text-base">
-            mPay Network Privacy Statement
+            {t("privacy_statement_title", "mPay Network Privacy Statement")}
           </p>
           <p>
             {t(

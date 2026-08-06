@@ -26,14 +26,14 @@ export default function TermsAndConditionsPage() {
           <Link to="/">
             <GlobalButton variant="outline" className="h-9 px-3 text-xs gap-1.5">
               <ArrowLeft size={14} />
-              {t("back", "Back")}
+              {t("buttonBack", t("back", "Back"))}
             </GlobalButton>
           </Link>
         </div>
 
         <div className="space-y-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           <p className="font-semibold text-slate-900 dark:text-white text-base">
-            mPay Merchant Account Service Agreement
+            {t("terms_agreement_title", "mPay Merchant Account Service Agreement")}
           </p>
           <p>
             {t(
@@ -82,7 +82,7 @@ export default function TermsAndConditionsPage() {
         <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/10 flex justify-end">
           <Link to="/enroll">
             <GlobalButton variant="primary" className="px-6 text-xs font-bold uppercase">
-              {t("buttonContinue", "Continue to Registration")}
+              {t("buttonContinue", t("continue_registration", "Continue to Registration"))}
             </GlobalButton>
           </Link>
         </div>

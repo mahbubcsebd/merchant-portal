@@ -82,8 +82,7 @@ export default function Home() {
               2xl:text-lg
               text-slate-400 leading-relaxed max-w-[320px] xl:max-w-[360px]"
             >
-              An all-in-one dashboard that gives you total control — track
-              payments, manage settlements, and grow your business.
+              {t('mp_hero_desc', 'An all-in-one dashboard that gives you total control — track payments, manage settlements, and grow your business.')}
             </p>
 
             {/* Stats */}
