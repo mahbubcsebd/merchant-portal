@@ -492,7 +492,7 @@ function SettlementSettingsView() {
   const handleDelete = (bank) => {
     openConfirmDialog({
       title: t("confirm_delete", "Confirm Delete"),
-      description: `Are you sure you want to delete account ending in ${bank.account.slice(-4)}?`,
+      description: `${t("confirm_delete_account_desc", "Are you sure you want to delete account ending in")} ${bank.account.slice(-4)}?`,
       confirmText: t("delete", "Delete"),
       cancelText: t("buttonCancel", t("cancel", "Cancel")),
       iconType: "danger",
@@ -504,20 +504,20 @@ function SettlementSettingsView() {
 
   const handleSubmit = () => {
     const newErrors = {};
-    if (!formData.bankName) newErrors.bankName = "Bank Name is required";
+    if (!formData.bankName) newErrors.bankName = t("err_bank_name_required", "Bank Name is required");
     
     if (!formData.accountNumber) {
-      newErrors.accountNumber = "Account Number is required";
+      newErrors.accountNumber = t("err_account_number_required", "Account Number is required");
     } else {
       if (/^0/.test(formData.accountNumber)) {
-        newErrors.accountNumber = "Account number cannot start with zero";
+        newErrors.accountNumber = t("err_account_number_zero", "Account number cannot start with zero");
       } else if (formData.accountNumber.length < 8) {
-        newErrors.accountNumber = "Account number must be at least 8 digits";
+        newErrors.accountNumber = t("err_account_number_min", "Account number must be at least 8 digits");
       }
     }
 
-    if (!formData.currency) newErrors.currency = "Currency is required";
-    if (!formData.accountType) newErrors.accountType = "Account Type is required";
+    if (!formData.currency) newErrors.currency = t("err_currency_required", "Currency is required");
+    if (!formData.accountType) newErrors.accountType = t("err_account_type_required", "Account Type is required");
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -1105,21 +1105,21 @@ function ChangePinView() {
   const handleSubmit = () => {
     const newErrors = {};
     if (!formData.oldPin) {
-      newErrors.oldPin = "Old PIN is required";
+      newErrors.oldPin = t("err_old_pin_required", "Old PIN is required");
     } else if (formData.oldPin.length < 6) {
-      newErrors.oldPin = "Old PIN must be 6 digits";
+      newErrors.oldPin = t("err_old_pin_digits", "Old PIN must be 6 digits");
     }
 
     if (!formData.newPin) {
-      newErrors.newPin = "New PIN is required";
+      newErrors.newPin = t("err_new_pin_required", "New PIN is required");
     } else if (formData.newPin.length < 6) {
-      newErrors.newPin = "New PIN must be 6 digits";
+      newErrors.newPin = t("err_new_pin_digits", "New PIN must be 6 digits");
     }
 
     if (!formData.confirmPin) {
-      newErrors.confirmPin = "Confirm PIN is required";
+      newErrors.confirmPin = t("err_confirm_pin_required", "Confirm PIN is required");
     } else if (formData.confirmPin !== formData.newPin) {
-      newErrors.confirmPin = "Confirm PIN does not match New PIN";
+      newErrors.confirmPin = t("err_confirm_pin_mismatch", "Confirm PIN does not match New PIN");
     }
 
     if (Object.keys(newErrors).length > 0) {
