@@ -31,23 +31,35 @@ import {
 import { cn } from '@/lib/utils';
 import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
 
-const formSchema = z.object({
-  storeName: z
-    .string()
-    .min(2, { message: 'Store name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  countryCode: z.string().min(1, { message: 'Select a country code.' }),
-  phone: z.string().min(6, { message: 'Enter a valid phone number.' }),
-  acceptTerms: z.boolean().refine((v) => v === true, {
-    message: 'You must accept the Terms and Conditions.',
-  }),
-  acceptDevice: z.boolean().refine((v) => v === true, {
-    message: 'You must agree to the device account agreement.',
-  }),
-  appConsent: z.enum(['Y', 'N'], {
-    required_error: 'Please select an option.',
-  }),
-});
+const getFormSchema = (t) =>
+  z.object({
+    storeName: z
+      .string()
+      .min(1, { message: t('store_name_required', 'Store Name is required.') })
+      .min(2, { message: t('store_name_min_error', 'Store Name must be at least 2 characters.') })
+      .max(100, { message: t('store_name_max_error', 'Store Name cannot exceed 100 characters.') }),
+    email: z
+      .string()
+      .min(1, { message: t('email_required', 'Business Email Address is required.') })
+      .email({ message: t('invalid_email', 'Please enter a valid Email Address.') })
+      .max(80, { message: t('email_max_error', 'Email Address cannot exceed 80 characters.') }),
+    countryCode: z.string().min(1, { message: t('country_code_required', 'Select a country code.') }),
+    phone: z
+      .string()
+      .min(1, { message: t('phone_required', 'Business Phone Number is required.') })
+      .min(6, { message: t('phone_min_error', 'Phone number must be at least 6 digits.') })
+      .max(20, { message: t('phone_max_error', 'Phone number cannot exceed 20 digits.') })
+      .regex(/^[0-9]+$/, { message: t('phone_numeric_error', 'Phone number must contain digits only.') }),
+    acceptTerms: z.boolean().refine((v) => v === true, {
+      message: t('accept_terms_required', 'You must accept the Terms and Conditions.'),
+    }),
+    acceptDevice: z.boolean().refine((v) => v === true, {
+      message: t('accept_device_required', 'You must agree to the device account agreement.'),
+    }),
+    appConsent: z.enum(['Y', 'N'], {
+      required_error: t('app_consent_required', 'Please select an option.'),
+    }),
+  });
 
 export function EnrollForm() {
   const navigate = useNavigate();
@@ -78,6 +90,8 @@ export function EnrollForm() {
     );
   }, [countryCodesList, searchQuery]);
 
+  const schema = useMemo(() => getFormSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
@@ -86,7 +100,7 @@ export function EnrollForm() {
     getValues,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       storeName: '',
       email: '',
@@ -252,7 +266,7 @@ export function EnrollForm() {
           {/* Heading */}
           <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
             <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-              {t("registerMerchant", "Merchant Registration").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+              {t("merNewToMobileBanking", t("registerMerchant", "Merchant Registration"))}
             </h2>
             <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
               {t("register_subtitle", "Register your business on mPay Merchant Portal")}
@@ -267,9 +281,9 @@ export function EnrollForm() {
             {/* Store Name */}
             <GlobalInput
               id="storeName"
-              label={t("storeName", "Store Name")}
+              label={t("crMerchantname", t("storeName", "Store Name"))}
               required
-              placeholder="Your Business Name"
+              placeholder={t("ph_business_name", "Your Business Name")}
               leftIcon={<Building2 size={16} />}
               error={errors.storeName?.message}
               aria-invalid={!!errors.storeName}
@@ -280,7 +294,7 @@ export function EnrollForm() {
             <GlobalInput
               id="email"
               type="email"
-              label={t("crEmail", "Business Email Address")}
+              label={t("merCrEmail", t("crEmail", "Business Email Address"))}
               required
               placeholder="business@example.com"
               leftIcon={<Mail size={16} />}
@@ -292,7 +306,7 @@ export function EnrollForm() {
             {/* Phone Number */}
             <div className="w-full">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t("mobile_phone", "Business Phone Number")} <span className="text-[#e65625]">*</span>
+                {t("merCrPhoneNo", t("mobile_phone", "Business Phone Number"))} <span className="text-[#e65625]">*</span>
               </label>
               <div
                 className={cn(
@@ -325,7 +339,7 @@ export function EnrollForm() {
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Search country..."
+                        placeholder={t("ph_search_country", "Search country...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-8 pl-8 pr-3 text-xs bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
@@ -334,7 +348,7 @@ export function EnrollForm() {
 
                     <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
                       {filteredCountries.length === 0 ? (
-                        <div className="py-4 text-center text-xs text-slate-400">No country found</div>
+                        <div className="py-4 text-center text-xs text-slate-400">{t("no_country_found", "No country found")}</div>
                       ) : (
                         filteredCountries.map((country, idx) => (
                           <button

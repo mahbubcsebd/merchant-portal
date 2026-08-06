@@ -3,7 +3,7 @@ import { loginWithPin, resendOTP, verifyOTP } from '@/lib/api/endpoints';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Lock, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import * as z from 'zod';
@@ -23,10 +23,19 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 
-const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  pin: z.string().min(4, { message: 'PIN must be at least 4 digits.' }),
-});
+const getFormSchema = (t) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t('usernameRequired', 'User ID / Email Address is required.') })
+      .email({ message: t('invalid_email', 'Please enter a valid Email Address.') })
+      .max(80, { message: t('email_max_error', 'Email Address cannot exceed 80 characters.') }),
+    pin: z
+      .string()
+      .min(1, { message: t('enter_pin', 'Wallet PIN is required.') })
+      .length(6, { message: t('pin_digit_error', 'Wallet PIN must be exactly 6 digits.') })
+      .regex(/^[0-9]+$/, { message: t('pin_numeric_error', 'Wallet PIN must contain numbers only.') }),
+  });
 
 export function LoginForm() {
   const router = useNavigate();
@@ -37,13 +46,15 @@ export function LoginForm() {
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
   const [resendSuccessMsg, setResendSuccessMsg] = useState('');
 
+  const schema = useMemo(() => getFormSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: 'kyeontan154@gmail.com', pin: '111111' },
   });
 
@@ -155,12 +166,12 @@ export function LoginForm() {
       {/* ── Heading ─────────────────────────────── */}
       <div className="mb-8 xl:mb-10 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          {t('wallet_pin_login', t('login_with_pin', 'Welcome back'))}
+          {t('authenticateTitle', t('wallet_pin_login', t('welcome_back', 'Welcome back')))}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
           {t(
-            'enter_pin_to_continue',
-            'Sign in to your Merchant Portal account',
+            'authenticateSubTitle',
+            t('enter_pin_to_continue', 'Sign in to your Merchant Portal account')
           )}
         </p>
       </div>
@@ -175,7 +186,7 @@ export function LoginForm() {
         <GlobalInput
           id="email"
           type="email"
-          label={t('crEmail', 'Email Address')}
+          label={t('crEmail', t('authenticateUserID', 'Email Address'))}
           required
           placeholder="merchant@example.com"
           leftIcon={<Mail size={16} />}
@@ -191,7 +202,7 @@ export function LoginForm() {
               htmlFor="pin"
               className="text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              {t('enter_your_pin', t('enter_pin', 'Wallet PIN'))}{' '}
+              {t('crPassword', t('enter_your_pin', 'Wallet PIN'))}{' '}
               <span className="text-[#e65625]">*</span>
             </label>
             <Link
@@ -230,7 +241,7 @@ export function LoginForm() {
           loadingText={t('verifying', 'Signing in…')}
           className="mt-2"
         >
-          {t('authenticateSignIn', 'Sign In')}
+          {t('authenticateSignIn', 'SIGN IN')}
         </GlobalButton>
       </form>
 
@@ -241,9 +252,7 @@ export function LoginForm() {
           to="/enroll"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 hover:underline transition-colors capitalize"
         >
-          {t('registerMerchant', 'Merchant Registration')
-            .toLowerCase()
-            .replace(/\b\w/g, (c) => c.toUpperCase())}
+          {t('merNewToMobileBanking', t('registerMerchant', 'Merchant Registration'))}
         </Link>
       </p>
 

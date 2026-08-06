@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -19,10 +19,15 @@ import { forgotPin } from "@/lib/api/endpoints"
 import { useDialog } from "@/components/globals/DialogProvider"
 import { useLanguage } from "@/components/globals/LanguageProvider"
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  dob: z.date({ required_error: "Date of Birth is required." }),
-})
+const getFormSchema = (t) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, { message: t("email_required", "Email Address is required.") })
+      .email({ message: t("invalid_email", "Please enter a valid Email Address.") })
+      .max(80, { message: t("email_max_error", "Email Address cannot exceed 80 characters.") }),
+    dob: z.date({ required_error: t("dob_required", "Date of Birth is required.") }),
+  })
 
 export function ForgotPinForm() {
   const navigate = useNavigate()
@@ -30,6 +35,8 @@ export function ForgotPinForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState("")
   const { openConfirmDialog } = useDialog()
+
+  const schema = useMemo(() => getFormSchema(t), [t])
 
   const {
     register,
@@ -39,7 +46,7 @@ export function ForgotPinForm() {
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: "" },
   })
 
@@ -85,7 +92,7 @@ export function ForgotPinForm() {
       {/* Heading */}
       <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
         <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          {t("beforeLoginForgotPIN", "Forgot Wallet PIN")}
+          {t("beforeLoginForgotPIN", t("changePassword", "Forgot Wallet PIN"))}
         </h2>
         <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
           {t("forgot_pin_subtitle", "Enter your registered email address and date of birth to reset your PIN.")}
@@ -110,7 +117,7 @@ export function ForgotPinForm() {
         <GlobalInput
           id="email"
           type="email"
-          label={t("crEmail", "Email Address")}
+          label={t("merCrEmail", t("crEmail", "Email Address"))}
           required
           placeholder="business@example.com"
           leftIcon={<Mail size={16} />}
@@ -122,7 +129,7 @@ export function ForgotPinForm() {
         {/* Date of Birth */}
         <div className="space-y-2">
           <label htmlFor="dob" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            {t("crDOB", t("date_of_birth", "Date of Birth"))} <span className="text-[#e65625]">*</span>
+            {t("crDateOfBirth", t("date_of_birth", "Date of Birth"))} <span className="text-[#e65625]">*</span>
           </label>
           <div className="relative w-full flex">
             <CalendarIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
@@ -183,7 +190,7 @@ export function ForgotPinForm() {
           to="/"
           className="font-bold text-[#2563eb] dark:text-blue-400 hover:text-[#1d4ed8] hover:underline transition-colors"
         >
-          {t("authenticateSignIn", "Sign In")}
+          {t("back_to_login", t("authenticateSignIn", "Sign In"))}
         </Link>
       </p>
     </div>
