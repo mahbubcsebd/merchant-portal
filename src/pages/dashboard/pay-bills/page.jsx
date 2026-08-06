@@ -10,7 +10,10 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { enforceNumericSpace, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
+import {
+  enforceNumericSpace,
+  enforceAlphanumericSpace,
+} from "@/lib/utils/inputFormatters";
 
 export default function PayBillsPage() {
   const queryClient = useQueryClient();
@@ -150,7 +153,8 @@ export default function PayBillsPage() {
           [t("bp_to", "To")]: selectedBillerLabel,
           [t("bp_tpBillerName", "Biller Name")]: billerDetails.billerName,
           [t("bp_ref1", "Reference No")]: billerDetails.referenceNo,
-          [t("bp_amount", "Amount")]: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(amount))} ${currencyLabel}`,
+          [t("bp_amount", "Amount")]:
+            `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(amount))} ${currencyLabel}`,
           "Exchange Rate": exchangeRateText,
           "Total Fees": totalFeesText,
           [t("bp_desc", "Description")]: description || "N/A",
@@ -246,16 +250,13 @@ export default function PayBillsPage() {
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* To (Biller) */}
           <GlobalSelect
-            label={
-              <>
-                {t("bp_to", "To")} <span className="text-red-500">*</span>
-              </>
-            }
+            label={t("ptb_account", "To")}
             value={biller}
             onChange={(val) => {
               setBiller(val);
               clearError("biller");
             }}
+            required
             error={errors.biller}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={billerOptions}
@@ -298,16 +299,13 @@ export default function PayBillsPage() {
 
           {/* From Account */}
           <GlobalSelect
-            label={
-              <>
-                {t("from_account", "From Account")} <span className="text-red-500">*</span>
-              </>
-            }
+            label={t("from_account", "From Account")}
             value={fromAccount}
             onChange={(val) => {
               setFromAccount(val);
               clearError("fromAccount");
             }}
+            required
             error={errors.fromAccount}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={accountOptions}
@@ -315,11 +313,7 @@ export default function PayBillsPage() {
 
           {/* Amount */}
           <GlobalInput
-            label={
-              <>
-                {t("bp_amount", "Amount")} <span className="text-red-500">*</span>
-              </>
-            }
+            label={t("bp_amount", "Amount")}
             type="text"
             inputMode="decimal"
             maxLength={17}
@@ -327,6 +321,7 @@ export default function PayBillsPage() {
             value={amount}
             error={errors.amount}
             onInput={enforceNumericSpace}
+            required
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, "");
               setAmount(val);
@@ -360,19 +355,18 @@ export default function PayBillsPage() {
 
           {/* When */}
           <GlobalSelect
-            label={
-              <>
-                {t("schedule_when", "When")} <span className="text-red-500">*</span>
-              </>
-            }
+            label={t("schedule_when", "When")}
             value={when}
             onChange={(val) => {
               setWhen(val);
               clearError("when");
             }}
+            required
             error={errors.when}
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[{ value: "immediate", label: t("schedule_now", "Pay Now") }]}
+            options={[
+              { value: "immediate", label: t("schedule_now", "Pay Now") },
+            ]}
           />
 
           {/* Submit */}

@@ -10,10 +10,11 @@ export function useFormValidation() {
     let isValid = true;
     
     fields.forEach(({ name, value, label, type = 'input', required = false, customValidation = null }) => {
+      const cleanLabel = typeof label === 'string' ? label.replace(/\s*\*\s*$/, '') : label;
       if (required && (value === null || value === undefined || String(value).trim() === '')) {
         newErrors[name] = type === 'select' 
-          ? `${t("pleaseSelect", "Please select")} ${label}` 
-          : `${t("pleaseEnter", "Please enter")} ${label}`;
+          ? `${t("pleaseSelect", "Please select")} ${cleanLabel}` 
+          : `${t("pleaseEnter", "Please enter")} ${cleanLabel}`;
         isValid = false;
       } else if (type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         newErrors[name] = t("invalid_email", "Please enter a valid email address.");
