@@ -61,8 +61,8 @@ export default function EnrollPage() {
             {/* Stats */}
             <div className="flex gap-8 xl:gap-10 pt-2">
               {[
-                { value: "5 min", label: t("setup_time", "Setup time") },
-                { value: "Zero", label: t("setup_fee", "Setup fee") },
+                { value: t("setup_time_val", "5 min"), label: t("setup_time", "Setup time") },
+                { value: t("setup_fee_val", "Zero"), label: t("setup_fee", "Setup fee") },
                 { value: "24/7", label: t("support", "Support") },
               ].map(({ value, label }) => (
                 <div key={label}>
