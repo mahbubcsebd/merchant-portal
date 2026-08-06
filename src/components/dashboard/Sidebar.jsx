@@ -55,7 +55,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   ];
 
   const BOTTOM_MENU_ITEMS = [
-    { label: t("sign_out", "Sign Out"), href: '/', icon: LogOut },
+    { label: t("leftMenuLogout", "Logout"), href: '/', icon: LogOut },
     { label: t("help", "Help"), href: '/dashboard/help', icon: HelpCircle },
     { label: t("contact_us", "Contact Us"), href: '/dashboard/contact', icon: Phone },
   ];
@@ -63,9 +63,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const handleLogout = (e) => {
     e.preventDefault();
     openConfirmDialog({
-      title: t("sign_out", "Sign Out"),
-      description: t("sign_out_confirm_text", "Are you sure you want to sign out of your account?"),
-      confirmText: t("yes_sign_out", "Yes, Sign Out"),
+      title: t("logoutConfirm", "Confirm logout"),
+      description: t("logoutMessage", "Do you want to logout?"),
+      confirmText: t("yes", "Yes"),
       iconType: "danger",
       onConfirm: async () => {
         try {
