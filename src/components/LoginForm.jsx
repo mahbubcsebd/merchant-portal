@@ -75,7 +75,7 @@ export function LoginForm() {
         // Handle error returned in success body (common in older APIs)
         setError('root.serverError', {
           type: 'manual',
-          message: data.message || 'Invalid credentials. Please try again.',
+          message: data.message || t('invalid_credentials_try_again', 'Invalid credentials. Please try again.'),
         });
       }
     },
@@ -84,7 +84,7 @@ export function LoginForm() {
         type: 'manual',
         message:
           error?.response?.data?.message ||
-          'Something went wrong connecting to the server.',
+          t('server_connection_error', 'Something went wrong connecting to the server.'),
       });
     },
   });
@@ -100,7 +100,7 @@ export function LoginForm() {
       } else {
         setOtpError(true);
         setOtpErrorMessage(
-          data.message || 'Invalid OTP code. Please try again.',
+          data.message || t('invalid_otp_code', 'Invalid OTP code. Please try again.'),
         );
         setTimeout(() => {
           setOtpValue('');
@@ -110,7 +110,7 @@ export function LoginForm() {
     onError: (error) => {
       setOtpError(true);
       setOtpErrorMessage(
-        error?.response?.data?.message || 'Something went wrong verifying OTP.',
+        error?.response?.data?.message || t('otp_verify_failed_try_again', 'Something went wrong verifying OTP.'),
       );
       setTimeout(() => {
         setOtpValue('');
