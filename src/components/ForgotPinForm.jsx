@@ -20,7 +20,11 @@ import { useDialog } from "@/components/globals/DialogProvider"
 import { useLanguage } from "@/components/globals/LanguageProvider"
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  email: z
+    .string()
+    .min(1, { message: "Email Address is required." })
+    .email({ message: "Please enter a valid Email Address." })
+    .max(80, { message: "Email Address cannot exceed 80 characters." }),
   dob: z.date({ required_error: "Date of Birth is required." }),
 })
 

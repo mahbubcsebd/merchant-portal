@@ -34,12 +34,20 @@ import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
 const formSchema = z.object({
   storeName: z
     .string()
-    .min(2, { message: 'Store name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+    .min(1, { message: 'Store Name is required.' })
+    .min(2, { message: 'Store Name must be at least 2 characters.' })
+    .max(100, { message: 'Store Name cannot exceed 100 characters.' }),
+  email: z
+    .string()
+    .min(1, { message: 'Business Email Address is required.' })
+    .email({ message: 'Please enter a valid Email Address.' })
+    .max(80, { message: 'Email Address cannot exceed 80 characters.' }),
   countryCode: z.string().min(1, { message: 'Select a country code.' }),
   phone: z
     .string()
-    .min(6, { message: 'Enter a valid phone number.' })
+    .min(1, { message: 'Business Phone Number is required.' })
+    .min(6, { message: 'Phone number must be at least 6 digits.' })
+    .max(20, { message: 'Phone number cannot exceed 20 digits.' })
     .regex(/^[0-9]+$/, { message: 'Phone number must contain digits only.' }),
   acceptTerms: z.boolean().refine((v) => v === true, {
     message: 'You must accept the Terms and Conditions.',

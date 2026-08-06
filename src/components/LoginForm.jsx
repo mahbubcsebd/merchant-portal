@@ -24,8 +24,16 @@ import {
 } from '@/components/ui/input-otp';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  pin: z.string().min(6, { message: 'Wallet PIN must be 6 digits.' }),
+  email: z
+    .string()
+    .min(1, { message: 'User ID / Email Address is required.' })
+    .email({ message: 'Please enter a valid Email Address.' })
+    .max(80, { message: 'Email Address cannot exceed 80 characters.' }),
+  pin: z
+    .string()
+    .min(1, { message: 'Wallet PIN is required.' })
+    .length(6, { message: 'Wallet PIN must be exactly 6 digits.' })
+    .regex(/^[0-9]+$/, { message: 'Wallet PIN must contain numbers only.' }),
 });
 
 export function LoginForm() {
