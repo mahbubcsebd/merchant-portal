@@ -283,7 +283,7 @@ export function EnrollForm() {
               id="storeName"
               label={t("crMerchantname", t("storeName", "Store Name"))}
               required
-              placeholder="Your Business Name"
+              placeholder={t("ph_business_name", "Your Business Name")}
               leftIcon={<Building2 size={16} />}
               error={errors.storeName?.message}
               aria-invalid={!!errors.storeName}
@@ -339,7 +339,7 @@ export function EnrollForm() {
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Search country..."
+                        placeholder={t("ph_search_country", "Search country...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-8 pl-8 pr-3 text-xs bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
@@ -348,7 +348,7 @@ export function EnrollForm() {
 
                     <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
                       {filteredCountries.length === 0 ? (
-                        <div className="py-4 text-center text-xs text-slate-400">No country found</div>
+                        <div className="py-4 text-center text-xs text-slate-400">{t("no_country_found", "No country found")}</div>
                       ) : (
                         filteredCountries.map((country, idx) => (
                           <button
