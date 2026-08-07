@@ -74,8 +74,20 @@ export default function ReportsPage() {
     e.preventDefault();
 
     const fieldsToValidate = [
-      { name: 'fromDate', value: fromDate, label: t("from_date", "From Date"), required: true, type: 'date' },
-      { name: 'toDate', value: toDate, label: t("to_date", "To Date"), required: true, type: 'date' }
+      {
+        name: "fromDate",
+        value: fromDate,
+        label: t("from_date", "From Date"),
+        required: true,
+        type: "date",
+      },
+      {
+        name: "toDate",
+        value: toDate,
+        label: t("to_date", "To Date"),
+        required: true,
+        type: "date",
+      },
     ];
 
     const validationResult = validate(fieldsToValidate);
@@ -126,9 +138,10 @@ export default function ReportsPage() {
         }
 
         const formattedDate = format(new Date(), "MMM dd yyyy").toUpperCase();
-        const prefix = activeTab === "settlement" 
-          ? `${t("report_settlement", "Settlement")} Report as of ` 
-          : `${t("report_refunds", "Refund")} Report as of `;
+        const prefix =
+          activeTab === "settlement"
+            ? `${t("report_settlement", "Settlement")} Report as of `
+            : `${t("report_refunds", "Refund")} Report as of `;
 
         downloadBlob(blob, `${prefix}${formattedDate}.csv`);
       } catch (err) {
@@ -149,11 +162,14 @@ export default function ReportsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">
           {t("ms_report", "Reports")}
         </h1>
-        <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white leading-snug">
+        {/* <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white leading-snug">
           {t("generateReportsByTransAndStatus", "Generate Reports By Transaction And Status")}
-        </h2>
-        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/50 italic mt-0.5">
-          {t("generateSalesReport", "Generate Sales Report By Transaction Types And Status")}
+        </h2> */}
+        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/50 mt-0.5">
+          {t(
+            "generateSalesReport",
+            "Generate Sales Report By Transaction Types And Status",
+          )}
         </p>
       </div>
       <div className="w-full rounded-xl border border-slate-200 bg-white dark:bg-white/[0.03] p-4 sm:p-6 shadow-sm">
@@ -202,7 +218,10 @@ export default function ReportsPage() {
                   }
                 }
 
-                const formattedDate = format(new Date(), "MMM dd yyyy").toUpperCase();
+                const formattedDate = format(
+                  new Date(),
+                  "MMM dd yyyy",
+                ).toUpperCase();
                 const prefix = `${t("report_balance", "Balance Statement")} as of `;
                 downloadBlob(blob, `${prefix}${formattedDate}.csv`);
               } catch (e) {
@@ -229,7 +248,8 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                {t("from_date", "From Date")} <span className="text-red-500">*</span>
+                {t("from_date", "From Date")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <GlobalDatePicker
                 value={fromDate}
@@ -246,7 +266,8 @@ export default function ReportsPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                {t("to_date", "To Date")} <span className="text-red-500">*</span>
+                {t("to_date", "To Date")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <GlobalDatePicker
                 value={toDate}
