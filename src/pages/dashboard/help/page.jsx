@@ -1,7 +1,10 @@
 
 import { HardHat } from "lucide-react"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export default function HelpPage() {
+  const { t } = useLanguage()
+
   return (
     <div className="w-full h-full min-h-[calc(100vh-100px)] flex flex-col items-center justify-center p-6">
       
@@ -14,12 +17,12 @@ export default function HelpPage() {
 
         {/* Title Badge */}
         <div className="bg-[#1b55ad] text-white px-8 py-3 rounded-lg font-bold text-xl tracking-wide shadow-md mb-8">
-          Under Construction
+          {t("under_construction", "Under Construction")}
         </div>
 
         {/* Subtext */}
         <p className="text-slate-600 dark:text-white/60 font-medium text-lg">
-          Coming soon...
+          {t("coming_soon", "Coming soon...")}
         </p>
         
       </div>
