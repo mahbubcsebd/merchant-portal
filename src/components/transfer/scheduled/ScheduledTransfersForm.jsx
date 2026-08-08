@@ -2,6 +2,7 @@ import React from "react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function ScheduledTransfersForm({
   formData,
@@ -10,26 +11,28 @@ export default function ScheduledTransfersForm({
   setLocalView,
   isPending,
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="w-full animate-in fade-in duration-300">
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-8 w-full max-w-2xl mx-auto">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-          Edit Scheduled Transfer
+          {t("edit_scheduled_transfer", "Edit Scheduled Transfer")}
         </h2>
         <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
           <GlobalInput
-            label="Beneficiary Name"
+            label={t("beneficiary_name", "Beneficiary Name")}
             value={formData.BENFNAME || formData.payTo || ""}
             disabled
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <GlobalInput
-              label="Bank Name"
+              label={t("bank_name", "Bank Name")}
               value={formData.BENFBNKID || formData.bank || ""}
               disabled
             />
             <GlobalInput
-              label="Account No."
+              label={t("account_number", "Account No.")}
               value={formData.BENFACC || formData.account || ""}
               disabled
             />
@@ -37,7 +40,7 @@ export default function ScheduledTransfersForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <GlobalInput
-              label="Amount"
+              label={t("amount", "Amount")}
               value={formData.TXNAMOUNT || formData.amount || ""}
               onChange={(e) =>
                 setFormData({ ...formData, TXNAMOUNT: e.target.value })
@@ -47,24 +50,24 @@ export default function ScheduledTransfersForm({
               required
             />
             <GlobalInput
-              label="Currency"
+              label={t("currency", "Currency")}
               value={formData.BENFACCUR || formData.currency || ""}
               disabled
             />
           </div>
 
           <GlobalInput
-            label="Description"
+            label={t("description", "Description")}
             value={formData.TXNDESC || formData.description || ""}
             onChange={(e) =>
               setFormData({ ...formData, TXNDESC: e.target.value })
             }
-            placeholder="Transfer description..."
+            placeholder={t("ph_transfer_description", "Transfer description...")}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <GlobalInput
-              label="Start Date"
+              label={t("start_date", "Start Date")}
               type="date"
               value={formData.STRDATE || formData.startDate || ""}
               onChange={(e) =>
@@ -73,33 +76,33 @@ export default function ScheduledTransfersForm({
               required
             />
             <GlobalSelect
-              label="How Often"
+              label={t("how_often", "How Often")}
               value={formData.FREQUENCY || formData.howOften || ""}
               onChange={(e) =>
                 setFormData({ ...formData, FREQUENCY: e.target.value })
               }
               options={[
-                { value: "1", label: "Once" },
-                { value: "2", label: "Daily" },
-                { value: "3", label: "Weekly" },
-                { value: "4", label: "Bi-Weekly" },
-                { value: "5", label: "Monthly" },
-                { value: "6", label: "Quarterly" },
-                { value: "7", label: "Half-Yearly" },
-                { value: "8", label: "Annually" },
+                { value: "1", label: t("freq_once", "Once") },
+                { value: "2", label: t("freq_daily", "Daily") },
+                { value: "3", label: t("freq_weekly", "Weekly") },
+                { value: "4", label: t("freq_biweekly", "Bi-Weekly") },
+                { value: "5", label: t("freq_monthly", "Monthly") },
+                { value: "6", label: t("freq_quarterly", "Quarterly") },
+                { value: "7", label: t("freq_halfyearly", "Half-Yearly") },
+                { value: "8", label: t("freq_annually", "Annually") },
               ]}
               required
             />
           </div>
 
           <GlobalInput
-            label="Until (End Date)"
+            label={t("until_end_date", "Until (End Date)")}
             type="date"
             value={formData.ENDDATE || formData.endDate || ""}
             onChange={(e) =>
               setFormData({ ...formData, ENDDATE: e.target.value })
             }
-            hint="Leave blank for endless"
+            hint={t("endless_hint", "Leave blank for endless")}
           />
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
@@ -110,7 +113,7 @@ export default function ScheduledTransfersForm({
               className="w-full sm:w-auto uppercase tracking-wide text-xs font-bold sm:px-8"
               disabled={isPending}
             >
-              Cancel
+              {t("buttonCancel", t("cancel", "Cancel"))}
             </GlobalButton>
             <GlobalButton
               type="submit"
@@ -118,7 +121,7 @@ export default function ScheduledTransfersForm({
               className="w-full sm:w-auto uppercase tracking-wide text-xs font-bold sm:px-8"
               disabled={isPending}
             >
-              {isPending ? "Submitting..." : "Submit"}
+              {isPending ? t("submitting", "Submitting...") : t("buttonSubmit", t("submit", "Submit"))}
             </GlobalButton>
           </div>
         </form>

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function TransferFormView({ setView }) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     to: "",
     from: "wallet1",
@@ -29,19 +31,19 @@ export default function TransferFormView({ setView }) {
             onClick={() => setView("manage_scheduled")}
             className="text-sm font-bold text-[#1b55ad] dark:text-blue-400 hover:underline"
           >
-            Manage Scheduled Transfers
+            {t("manage_scheduled_transfers", "Manage Scheduled Transfers")}
           </button>
           <button
             onClick={() => setView("manage_beneficiaries")}
             className="text-sm font-bold text-[#1b55ad] dark:text-blue-400 hover:underline"
           >
-            Manage Beneficiaries
+            {t("manage_beneficiaries", "Manage Beneficiaries")}
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <GlobalSelect
-            label="To"
+            label={t("to", "To")}
             required
             value={formData.to}
             onChange={(val) => setFormData({ ...formData, to: val })}
@@ -53,7 +55,7 @@ export default function TransferFormView({ setView }) {
           />
 
           <GlobalSelect
-            label="From"
+            label={t("from", "From")}
             required
             value={formData.from}
             onChange={(val) => setFormData({ ...formData, from: val })}
@@ -66,7 +68,7 @@ export default function TransferFormView({ setView }) {
 
           <div className="flex flex-col sm:flex-row gap-5">
             <GlobalInput
-              label="Amount"
+              label={t("amount", "Amount")}
               required
               type="number"
               value={formData.amount}
@@ -78,7 +80,7 @@ export default function TransferFormView({ setView }) {
             />
 
             <GlobalSelect
-              label="Currency"
+              label={t("currency", "Currency")}
               required
               value={formData.currency}
               onChange={(val) => setFormData({ ...formData, currency: val })}
@@ -93,7 +95,7 @@ export default function TransferFormView({ setView }) {
           </div>
 
           <GlobalInput
-            label="Description"
+            label={t("description", "Description")}
             type="text"
             value={formData.description}
             onChange={(e) =>
@@ -103,14 +105,14 @@ export default function TransferFormView({ setView }) {
           />
 
           <GlobalSelect
-            label="When"
+            label={t("when", "When")}
             required
             value={formData.when}
             onChange={(val) => setFormData({ ...formData, when: val })}
             labelClassName="text-sm text-slate-600 dark:text-white/70 mb-1.5"
             options={[
-              { value: "Immediate", label: "Immediate" },
-              { value: "Scheduled", label: "Scheduled" },
+              { value: "Immediate", label: t("immediate", "Immediate") },
+              { value: "Scheduled", label: t("scheduled", "Scheduled") },
             ]}
           />
 
@@ -120,7 +122,7 @@ export default function TransferFormView({ setView }) {
               variant="primary"
               className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
             >
-              Submit
+              {t("buttonSubmit", t("submit", "Submit"))}
             </GlobalButton>
           </div>
         </form>

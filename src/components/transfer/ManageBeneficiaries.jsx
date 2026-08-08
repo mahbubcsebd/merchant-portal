@@ -8,8 +8,10 @@ import BeneficiaryFormFields from "@/components/transfer/BeneficiaryFormFields";
 import { Eye, Pencil, Trash2, Search } from "lucide-react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalButton from "@/components/globals/GlobalButton";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function ManageBeneficiaries({ setView: setParentView, setViewData }) {
+  const { t } = useLanguage();
   const { beneficiariesQuery, createBeneficiaryMutation, updateBeneficiaryMutation, deleteBeneficiaryMutation } = useBeneficiaries();
   const {
     openFormDialog,
@@ -54,9 +56,9 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
 
   const openBeneficiaryForm = (initialValues = null, isEdit = false, originalBeneficiary = null) => {
     openFormDialog({
-      title: isEdit ? "Edit Beneficiary" : "Add Beneficiary",
+      title: isEdit ? t("edit_beneficiary", "Edit Beneficiary") : t("add_beneficiary", "Add Beneficiary"),
       isView: false,
-      submitText: "Submit",
+      submitText: t("buttonSubmit", t("submit", "Submit")),
       size: "sm:max-w-md",
       disableAutoValidation: true,
       content: <BeneficiaryFormFields data={initialValues} isView={false} isEditMode={isEdit} />,
@@ -205,29 +207,29 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-6 w-full">
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6">
           <h3 className="font-bold text-slate-900 dark:text-white px-1 text-base sm:text-lg">
-            Beneficiaries
+            {t("beneficiaries", "Beneficiaries")}
           </h3>
           <GlobalButton
             onClick={handleAdd}
             variant="primary"
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10"
           >
-            + Add Beneficiary
+            + {t("add_beneficiary", "Add Beneficiary")}
           </GlobalButton>
         </div>
 
         <div className="flex flex-col gap-0 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent">
           {beneficiariesQuery.isLoading ? (
             <div className="p-8 text-center text-slate-500 dark:text-white/50 text-sm">
-              Loading beneficiaries...
+              {t("loading_beneficiaries", "Loading beneficiaries...")}
             </div>
           ) : beneficiariesQuery.isError ? (
             <div className="p-8 text-center text-red-500 text-sm">
-              Error loading beneficiaries.
+              {t("error_loading_beneficiaries", "Error loading beneficiaries.")}
             </div>
           ) : filteredBeneficiaries.length === 0 ? (
             <div className="p-8 text-center text-slate-500 dark:text-white/50 text-sm">
-              No beneficiaries found.
+              {t("no_beneficiaries_found", "No beneficiaries found.")}
             </div>
           ) : (
             filteredBeneficiaries.map((b, idx) => (
@@ -262,33 +264,33 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
                   <button
                     onClick={() => {
                       openDetailDialog({
-                        title: "View Beneficiary",
+                        title: t("view_beneficiary", "View Beneficiary"),
                         details: [
-                          { label: "Beneficiary Name", value: b.payeeName },
-                          { label: "Nickname", value: b.payeeNickName },
-                          { label: "Account Number", value: b.payeeBankAccount },
-                          { label: "Bank", value: getBankName(b.payeeBankBIC) },
-                          { label: "Currency", value: getCurrencyLabel(b.payeeAcctCurr) },
+                          { label: t("beneficiary_name", "Beneficiary Name"), value: b.payeeName },
+                          { label: t("beneficiary_nickname", "Nickname"), value: b.payeeNickName },
+                          { label: t("account_number", "Account Number"), value: b.payeeBankAccount },
+                          { label: t("bank_name", "Bank"), value: getBankName(b.payeeBankBIC) },
+                          { label: t("currency", "Currency"), value: getCurrencyLabel(b.payeeAcctCurr) },
                         ],
-                        doneText: "Close",
+                        doneText: t("close", "Close"),
                       });
                     }}
                     className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                    title="View"
+                    title={t("view", "View")}
                   >
                     <Eye size={18} strokeWidth={2.5} />
                   </button>
                   <button
                     onClick={() => handleEdit(b, idx)}
                     className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                    title="Edit"
+                    title={t("edit", "Edit")}
                   >
                     <Pencil size={18} strokeWidth={2} />
                   </button>
                   <button
                     onClick={() => handleDelete(idx)}
                     className="text-slate-400 hover:text-red-500 transition-colors"
-                    title="Delete"
+                    title={t("delete", "Delete")}
                   >
                     <Trash2 size={18} strokeWidth={2} />
                   </button>
@@ -304,7 +306,7 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
             variant="secondary"
             className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
           >
-            Back to Transfer
+            {t("back_to_transfer", "Back to Transfer")}
           </GlobalButton>
         </div>
       </div>
