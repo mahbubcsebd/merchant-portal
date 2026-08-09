@@ -376,7 +376,7 @@ function SettlementSettingsView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
@@ -404,7 +404,7 @@ function SettlementSettingsView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
@@ -435,7 +435,7 @@ function SettlementSettingsView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true
@@ -895,7 +895,7 @@ function ManageNotificationsView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
@@ -1003,7 +1003,7 @@ function ChangeLanguageView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
@@ -1094,7 +1094,7 @@ function ChangePinView() {
     onError: (err) => {
       openConfirmDialog({
         title: t("error", "Error"),
-        description: err?.response?.data?.message || "Something went wrong.",
+        description: err?.response?.data?.message || t("something_went_wrong_try_again", "Something went wrong."),
         confirmText: t("close", "Close"),
         iconType: "danger",
         hideCancel: true,
