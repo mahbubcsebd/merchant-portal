@@ -99,7 +99,7 @@ export default function ReportsPage() {
     const toDateStr = format(toDate, "MM/dd/yyyy");
 
     if (activeTab === "transaction") {
-      setReportTitle("Transaction Report");
+      setReportTitle(t("transaction_report", "Transaction Report"));
       setAppliedFilters({
         pageNum: 1,
         pageSize: 100,
@@ -129,7 +129,7 @@ export default function ReportsPage() {
             if (data && data.message) {
               openGlobalPopup({
                 type: "error",
-                title: "Error",
+                title: t("error", "Error"),
                 description: data.message,
               });
               return;
@@ -140,15 +140,15 @@ export default function ReportsPage() {
         const formattedDate = format(new Date(), "MMM dd yyyy").toUpperCase();
         const prefix =
           activeTab === "settlement"
-            ? `${t("report_settlement", "Settlement")} Report as of `
-            : `${t("report_refunds", "Refund")} Report as of `;
+            ? `${t("report_settlement", "Settlement")} Report ${t("as_of", "as of")} `
+            : `${t("report_refunds", "Refund")} Report ${t("as_of", "as of")} `;
 
         downloadBlob(blob, `${prefix}${formattedDate}.csv`);
       } catch (err) {
         openGlobalPopup({
           type: "error",
-          title: "Error",
-          description: "Failed to generate report.",
+          title: t("error", "Error"),
+          description: t("failed_generate_report", "Failed to generate report."),
         });
       } finally {
         setIsDownloading(false);
@@ -340,7 +340,7 @@ export default function ReportsPage() {
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-[#2563eb]" />
             <p className="text-sm font-medium text-slate-500 dark:text-white/50">
-              Fetching transactions...
+              {t("fetching_transactions", "Fetching transactions...")}
             </p>
           </div>
         )}
