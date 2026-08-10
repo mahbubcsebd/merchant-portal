@@ -19,7 +19,9 @@ import {
 
 import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDashboardContext } from '@/pages/dashboard/context';
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { useProfileImage } from "@/hooks/useProfileImage";
+// remove old from '@/pages/dashboard/context';
 import { useDialog } from '@/components/globals/DialogProvider';
 import { useLanguage } from '@/components/globals/LanguageProvider';
 import { logout } from '@/lib/api/endpoints';
@@ -29,6 +31,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const pathname = useLocation().pathname;
   const navigate = useNavigate();
   const { profile } = useDashboardContext();
+  const { data: profileImage } = useProfileImage(profile);
   const { openConfirmDialog } = useDialog();
 
   const MENU_ITEMS = [
@@ -52,7 +55,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   ];
 
   const BOTTOM_MENU_ITEMS = [
-    { label: t("sign_out", "Sign Out"), href: '/', icon: LogOut },
+    { label: t("leftMenuLogout", "Logout"), href: '/', icon: LogOut },
     { label: t("help", "Help"), href: '/dashboard/help', icon: HelpCircle },
     { label: t("contact_us", "Contact Us"), href: '/dashboard/contact', icon: Phone },
   ];
@@ -60,9 +63,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const handleLogout = (e) => {
     e.preventDefault();
     openConfirmDialog({
-      title: t("sign_out", "Sign Out"),
-      description: t("sign_out_confirm_text", "Are you sure you want to sign out of your account?"),
-      confirmText: t("yes_sign_out", "Yes, Sign Out"),
+      title: t("logoutConfirm", "Confirm logout"),
+      description: t("logoutMessage", "Do you want to logout?"),
+      confirmText: t("yes", "Yes"),
       iconType: "danger",
       onConfirm: async () => {
         try {
@@ -158,8 +161,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           )}
         >
           <div className="relative shrink-0">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xs shadow-md select-none">
-              {userInitials}
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xs shadow-md select-none overflow-hidden">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                userInitials
+              )}
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0f1829]" />
           </div>

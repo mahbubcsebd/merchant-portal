@@ -117,7 +117,8 @@ export async function generateReportBalanceStatement(payload = {}) {
 
 // Get Document Content
 export async function getDocumentContent(payload = {}) {
-  return post("/getDocumentContent", payload);
+  const url = payload.imgId ? `/getDocumentContent?imgId=${payload.imgId}` : "/getDocumentContent";
+  return post(url, payload);
 }
 
 // Logout
@@ -255,9 +256,18 @@ export async function deleteUserBiller(payload = {}) {
 export async function createCashier(payload = {}) {
   return post("/createCashier", payload);
 }
+export async function updateCashier(payload = {}) {
+  return post("/updateCashier", payload);
+}
 
 export async function getCashierPermssionList(payload = {}) {
   return post("/getCashierPermssionList", payload);
+}
+export async function getCashierPermissionsByCashier(payload = {}) {
+  return post("/getCashierPermissionsByCashier", payload);
+}
+export async function updateStatusCashier(payload = {}) {
+  return post("/updateStatusCashier", payload);
 }
 
 export async function saveMerchantCashierPermission(payload = {}) {
@@ -301,6 +311,10 @@ export async function updateScheduledTxn(payload = {}) {
 
 export async function deleteScheduledTxn(payload = {}) {
   return post("/deleteScheduledTxn", payload);
+}
+
+export async function payToBank(payload = {}) {
+  return post("/payToBank", payload);
 }
 
 export async function scheduledTxnHistory(payload = {}) {

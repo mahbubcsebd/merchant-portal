@@ -75,7 +75,7 @@ export default function ForgotPinPage() {
 
           {/* Copyright */}
           <p className="relative z-10 text-xs text-slate-400 font-medium">
-            © 2025 mPay Network. All rights reserved.
+            © {new Date().getFullYear()} mPay Network. All rights reserved.
           </p>
         </div>
 

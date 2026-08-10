@@ -1,5 +1,5 @@
 import { Eye, Pencil, Trash2, Loader2 } from "lucide-react";
-import BranchFormFields from "./BranchFormFields";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function BranchDesktopTable({
   branches,
@@ -8,25 +8,26 @@ export default function BranchDesktopTable({
   onEdit,
   onDelete,
 }) {
+  const { t } = useLanguage();
   return (
     <div className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 mb-8">
       <table className="w-full text-left text-sm whitespace-nowrap">
         <thead>
           <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
             <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
-              Branch Name
+              {t("subsidiaryName", "Branch Name")}
             </th>
             <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
-              Email
+              {t("ms_agentEmail", "Email")}
             </th>
             <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
-              Phone Number
+              {t("ucphoneNo", "Phone Number")}
             </th>
             <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
-              Status
+              {t("global_status", "Status")}
             </th>
             <th className="px-5 py-4 font-bold text-slate-900 dark:text-white text-right">
-              Action
+              {t("teAction", "Action")}
             </th>
           </tr>
         </thead>
@@ -53,7 +54,7 @@ export default function BranchDesktopTable({
           ) : (
             branches.map((branch, idx) => (
               <tr
-                key={branch.CORPCUSTSUBID || idx}
+                key={`desktop-${branch.subId || branch.CORPCUSTSUBID}-${idx}`}
                 className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
               >
                 <td className="px-5 py-4 text-slate-600 dark:text-white/70 capitalize">
@@ -65,9 +66,9 @@ export default function BranchDesktopTable({
                 <td className="px-5 py-4 text-slate-600 dark:text-white/70">
                   {branch.MOBILEPHONE}
                 </td>
-                <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                <td className="px-5 py-4">
                   <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold ${branch.SUBSTATUS === "A" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"}`}
+                    className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${branch.SUBSTATUS === "A" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"}`}
                   >
                     {branch.SUBSTATUS === "A" ? "Active" : "Inactive"}
                   </span>

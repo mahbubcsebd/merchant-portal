@@ -6,6 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import GlobalButton from "./GlobalButton";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ConfirmationDialog({
   title,
@@ -17,6 +18,7 @@ export default function ConfirmationDialog({
   hideCancel = false,
   onClose,
 }) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -75,7 +77,7 @@ export default function ConfirmationDialog({
             disabled={loading}
             className="flex-1 max-w-[150px] uppercase font-bold h-10 text-xs"
           >
-            {cancelText}
+            {cancelText === "Cancel" ? t("buttonCancel", "Cancel") : cancelText}
           </GlobalButton>
         )}
         <GlobalButton
@@ -84,7 +86,7 @@ export default function ConfirmationDialog({
           isLoading={loading}
           className={`uppercase font-bold h-10 text-xs ${hideCancel ? 'px-10' : 'flex-1 max-w-[150px]'}`}
         >
-          {confirmText}
+          {confirmText === "Confirm" ? t("button_confirm", "Confirm") : confirmText}
         </GlobalButton>
       </div>
     </div>

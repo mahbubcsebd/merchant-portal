@@ -7,6 +7,7 @@ import {
 import { useTheme } from "next-themes"
 import { useState, useEffect, useMemo } from "react"
 import { useDashboardContext } from "@/pages/dashboard/context"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -28,6 +29,7 @@ export function StatisticsChart() {
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const { dashboardInfo, period } = useDashboardContext();
+  const { t } = useLanguage();
 
   useEffect(() => setMounted(true), [])
 
@@ -79,16 +81,16 @@ export function StatisticsChart() {
   }, [dashboardInfo]);
 
   const periodLabel = {
-    last3months: "Last 3 Months",
-    thismonth: "This Month",
-    thisyear: "This Year",
-    alltime: "All Time",
-  }[period] || "Last 5 Months";
+    last3months: t("threeMonths", "Last 3 Months"),
+    thismonth: t("thisMonth", "This Month"),
+    thisyear: t("thisYear", "This Year"),
+    alltime: t("allTime", "All Time"),
+  }[period] || t("threeMonths", "Last 5 Months");
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-5">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Transaction History</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("mStatistics", "Transaction History")}</h3>
         <span className="text-xs font-medium text-slate-500 dark:text-white/30 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 px-3 py-1 rounded-md">
           {periodLabel}
         </span>

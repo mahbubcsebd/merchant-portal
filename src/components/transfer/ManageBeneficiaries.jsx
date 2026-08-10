@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useBeneficiaries } from "@/hooks/useBeneficiaries";
 import { getBankRoutingByBankId } from "@/lib/api/endpoints";
@@ -26,22 +27,6 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
-  const getBankName = (bankId) => {
-    if (!welcomeData?.metaData?.SETTLEBANK) return bankId;
-    const bank = welcomeData.metaData.SETTLEBANK.find(
-      (b) => String(b.id) === String(bankId),
-    );
-    return bank ? bank.title : bankId;
-  };
-
-  const getCurrencyLabel = (currencyId) => {
-    if (!welcomeData?.metaData?.CURRENCY) return currencyId;
-    const curr = welcomeData.metaData.CURRENCY.find(
-      (c) => String(c.id) === String(currencyId),
-    );
-    return curr ? curr.title : currencyId;
-  };
-
   const [searchTerm, setSearchTerm] = useState("");
 
   const beneficiaries = beneficiariesQuery.data || [];
@@ -56,7 +41,7 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
 
   const openBeneficiaryForm = (initialValues = null, isEdit = false, originalBeneficiary = null) => {
     openFormDialog({
-      title: isEdit ? t("edit_beneficiary", "Edit Beneficiary") : t("add_beneficiary", "Add Beneficiary"),
+      title: isEdit ? t("edit.beneficiary", t("edit_beneficiary", "Edit Beneficiary")) : t("register.beneficiary", t("add_beneficiary", "Add Beneficiary")),
       isView: false,
       submitText: t("buttonSubmit", t("submit", "Submit")),
       size: "sm:max-w-md",
@@ -78,15 +63,15 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
         }
 
         const preconfirmDetails = {
-          "Beneficiary Name": values.payeeName,
-          Nickname: values.payeeNickName,
-          "Account Number": values.payeeBankAccount,
-          Bank: getBankName(values.payeeBankId),
-          Currency: getCurrencyLabel(values.payeeAcctCurr),
+          [t("add_ben_firstLast", t("beneficiary_name", "Beneficiary Name"))]: values.payeeName,
+          [t("add_ben_nickname", t("beneficiary_nickname", "Nickname"))]: values.payeeNickName,
+          [t("add_ben_accNo", t("account_number", "Account Number"))]: values.payeeBankAccount,
+          [t("add_ben_bank", t("bank_name", "Bank"))]: getBankName(welcomeData, values.payeeBankId),
+          [t("add_ben_currency", t("currency", "Currency"))]: getCurrencyLabel(welcomeData, values.payeeAcctCurr),
         };
 
         openPreconfirmDialog({
-          title: isEdit ? "Confirm Edit" : "Confirm Beneficiary",
+          title: isEdit ? t("edit.beneficiary", t("confirm_edit", "Confirm Edit")) : t("register.beneficiary", t("confirm_beneficiary", "Confirm Beneficiary")),
           message: isEdit ? "Please review the updated details before submitting." : "Please review the beneficiary details before submitting.",
           details: preconfirmDetails,
           onChange: () => {
@@ -131,13 +116,13 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
               const res = await mutation.mutateAsync(payload);
               
               openSuccessDialog({
-                title: "Success",
+                title: t("success", "Success"),
                 message: res.message || (isEdit ? "Beneficiary updated successfully." : "Beneficiary created successfully."),
                 details: preconfirmDetails,
               });
             } catch (err) {
               openGlobalPopup({
-                title: "Error",
+                title: t("error", "Error"),
                 description: err.message || (isEdit ? "Failed to update beneficiary." : "Failed to create beneficiary."),
                 type: "error",
               });
@@ -165,18 +150,18 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
   const handleDelete = (index) => {
     const beneficiary = filteredBeneficiaries[index];
     const details = {
-      "Beneficiary Name": beneficiary.payeeName,
-      Nickname: beneficiary.payeeNickName,
-      "Account Number": beneficiary.payeeBankAccount,
-      Bank: getBankName(beneficiary.payeeBankBIC),
-      Currency: getCurrencyLabel(beneficiary.payeeAcctCurr),
+      [t("add_ben_firstLast", t("beneficiary_name", "Beneficiary Name"))]: beneficiary.payeeName,
+      [t("add_ben_nickname", t("beneficiary_nickname", "Nickname"))]: beneficiary.payeeNickName,
+      [t("add_ben_accNo", t("account_number", "Account Number"))]: beneficiary.payeeBankAccount,
+      [t("add_ben_bank", t("bank_name", "Bank"))]: getBankName(welcomeData, beneficiary.payeeBankBIC),
+      [t("add_ben_currency", t("currency", "Currency"))]: getCurrencyLabel(welcomeData, beneficiary.payeeAcctCurr),
     };
 
     openPreconfirmDialog({
-      title: "Delete Beneficiary?",
+      title: t("delete_beneficiary_title", "Delete Beneficiary?"),
       message: `Are you sure you want to delete ${beneficiary.payeeName}? This action cannot be undone.`,
       details,
-      confirmText: "Delete",
+      confirmText: t("buttonsDelete", t("delete", "Delete")),
       iconType: "danger",
       onChange: () => closeDialog(),
       onSubmit: async () => {
@@ -187,13 +172,13 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
           };
           const res = await deleteBeneficiaryMutation.mutateAsync(payload);
           openSuccessDialog({
-            title: "Success",
+            title: t("success", "Success"),
             message: res.message || "Beneficiary deleted successfully.",
             details,
           });
         } catch (err) {
           openGlobalPopup({
-            title: "Error",
+            title: t("error", "Error"),
             description: err.message || "Failed to delete beneficiary.",
             type: "error",
           });
@@ -207,14 +192,14 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
       <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-6 w-full">
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6">
           <h3 className="font-bold text-slate-900 dark:text-white px-1 text-base sm:text-lg">
-            {t("beneficiaries", "Beneficiaries")}
+            {t("manage.beneficiaries", t("beneficiaries", "Beneficiaries"))}
           </h3>
           <GlobalButton
             onClick={handleAdd}
             variant="primary"
             className="w-full sm:w-auto text-xs font-bold uppercase tracking-wider h-10"
           >
-            + {t("add_beneficiary", "Add Beneficiary")}
+            + {t("register.beneficiary", t("add_beneficiary", "Add Beneficiary"))}
           </GlobalButton>
         </div>
 
@@ -264,15 +249,15 @@ export default function ManageBeneficiaries({ setView: setParentView, setViewDat
                   <button
                     onClick={() => {
                       openDetailDialog({
-                        title: t("view_beneficiary", "View Beneficiary"),
+                        title: t("manage.beneficiaries", t("view_beneficiary", "View Beneficiary")),
                         details: [
-                          { label: t("beneficiary_name", "Beneficiary Name"), value: b.payeeName },
-                          { label: t("beneficiary_nickname", "Nickname"), value: b.payeeNickName },
-                          { label: t("account_number", "Account Number"), value: b.payeeBankAccount },
-                          { label: t("bank_name", "Bank"), value: getBankName(b.payeeBankBIC) },
-                          { label: t("currency", "Currency"), value: getCurrencyLabel(b.payeeAcctCurr) },
+                          { label: t("add_ben_firstLast", t("beneficiary_name", "Beneficiary Name")), value: b.payeeName },
+                          { label: t("add_ben_nickname", t("beneficiary_nickname", "Nickname")), value: b.payeeNickName },
+                          { label: t("add_ben_accNo", t("account_number", "Account Number")), value: b.payeeBankAccount },
+                          { label: t("add_ben_bank", t("bank_name", "Bank")), value: getBankName(welcomeData, b.payeeBankBIC) },
+                          { label: t("add_ben_currency", t("currency", "Currency")), value: getCurrencyLabel(welcomeData, b.payeeAcctCurr) },
                         ],
-                        doneText: t("close", "Close"),
+                        doneText: t("buttonsClose", t("close", "Close")),
                       });
                     }}
                     className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"

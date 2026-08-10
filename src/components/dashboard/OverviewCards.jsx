@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { useDashboardContext } from "@/pages/dashboard/context"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 // Helper function to format balance
 function formatBalance(amountStr, currencyStr) {
@@ -10,6 +11,7 @@ function formatBalance(amountStr, currencyStr) {
 
 export function OverviewCards() {
   const { profile, accounts, dashboardInfo } = useDashboardContext();
+  const { t } = useLanguage();
 
   const mainAccount = accounts?.length > 0 ? accounts[0] : null;
   const currencyStr = mainAccount?.CURSHRTNAME || 'XCG';
@@ -27,9 +29,9 @@ export function OverviewCards() {
 
   const cards = [
     {
-      label: "Incoming",
+      label: t("incoming", "Incoming"),
       value: incomingStr,
-      count: `${incomingCount} transactions`,
+      count: `${incomingCount} ${t("transactions", "transactions")}`,
       trend: "up",
       change: "0%",
       icon: ArrowDownLeft,
@@ -38,9 +40,9 @@ export function OverviewCards() {
       borderClass: "border-emerald-200/50 dark:border-emerald-500/20",
     },
     {
-      label: "Outgoing",
+      label: t("outgoing", "Outgoing"),
       value: outgoingStr,
-      count: `${outgoingCount} transactions`,
+      count: `${outgoingCount} ${t("transactions", "transactions")}`,
       trend: "down",
       change: "0%",
       icon: ArrowUpRight,
@@ -49,18 +51,18 @@ export function OverviewCards() {
       borderClass: "border-red-200/50 dark:border-red-500/20",
     },
     {
-      label: "Available Balance",
+      label: t("available_balance", "Available Balance"),
       value: totalBalanceStr,
-      count: mainAccount ? mainAccount.ACCOUNTNO : "All time",
+      count: mainAccount ? mainAccount.ACCOUNTNO : t("allTime", "All time"),
       trend: "up",
-      change: "Active",
+      change: t("active", "Active"),
       icon: TrendingUp,
       iconColor: "text-blue-600 dark:text-blue-400",
       bgClass: "bg-blue-50 dark:bg-blue-500/5",
       borderClass: "border-blue-200/50 dark:border-blue-500/20",
     },
     {
-      label: "This Month",
+      label: t("thisMonth", "This Month"),
       value: "XCG 0.00",
       count: "May 2026",
       trend: "up",

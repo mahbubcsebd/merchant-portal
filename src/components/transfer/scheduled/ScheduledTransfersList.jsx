@@ -94,13 +94,15 @@ export default function ScheduledTransfersList({
                           >
                             <Eye size={18} />
                           </button>
-                          <button
-                            onClick={() => handleEdit(tItem)}
-                            className="text-slate-400 hover:text-emerald-500 transition-colors"
-                            title={t("edit", "Edit")}
-                          >
-                            <Pencil size={18} />
-                          </button>
+                          {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
+                            <button
+                              onClick={() => handleEdit(tItem)}
+                              className="text-slate-400 hover:text-emerald-500 transition-colors"
+                              title={t("edit", "Edit")}
+                            >
+                              <Pencil size={18} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleHistory(tItem)}
                             className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
@@ -108,13 +110,15 @@ export default function ScheduledTransfersList({
                           >
                             <Clock size={18} />
                           </button>
-                          <button
-                            onClick={() => handleDelete(tItem)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors"
-                            title={t("delete", "Delete")}
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
+                            <button
+                              onClick={() => handleDelete(tItem)}
+                              className="text-slate-400 hover:text-rose-500 transition-colors"
+                              title={t("delete", "Delete")}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -148,7 +152,7 @@ export default function ScheduledTransfersList({
                       </h4>
                       <p className="text-xs text-slate-400 dark:text-white/45 mt-1">
                         {tItem.howOften || tItem.FREQUENCY} · {t("until", "Until")}:{" "}
-                        {tItem.until || tItem.ENDDATE || t("endless", "Endless")}
+                        {tItem.until || tItem.ENDDATE || t("endless", "-")}
                       </p>
                     </div>
                     <span
@@ -176,13 +180,15 @@ export default function ScheduledTransfersList({
                       >
                         <Eye size={18} strokeWidth={2} />
                       </button>
-                      <button
-                        onClick={() => handleEdit(tItem)}
-                        className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                        title={t("edit", "Edit")}
-                      >
-                        <Pencil size={18} strokeWidth={2} />
-                      </button>
+                      {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
+                        <button
+                          onClick={() => handleEdit(tItem)}
+                          className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
+                          title={t("edit", "Edit")}
+                        >
+                          <Pencil size={18} strokeWidth={2} />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleHistory(tItem)}
                         className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
@@ -190,13 +196,15 @@ export default function ScheduledTransfersList({
                       >
                         <Clock size={18} strokeWidth={2} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(tItem)}
-                        className="text-slate-500 hover:text-red-500 transition-colors"
-                        title={t("delete", "Delete")}
-                      >
-                        <Trash2 size={18} strokeWidth={2} />
-                      </button>
+                      {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
+                        <button
+                          onClick={() => handleDelete(tItem)}
+                          className="text-slate-500 hover:text-red-500 transition-colors"
+                          title={t("delete", "Delete")}
+                        >
+                          <Trash2 size={18} strokeWidth={2} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

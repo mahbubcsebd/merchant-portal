@@ -1,15 +1,17 @@
 import GlobalSelect from "@/components/globals/GlobalSelect"
 import { useDashboardContext } from "@/pages/dashboard/context"
-
-const TIME_PERIODS = [
-  { label: "3 Months", value: "last3months" },
-  { label: "This Month", value: "thismonth" },
-  { label: "This Year", value: "thisyear" },
-  { label: "All Time", value: "alltime" },
-]
-
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export function PeriodDropdown({ value, onChange }) {
+  const { t } = useLanguage();
+
+  const TIME_PERIODS = [
+    { label: t("threeMonths", "3 Months"), value: "last3months" },
+    { label: t("thisMonth", "This Month"), value: "thismonth" },
+    { label: t("thisYear", "This Year"), value: "thisyear" },
+    { label: t("allTime", "All Time"), value: "alltime" },
+  ];
+
   return (
     <GlobalSelect
       value={value}

@@ -3,6 +3,7 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { enforceNumeric, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
 
 export default function BeneficiaryFormFields({ data, isView, isEditMode = false, errors = {}, clearError = () => {} }) {
   const { t } = useLanguage();
@@ -60,40 +61,46 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalInput
-        label={t("beneficiary_name", "Beneficiary Name")}
+        label={t("add_ben_firstLast", t("beneficiary_name", "Beneficiary Name"))}
         name="display_payeeName"
         value={formData.payeeName}
         onChange={(e) => handleChange("payeeName", e.target.value)}
         disabled={isView || isEditMode}
         required
+        maxLength={50}
+        onInput={enforceAlphanumericSpace}
         error={errors.payeeName}
         placeholder={t("ph_enter_beneficiary_name", "Enter beneficiary name")}
       />
 
       <GlobalInput
-        label={t("beneficiary_nickname", "Beneficiary Nickname")}
+        label={t("add_ben_nickname", t("beneficiary_nickname", "Beneficiary Nickname"))}
         name="display_payeeNickName"
         value={formData.payeeNickName}
         onChange={(e) => handleChange("payeeNickName", e.target.value)}
         disabled={isView}
         required
+        maxLength={30}
+        onInput={enforceAlphanumericSpace}
         error={errors.payeeNickName}
         placeholder={t("ph_enter_nickname", "Enter nickname")}
       />
 
       <GlobalInput
-        label={t("account_number", "Account Number")}
+        label={t("add_ben_accNo", t("account_number", "Account Number"))}
         name="display_payeeBankAccount"
         value={formData.payeeBankAccount}
         onChange={(e) => handleChange("payeeBankAccount", e.target.value)}
         disabled={isView}
         required
+        maxLength={12}
+        onInput={enforceNumeric}
         error={errors.payeeBankAccount}
         placeholder={t("ph_enter_account_number", "Enter account number")}
       />
 
       <GlobalSelect
-        label={t("bank_name", "Bank")}
+        label={t("add_ben_bank", t("bank_name", "Bank"))}
         name="display_payeeBankId"
         value={formData.payeeBankId}
         onChange={(val) => handleChange("payeeBankId", val)}
@@ -106,7 +113,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalSelect
-        label={t("currency", "Currency")}
+        label={t("add_ben_currency", t("currency", "Currency"))}
         name="display_payeeAcctCurr"
         value={formData.payeeAcctCurr}
         onChange={(val) => handleChange("payeeAcctCurr", val)}

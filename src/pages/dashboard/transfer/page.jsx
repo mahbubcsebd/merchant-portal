@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import TransferFormView from "@/components/transfer/TransferFormView";
+import TransferForm from "@/components/transfer/TransferForm";
 import ManageBeneficiaries from "@/components/transfer/ManageBeneficiaries";
 import ManageScheduledTransfers from "@/components/transfer/ManageScheduledTransfers";
 
@@ -18,7 +18,7 @@ export default function TransferPage() {
         </h2>
       </div>
 
-      {view === "transfer" && <TransferFormView setView={setView} />}
+      {view === "transfer" && <TransferForm setView={setView} />}
       {view === "manage_beneficiaries" && (
         <ManageBeneficiaries setView={setView} setViewData={setViewData} />
       )}

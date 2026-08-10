@@ -6,6 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import GlobalButton from "./GlobalButton";
+import { useLanguage } from "./LanguageProvider";
 
 export default function SuccessDialog({
   title = "Success",
@@ -13,6 +14,7 @@ export default function SuccessDialog({
   details = {},
   onClose,
 }) {
+  const { t } = useLanguage();
   return (
     <div className="p-8 text-center flex flex-col items-center">
       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -39,7 +41,7 @@ export default function SuccessDialog({
                 className="flex justify-between items-start text-sm"
               >
                 <span className="text-slate-500 dark:text-white/50 pr-4">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
+                  {key.replace(/([A-Z])/g, " $1").replace(/\s*\*\s*$/, '').trim()}
                 </span>
                 <span className="font-medium text-slate-900 dark:text-white text-right break-words">
                   {String(value)}
@@ -56,7 +58,7 @@ export default function SuccessDialog({
           onClick={onClose}
           className="w-full max-w-[150px] uppercase font-bold h-10 text-xs"
         >
-          Done
+          {t("buttonDone", "Done")}
         </GlobalButton>
       </div>
     </div>

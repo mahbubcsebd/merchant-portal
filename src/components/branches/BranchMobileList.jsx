@@ -1,5 +1,4 @@
 import { Eye, Pencil, Trash2, Loader2 } from "lucide-react";
-import BranchFormFields from "./BranchFormFields";
 
 export default function BranchMobileList({
   branches,
@@ -22,7 +21,7 @@ export default function BranchMobileList({
       ) : (
         branches.map((branch, idx) => (
           <div
-            key={branch.CORPCUSTSUBID || idx}
+            key={`mobile-${branch.subId || branch.CORPCUSTSUBID}-${idx}`}
             className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
           >
             {/* Row 1: Name & Status */}
