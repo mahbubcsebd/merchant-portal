@@ -33,6 +33,8 @@ export default function BeneficiaryFormFields({
     label: curr.title,
   }));
 
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState({
     payeeName: data?.payeeName || data?.name || "",
     payeeNickName: data?.payeeNickName || data?.nickname || "",
