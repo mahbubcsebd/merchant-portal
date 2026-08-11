@@ -29,7 +29,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
-import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
+import { COUNTRY_OPTIONS, getDynamicCountryOptions } from '@/lib/constants/countries';
 import { enforceNumeric, enforceAlphanumericSpace, enforceEmail } from '@/lib/utils/inputFormatters';
 
 const getFormSchema = (t) =>
@@ -66,6 +66,7 @@ const getFormSchema = (t) =>
 export function EnrollForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
   const { t } = useLanguage();
   const { openConfirmDialog } = useDialog();
 
@@ -79,7 +80,7 @@ export function EnrollForm() {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const countryCodesList = COUNTRY_OPTIONS;
+  const countryCodesList = useMemo(() => getDynamicCountryOptions(welcomeData), [welcomeData]);
 
   const filteredCountries = useMemo(() => {
     if (!searchQuery) return countryCodesList;
@@ -328,15 +329,15 @@ export function EnrollForm() {
                     aria-expanded={openCountryBox}
                     className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span>
+                    <span className="flex items-center gap-2 text-xs sm:text-sm">
+                      <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
                         {
                           countryCodesList.find(
                             (c) => c.code === watch('countryCode')
-                          )?.flag || '🌐'
+                          )?.isoCode || 'AL'
                         }
                       </span>
-                      <span>+{watch('countryCode')}</span>
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">+{watch('countryCode')}</span>
                     </span>
                     <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                   </PopoverTrigger>
@@ -373,8 +374,9 @@ export function EnrollForm() {
                             )}
                           >
                             <span className="flex items-center gap-2 truncate">
-                              <span className="text-base leading-none">{country.flag}</span>
-                              <span className="truncate">{country.country}</span>
+                              <span className="font-bold text-xs uppercase w-6 shrink-0">{country.isoCode}</span>
+                              <span className="font-semibold shrink-0">+{country.code}</span>
+                              <span className="truncate text-slate-500 dark:text-slate-400">{country.name}</span>
                             </span>
                             {watch('countryCode') === country.code && (
                               <Check className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-400 shrink-0" />

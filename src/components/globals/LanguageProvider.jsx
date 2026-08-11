@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getLangPack } from '@/lib/api/endpoints';
 import { globalDefaultParams } from '@/lib/api/api';
 
@@ -9,6 +9,35 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'fr', label: 'French', flag: '🇫🇷' },
   { code: 'es', label: 'Spanish', flag: '🇪🇸' },
 ];
+
+const FLAG_MAP = {
+  en: '🇺🇸',
+  nl: '🇳🇱',
+  fr: '🇫🇷',
+  es: '🇪🇸',
+  de: '🇩🇪',
+  it: '🇮🇹',
+  pt: '🇵🇹',
+  zh: '🇨🇳',
+  ja: '🇯🇵',
+  ar: '🇸🇦',
+  hi: '🇮🇳',
+};
+
+export const getDynamicSupportedLanguages = (welcomeData) => {
+  const list = welcomeData?.metaData?.LANGUAGELIST;
+  if (Array.isArray(list) && list.length > 0) {
+    return list.map((item) => {
+      const code = String(item.id).toLowerCase().trim();
+      return {
+        code,
+        label: item.title,
+        flag: FLAG_MAP[code] || '🌐',
+      };
+    });
+  }
+  return SUPPORTED_LANGUAGES;
+};
 
 const LanguageContext = createContext(null);
 
@@ -21,6 +50,13 @@ export function useLanguage() {
 }
 
 export function LanguageProvider({ children }) {
+  const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(['welcome']);
+
+  const supportedLanguages = useMemo(() => {
+    return getDynamicSupportedLanguages(welcomeData);
+  }, [welcomeData]);
+
   // Read initial language from localStorage or default to English ('en')
   const [lang, setLangState] = useState(() => {
     return localStorage.getItem('app_language') || 'en';
@@ -103,7 +139,7 @@ export function LanguageProvider({ children }) {
         t,
         translationMap,
         isLangLoading,
-        supportedLanguages: SUPPORTED_LANGUAGES,
+        supportedLanguages,
       }}
     >
       {children}

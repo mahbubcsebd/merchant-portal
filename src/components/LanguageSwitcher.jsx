@@ -8,9 +8,10 @@ import {
 import { useLanguage, SUPPORTED_LANGUAGES } from "@/components/globals/LanguageProvider";
 
 export function LanguageSwitcher() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, supportedLanguages } = useLanguage();
+  const languagesList = supportedLanguages && supportedLanguages.length > 0 ? supportedLanguages : SUPPORTED_LANGUAGES;
 
-  const currentLang = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
+  const currentLang = languagesList.find((l) => l.code === language) || languagesList[0];
 
   return (
     <div className="flex items-center gap-2">
@@ -46,7 +47,7 @@ export function LanguageSwitcher() {
           align="end"
           className="min-w-[160px] sm:min-w-[170px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-xl shadow-slate-200/50 dark:shadow-black/40 p-1 z-50"
         >
-          {SUPPORTED_LANGUAGES.map(({ code, flag, label }) => (
+          {languagesList.map(({ code, flag, label }) => (
             <SelectItem
               key={code}
               value={code}
