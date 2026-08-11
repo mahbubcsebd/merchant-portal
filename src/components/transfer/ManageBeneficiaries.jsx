@@ -238,10 +238,10 @@ export default function ManageBeneficiaries({
     };
 
     openPreconfirmDialog({
-      title: t("delete.beneficiary", "Delete Beneficiary?"),
+      title: t("delete_beneficiary_title", "Delete Beneficiary?"),
       message: `Are you sure you want to delete ${beneficiary.payeeName}? This action cannot be undone.`,
       details,
-      confirmText: "Delete",
+      confirmText: t("buttonsDelete", t("delete", "Delete")),
       iconType: "danger",
       onChange: () => closeDialog(),
       onSubmit: async () => {
@@ -252,13 +252,13 @@ export default function ManageBeneficiaries({
           };
           const res = await deleteBeneficiaryMutation.mutateAsync(payload);
           openSuccessDialog({
-            title: "Success",
+            title: t("success", "Success"),
             message: res.message || "Beneficiary deleted successfully.",
             details,
           });
         } catch (err) {
           openGlobalPopup({
-            title: "Error",
+            title: t("error", "Error"),
             description: err.message || "Failed to delete beneficiary.",
             type: "error",
           });
@@ -352,7 +352,7 @@ export default function ManageBeneficiaries({
                             value: getCurrencyLabel(b.payeeAcctCurr),
                           },
                         ],
-                        doneText: t("close", "Close"),
+                        doneText: t("buttonsClose", t("close", "Close")),
                       });
                     }}
                     className="text-slate-400 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"

@@ -369,7 +369,7 @@ export default function BusinessProfilePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Settings
+            {t("settings", "Settings")}
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {t("business_profile", "Business Profile")}
@@ -543,8 +543,8 @@ export default function BusinessProfilePage() {
                 className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
               >
                 {updateMutation.isPending
-                  ? "Submitting..."
-                  : t("buttonSubmit", "Submit")}
+                  ? t("submitting", "Submitting...")
+                  : t("buttonSubmit", t("submit", "Submit"))}
               </GlobalButton>
             </div>
           </Card>
@@ -553,7 +553,7 @@ export default function BusinessProfilePage() {
         {/* Right Column (QR Code) */}
         <div className="xl:col-span-4 flex flex-col">
           <Card
-            title={t("businessQrCode", "Business QR Code")}
+            title={t("business_qr_code", t("businessQrCode", "Business QR Code"))}
             className="flex-1 flex flex-col h-full"
           >
             <div className="flex flex-col items-center flex-1">

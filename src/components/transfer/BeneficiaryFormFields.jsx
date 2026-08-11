@@ -17,7 +17,6 @@ export default function BeneficiaryFormFields({
 }) {
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
-  const { t } = useLanguage();
 
   // Extract lists from metaData
   const bankList = welcomeData?.metaData?.SETTLEBANK || [];

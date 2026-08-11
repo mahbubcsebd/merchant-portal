@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import TransferForm from "@/components/transfer/TransferForm";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import TransferFormView from "@/components/transfer/TransferFormView";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import TransferForm from "@/components/transfer/TransferForm";
 import ManageBeneficiaries from "@/components/transfer/ManageBeneficiaries";
 import ManageScheduledTransfers from "@/components/transfer/ManageScheduledTransfers";
 

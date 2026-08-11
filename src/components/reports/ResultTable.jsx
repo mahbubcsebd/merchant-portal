@@ -12,7 +12,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
     <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-slate-500 dark:text-white/40 uppercase tracking-wider">
-          {data.length} results
+          {data.length} {t("results", "results")}
         </p>
         <button
           type="button"
@@ -51,7 +51,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
                   colSpan="7"
                   className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
                 >
-                  No transactions
+                  {t("no_transactions_found", "No transactions available")}
                 </td>
               </tr>
             ) : (
@@ -79,7 +79,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
                   <td className="px-4 py-3 text-xs">{row.txnName}</td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">
-                      Processed
+                      {t("processed", "Processed")}
                     </span>
                   </td>
                 </tr>
@@ -92,7 +92,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
       <div className="md:hidden space-y-3">
         {data.length === 0 ? (
           <div className="text-center py-8 text-slate-500 dark:text-white/50 border border-slate-200 dark:border-white/10 rounded-xl">
-            No transactions available
+            {t("no_transactions_found", "No transactions available")}
           </div>
         ) : (
           data.map((row, i) => (
@@ -105,7 +105,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
                   {row.txnName}
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 uppercase">
-                  Processed
+                  {t("processed", "Processed")}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2">
@@ -138,7 +138,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
             }
             className="text-xs uppercase"
           >
-            Save as CSV
+            {t("save_as_csv", "Save as CSV")}
           </GlobalButton>
           <GlobalButton
             variant="secondary"
@@ -154,7 +154,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
             }
             className="text-xs uppercase"
           >
-            Download PDF
+            {t("download_pdf", "Download PDF")}
           </GlobalButton>
           <GlobalButton
             variant="primary"
@@ -170,7 +170,7 @@ export default function ResultTable({ data, reportTitle, filename, fromDate, toD
             }
             className="text-xs uppercase"
           >
-            Print
+            {t("print", "Print")}
           </GlobalButton>
         </div>
       )}

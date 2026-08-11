@@ -88,7 +88,6 @@ export function LoginForm() {
           router("/dashboard");
         }
       } else {
-        // Handle error returned in success body (common in older APIs)
         setError("root.serverError", {
           type: "manual",
           message:
