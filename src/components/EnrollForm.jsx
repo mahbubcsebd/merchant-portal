@@ -28,8 +28,7 @@ import {
   InputOTP,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { cn } from '@/lib/utils';
-import { COUNTRY_OPTIONS } from '@/lib/constants/countries';
+import { enforceNumeric, enforceAlphanumericSpace, enforceEmail } from '@/lib/utils/inputFormatters';
 
 const getFormSchema = (t) =>
   z.object({
@@ -37,7 +36,8 @@ const getFormSchema = (t) =>
       .string()
       .min(1, { message: t('store_name_required', 'Store Name is required.') })
       .min(2, { message: t('store_name_min_error', 'Store Name must be at least 2 characters.') })
-      .max(100, { message: t('store_name_max_error', 'Store Name cannot exceed 100 characters.') }),
+      .max(50, { message: t('store_name_max_error', 'Store Name cannot exceed 50 characters.') })
+      .regex(/^[a-zA-Z0-9 ]+$/, { message: t('store_name_alphanumeric_error', 'Store Name must contain letters, numbers, and spaces only.') }),
     email: z
       .string()
       .min(1, { message: t('email_required', 'Business Email Address is required.') })
@@ -47,8 +47,8 @@ const getFormSchema = (t) =>
     phone: z
       .string()
       .min(1, { message: t('phone_required', 'Business Phone Number is required.') })
-      .min(6, { message: t('phone_min_error', 'Phone number must be at least 6 digits.') })
-      .max(20, { message: t('phone_max_error', 'Phone number cannot exceed 20 digits.') })
+      .min(7, { message: t('phone_min_error', 'Phone number must be at least 7 digits.') })
+      .max(12, { message: t('phone_max_error', 'Phone number cannot exceed 12 digits.') })
       .regex(/^[0-9]+$/, { message: t('phone_numeric_error', 'Phone number must contain digits only.') }),
     acceptTerms: z.boolean().refine((v) => v === true, {
       message: t('accept_terms_required', 'You must accept the Terms and Conditions.'),
@@ -287,6 +287,8 @@ export function EnrollForm() {
               leftIcon={<Building2 size={16} />}
               error={errors.storeName?.message}
               aria-invalid={!!errors.storeName}
+              maxLength={50}
+              onInput={enforceAlphanumericSpace}
               {...register('storeName')}
             />
 
@@ -300,6 +302,8 @@ export function EnrollForm() {
               leftIcon={<Mail size={16} />}
               error={errors.email?.message}
               aria-invalid={!!errors.email}
+              maxLength={80}
+              onInput={enforceEmail}
               {...register('email')}
             />
 
@@ -389,6 +393,8 @@ export function EnrollForm() {
                     id="phone"
                     type="tel"
                     placeholder="XXXXXXXXXX"
+                    maxLength={12}
+                    onInput={enforceNumeric}
                     className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     aria-invalid={!!errors.phone}
                     {...register('phone')}
