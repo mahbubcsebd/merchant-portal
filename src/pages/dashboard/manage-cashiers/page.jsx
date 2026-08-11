@@ -12,7 +12,7 @@ import { getCashierPermissionsByCashier } from "@/lib/api/endpoints";
 
 export default function ManageCashiersPage() {
   const { openFormDialog, openConfirmDialog, openGlobalPopup } = useDialog();
-  const { cashiersQuery, createCashierMutation, updateCashierMutation, updateStatusMutation, savePermissionsMutation, deleteCashierMutation } =
+  const { cashiersQuery, createCashierMutation, updateCashierMutation, updateStatusMutation, savePermissionsMutation, deleteCashierMutation, resetPinMutation } =
     useCashiers();
   const { validate } = useFormValidation();
   const { t } = useLanguage();
@@ -232,8 +232,27 @@ export default function ManageCashiersPage() {
       description: `Are you sure you want to reset PIN for cashier ${cashier.name}?`,
       confirmText: "Reset",
       iconType: "warning",
-      onConfirm: () => {
-        console.log("Reset PIN for cashier:", cashier.id);
+      onConfirm: async () => {
+        try {
+          const payload = {
+            cashierIDNum: cashier.raw.cashierIDNum ? String(cashier.raw.cashierIDNum) : "",
+            merCashierID: cashier.loginId,
+          };
+          const res = await resetPinMutation.mutateAsync(payload);
+          openGlobalPopup({
+            title: t("success_title", "Success"),
+            description: res.message || "PIN reset successfully.",
+            type: "success"
+          });
+          return false;
+        } catch (err) {
+          openGlobalPopup({
+            title: t("error_title", "Error"),
+            description: err.message || "Failed to reset PIN.",
+            type: "error"
+          });
+          return false;
+        }
       },
     });
   };
