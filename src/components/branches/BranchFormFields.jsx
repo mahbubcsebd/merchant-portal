@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, Phone } from "lucide-react";
 import {
   Popover,
@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/lib/api/endpoints";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { getDynamicCountryOptions } from "@/lib/constants/countries";
 import {
   enforceNumeric,
   enforceAlphanumericSpace,
@@ -47,16 +48,16 @@ export default function BranchFormFields({
   );
 
   // Dial code options mapped from COUNTRYCODE
-  const dialOptions = (welcomeData?.metaData?.COUNTRYCODE || []).map((c) => ({
-    code: `+${c.id}`,
-    name: c.title,
-  }));
+  const dialOptions = useMemo(() => getDynamicCountryOptions(welcomeData), [welcomeData]);
 
   // Mobile and Business Dial state
   const [mobileDial, setMobileDial] = useState(data?.mobileDial || "");
   const [businessDial, setBusinessDial] = useState(data?.businessDial || "");
   const [openMobileCountryBox, setOpenMobileCountryBox] = useState(false);
   const [openBusinessCountryBox, setOpenBusinessCountryBox] = useState(false);
+
+  const selectedMobileDialObj = dialOptions.find((c) => c.code === mobileDial.replace("+", "") || c.dialCode === mobileDial);
+  const selectedBusinessDialObj = dialOptions.find((c) => c.code === businessDial.replace("+", "") || c.dialCode === businessDial);
 
   // Form selections state
   const [country, setCountry] = useState(
@@ -135,13 +136,24 @@ export default function BranchFormFields({
                   aria-expanded={openMobileCountryBox}
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 min-w-[70px]"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <span>{mobileDial || t("select", "Select")}</span>
+                  <span className="flex items-center gap-1.5 text-xs sm:text-sm">
+                    {selectedMobileDialObj ? (
+                      <>
+                        <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                          {selectedMobileDialObj.isoCode}
+                        </span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-300">
+                          {selectedMobileDialObj.dialCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">{t("select", "Select")}</span>
+                    )}
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[240px] p-0" align="start">
+              <PopoverContent className="w-[260px] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Search country..." />
                   <CommandList>
@@ -150,9 +162,9 @@ export default function BranchFormFields({
                       {dialOptions.map((countryItem) => (
                         <CommandItem
                           key={countryItem.name + countryItem.code}
-                          value={countryItem.name + " " + countryItem.code}
+                          value={countryItem.name + " " + countryItem.code + " " + countryItem.isoCode}
                           onSelect={() => {
-                            setMobileDial(countryItem.code);
+                            setMobileDial(countryItem.dialCode);
                             setOpenMobileCountryBox(false);
                             clearError("mobileDial");
                           }}
@@ -160,15 +172,15 @@ export default function BranchFormFields({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              mobileDial === countryItem.code
+                              mobileDial === countryItem.dialCode || mobileDial === countryItem.code
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
-                          <span className="flex items-center gap-2">
-                            <span>
-                              {countryItem.code} ({countryItem.name})
-                            </span>
+                          <span className="flex items-center gap-2 truncate">
+                            <span className="font-bold text-xs uppercase w-6 shrink-0">{countryItem.isoCode}</span>
+                            <span className="font-semibold shrink-0">{countryItem.dialCode}</span>
+                            <span className="truncate text-slate-500 dark:text-slate-400">{countryItem.name}</span>
                           </span>
                         </CommandItem>
                       ))}
@@ -231,13 +243,24 @@ export default function BranchFormFields({
                   aria-expanded={openBusinessCountryBox}
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 min-w-[70px]"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <span>{businessDial || t("select", "Select")}</span>
+                  <span className="flex items-center gap-1.5 text-xs sm:text-sm">
+                    {selectedBusinessDialObj ? (
+                      <>
+                        <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                          {selectedBusinessDialObj.isoCode}
+                        </span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-300">
+                          {selectedBusinessDialObj.dialCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">{t("select", "Select")}</span>
+                    )}
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[240px] p-0" align="start">
+              <PopoverContent className="w-[260px] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Search country..." />
                   <CommandList>
@@ -246,9 +269,9 @@ export default function BranchFormFields({
                       {dialOptions.map((countryItem) => (
                         <CommandItem
                           key={countryItem.name + countryItem.code}
-                          value={countryItem.name + " " + countryItem.code}
+                          value={countryItem.name + " " + countryItem.code + " " + countryItem.isoCode}
                           onSelect={() => {
-                            setBusinessDial(countryItem.code);
+                            setBusinessDial(countryItem.dialCode);
                             setOpenBusinessCountryBox(false);
                             clearError("businessDial");
                           }}
@@ -256,15 +279,15 @@ export default function BranchFormFields({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              businessDial === countryItem.code
+                              businessDial === countryItem.dialCode || businessDial === countryItem.code
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
-                          <span className="flex items-center gap-2">
-                            <span>
-                              {countryItem.code} ({countryItem.name})
-                            </span>
+                          <span className="flex items-center gap-2 truncate">
+                            <span className="font-bold text-xs uppercase w-6 shrink-0">{countryItem.isoCode}</span>
+                            <span className="font-semibold shrink-0">{countryItem.dialCode}</span>
+                            <span className="truncate text-slate-500 dark:text-slate-400">{countryItem.name}</span>
                           </span>
                         </CommandItem>
                       ))}

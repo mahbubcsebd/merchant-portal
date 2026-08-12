@@ -266,3 +266,43 @@ export function getCountryByCode(code) {
   const cleanCode = code.toString().replace("+", "");
   return COUNTRY_OPTIONS.find((c) => c.code === cleanCode) || null;
 }
+
+/**
+ * Helper to build dynamic country dial options from welcome API metaData.COUNTRYCODE
+ * with ISO 2-letter codes matched from local COUNTRIES catalog.
+ */
+export function getDynamicCountryOptions(welcomeData) {
+  const apiCountries = welcomeData?.metaData?.COUNTRYCODE;
+  if (!Array.isArray(apiCountries) || apiCountries.length === 0) {
+    return COUNTRY_OPTIONS;
+  }
+
+  return apiCountries.map((item) => {
+    const codeStr = String(item.id).trim();
+    const titleStr = item.title ? item.title.trim() : "";
+
+    // Match against COUNTRIES catalog
+    const matched = COUNTRIES.find((c) => {
+      const cCodeClean = c.dial_code.replace("+", "").trim();
+      if (cCodeClean === codeStr) return true;
+      if (titleStr && c.name.toLowerCase() === titleStr.toLowerCase()) return true;
+      if (titleStr && titleStr.toLowerCase().includes(c.name.toLowerCase())) return true;
+      if (titleStr && c.name.toLowerCase().includes(titleStr.toLowerCase())) return true;
+      return false;
+    });
+
+    const isoCode = matched?.code || (titleStr ? titleStr.substring(0, 2).toUpperCase() : "UN");
+    const flag = matched?.flag || "🌐";
+    const name = titleStr || matched?.name || `Country (+${codeStr})`;
+
+    return {
+      code: codeStr,
+      dialCode: `+${codeStr}`,
+      flag: flag,
+      name: name,
+      country: `${name} (+${codeStr})`,
+      isoCode: isoCode,
+      display: `${isoCode} +${codeStr}`,
+    };
+  });
+}

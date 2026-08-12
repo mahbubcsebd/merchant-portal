@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, Phone } from "lucide-react";
 import {
   Popover,
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBranches } from "@/hooks/useBranches";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { getDynamicCountryOptions } from "@/lib/constants/countries";
 import {
   enforceNumeric,
   enforceAlphanumericSpace,
@@ -41,13 +42,12 @@ export default function CashierFormFields({
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
   const identifyTypes = welcomeData?.metaData?.IDENTIFYTYPE || [];
-  const dialOptions = (welcomeData?.metaData?.COUNTRYCODE || []).map((c) => ({
-    code: `+${c.id}`,
-    name: c.title,
-  }));
+  const dialOptions = useMemo(() => getDynamicCountryOptions(welcomeData), [welcomeData]);
 
   const { branches } = useBranches();
   const activeSubsidiaries = branches.filter((sub) => sub.SUBSTATUS === "A");
+
+  const selectedDialObj = dialOptions.find((c) => c.code === mobileDial.replace("+", "") || c.dialCode === mobileDial);
 
   return (
     <>
@@ -101,18 +101,64 @@ export default function CashierFormFields({
           onInput={enforceEmail}
         />
 
-        {/* Mobile Phone (Cashier) */}
+        <GlobalSelect
+          name="merSubID"
+          label={t("branch", "Branch")}
+          required
+          value={merSubID}
+          onChange={(val) => {
+            setMerSubID(val);
+            clearError("merSubID");
+          }}
+          options={activeSubsidiaries.map((s) => ({
+            value: s.CORPCUSTSUBID,
+            label: s.SUBNAME,
+          }))}
+          disabled={isView}
+          error={errors.merSubID}
+        />
+
+        <GlobalSelect
+          name="cashierIDType"
+          label={t("crIdType", "ID Type")}
+          required
+          value={cashierIDType}
+          onChange={(val) => {
+            setCashierIDType(val);
+            clearError("cashierIDType");
+          }}
+          options={identifyTypes.map((i) => ({
+            value: i.id,
+            label: i.title,
+          }))}
+          disabled={isView}
+          error={errors.cashierIDType}
+        />
+
+        <GlobalInput
+          name="cashierIDNo"
+          label={t("crIdNumber", "ID Number")}
+          required
+          defaultValue={data?.cashierIDNo || ""}
+          disabled={isView}
+          error={errors.cashierIDNo}
+          onChange={() => clearError("cashierIDNo")}
+          maxLength={20}
+          onInput={enforceAlphanumericSpace}
+        />
+
+        {/* Mobile Number Field */}
         <div className="flex flex-col gap-1.5">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-0.5">
-            {t("global_mobile_no", "Mobile No.")}{" "}
-            <span className="text-[#e65625]">*</span>
+          <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
+            {t("global_mobile_no", "Mobile Phone")}{" "}
+            <span className="ml-1 text-[#e65625]">*</span>
           </label>
           <div
             className={cn(
-              "flex items-stretch w-full h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20 transition-all duration-150 overflow-hidden",
+              "flex items-stretch w-full h-10 rounded-lg border bg-slate-50 dark:bg-white/5 transition-all duration-150 overflow-hidden",
               errors.cashierMobile || errors.countryCode
-                ? "border-red-500"
-                : "",
+                ? "border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                : "border-slate-200 dark:border-white/10 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20",
             )}
           >
             <Popover
@@ -126,15 +172,24 @@ export default function CashierFormFields({
                   aria-expanded={openMobileCountryBox}
                   className="flex items-center justify-between gap-1.5 h-full px-3 border-r border-slate-200 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-sm font-medium text-slate-900 dark:text-white shrink-0 transition-colors outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <span className={!mobileDial ? "text-slate-400" : ""}>
-                      {mobileDial || t("select", "Select")}
-                    </span>
+                  <span className="flex items-center gap-1.5 text-xs sm:text-sm">
+                    {selectedDialObj ? (
+                      <>
+                        <span className="font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                          {selectedDialObj.isoCode}
+                        </span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-300">
+                          {selectedDialObj.dialCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">{t("select", "Select")}</span>
+                    )}
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[240px] p-0" align="start">
+              <PopoverContent className="w-[260px] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Search country..." />
                   <CommandList>
@@ -143,9 +198,9 @@ export default function CashierFormFields({
                       {dialOptions.map((country) => (
                         <CommandItem
                           key={country.code}
-                          value={country.name + " " + country.code}
+                          value={country.name + " " + country.code + " " + country.isoCode}
                           onSelect={() => {
-                            setMobileDial(country.code);
+                            setMobileDial(country.dialCode);
                             setOpenMobileCountryBox(false);
                             clearError("countryCode");
                           }}
@@ -153,15 +208,15 @@ export default function CashierFormFields({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              mobileDial === country.code
+                              mobileDial === country.dialCode || mobileDial === country.code
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
-                          <span className="flex items-center gap-2">
-                            <span>
-                              {country.name} ({country.code})
-                            </span>
+                          <span className="flex items-center gap-2 truncate">
+                            <span className="font-bold text-xs uppercase w-6 shrink-0">{country.isoCode}</span>
+                            <span className="font-semibold shrink-0">{country.dialCode}</span>
+                            <span className="truncate text-slate-500 dark:text-slate-400">{country.name}</span>
                           </span>
                         </CommandItem>
                       ))}
