@@ -3,10 +3,18 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { enforceNumeric, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
+import {
+  enforceNumeric,
+  enforceAlphanumericSpace,
+} from "@/lib/utils/inputFormatters";
 
-export default function BeneficiaryFormFields({ data, isView, isEditMode = false, errors = {}, clearError = () => {} }) {
-  const { t } = useLanguage();
+export default function BeneficiaryFormFields({
+  data,
+  isView,
+  isEditMode = false,
+  errors = {},
+  clearError = () => {},
+}) {
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
 
@@ -24,6 +32,8 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
     value: curr.id,
     label: curr.title,
   }));
+
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     payeeName: data?.payeeName || data?.name || "",
@@ -61,7 +71,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalInput
-        label={t("add_ben_firstLast", t("beneficiary_name", "Beneficiary Name"))}
+        label={t("beneficiary_name", "Beneficiary Name")}
         name="display_payeeName"
         value={formData.payeeName}
         onChange={(e) => handleChange("payeeName", e.target.value)}
@@ -74,7 +84,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalInput
-        label={t("add_ben_nickname", t("beneficiary_nickname", "Beneficiary Nickname"))}
+        label={t("beneficiary_nickname", "Beneficiary Nickname")}
         name="display_payeeNickName"
         value={formData.payeeNickName}
         onChange={(e) => handleChange("payeeNickName", e.target.value)}
@@ -87,7 +97,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalInput
-        label={t("add_ben_accNo", t("account_number", "Account Number"))}
+        label={t("account_number", "Account Number")}
         name="display_payeeBankAccount"
         value={formData.payeeBankAccount}
         onChange={(e) => handleChange("payeeBankAccount", e.target.value)}
@@ -100,7 +110,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalSelect
-        label={t("add_ben_bank", t("bank_name", "Bank"))}
+        label={t("bank_name", "Bank")}
         name="display_payeeBankId"
         value={formData.payeeBankId}
         onChange={(val) => handleChange("payeeBankId", val)}
@@ -113,7 +123,7 @@ export default function BeneficiaryFormFields({ data, isView, isEditMode = false
       />
 
       <GlobalSelect
-        label={t("add_ben_currency", t("currency", "Currency"))}
+        label={t("currency", "Currency")}
         name="display_payeeAcctCurr"
         value={formData.payeeAcctCurr}
         onChange={(val) => handleChange("payeeAcctCurr", val)}

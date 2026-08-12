@@ -88,18 +88,26 @@ export function LoginForm() {
           router("/dashboard");
         }
       } else {
-        setError('root.serverError', {
-          type: 'manual',
-          message: data.message || t('invalid_credentials_try_again', 'Invalid credentials. Please try again.'),
+        setError("root.serverError", {
+          type: "manual",
+          message:
+            data.message ||
+            t(
+              "invalid_credentials_try_again",
+              "Invalid credentials. Please try again.",
+            ),
         });
       }
     },
     onError: (error) => {
-      setError('root.serverError', {
-        type: 'manual',
+      setError("root.serverError", {
+        type: "manual",
         message:
           error?.response?.data?.message ||
-          t('server_connection_error', 'Something went wrong connecting to the server.'),
+          t(
+            "server_connection_error",
+            "Something went wrong connecting to the server.",
+          ),
       });
     },
   });
@@ -107,25 +115,30 @@ export function LoginForm() {
   const verifyOTPMutation = useMutation({
     mutationFn: (values) => verifyOTP({ otp: values.otp }),
     onSuccess: (data) => {
-      if (data.status === 'success' && data.statusCode === 0) {
-        console.log('OTP Verification Success Data:', data);
-        localStorage.setItem('is_authenticated', 'true');
+      if (data.status === "success" && data.statusCode === 0) {
+        console.log("OTP Verification Success Data:", data);
+        localStorage.setItem("is_authenticated", "true");
         setShowOtpDialog(false);
-        router('/dashboard');
+        router("/dashboard");
       } else {
         setOtpError(true);
         setOtpErrorMessage(
-          data.message || t('invalid_otp_code', 'Invalid OTP code. Please try again.'),
+          data.message ||
+            t("invalid_otp_code", "Invalid OTP code. Please try again."),
         );
         setTimeout(() => {
-          setOtpValue('');
+          setOtpValue("");
         }, 800);
       }
     },
     onError: (error) => {
       setOtpError(true);
       setOtpErrorMessage(
-        error?.response?.data?.message || t('otp_verify_failed_try_again', 'Something went wrong verifying OTP.'),
+        error?.response?.data?.message ||
+          t(
+            "otp_verify_failed_try_again",
+            "Something went wrong verifying OTP.",
+          ),
       );
       setTimeout(() => {
         setOtpValue("");

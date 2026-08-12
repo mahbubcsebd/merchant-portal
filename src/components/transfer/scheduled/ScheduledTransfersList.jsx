@@ -31,7 +31,10 @@ export default function ScheduledTransfersList({
           </div>
         ) : isError ? (
           <div className="p-8 text-center text-red-500 text-sm border border-slate-200 dark:border-white/10 rounded-xl">
-            {t("error_loading_scheduled_transfers", "Error loading scheduled transfers.")}
+            {t(
+              "error_loading_scheduled_transfers",
+              "Error loading scheduled transfers.",
+            )}
           </div>
         ) : (
           <>
@@ -80,7 +83,8 @@ export default function ScheduledTransfersList({
                         {tItem.until || tItem.ENDDATE}
                       </td>
                       <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-right">
-                        {tItem.currency || tItem.BENFACCUR} {tItem.amount || tItem.TXNAMOUNT}
+                        {tItem.currency || tItem.BENFACCUR}{" "}
+                        {tItem.amount || tItem.TXNAMOUNT}
                       </td>
                       <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center uppercase text-xs font-semibold">
                         {tItem.TXNSTATUS || tItem.status}
@@ -94,15 +98,13 @@ export default function ScheduledTransfersList({
                           >
                             <Eye size={18} />
                           </button>
-                          {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
-                            <button
-                              onClick={() => handleEdit(tItem)}
-                              className="text-slate-400 hover:text-emerald-500 transition-colors"
-                              title={t("edit", "Edit")}
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleEdit(tItem)}
+                            className="text-slate-400 hover:text-emerald-500 transition-colors"
+                            title={t("edit", "Edit")}
+                          >
+                            <Pencil size={18} />
+                          </button>
                           <button
                             onClick={() => handleHistory(tItem)}
                             className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
@@ -110,15 +112,13 @@ export default function ScheduledTransfersList({
                           >
                             <Clock size={18} />
                           </button>
-                          {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
-                            <button
-                              onClick={() => handleDelete(tItem)}
-                              className="text-slate-400 hover:text-rose-500 transition-colors"
-                              title={t("delete", "Delete")}
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleDelete(tItem)}
+                            className="text-slate-400 hover:text-rose-500 transition-colors"
+                            title={t("delete", "Delete")}
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -129,7 +129,10 @@ export default function ScheduledTransfersList({
                         colSpan="6"
                         className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
                       >
-                        {t("no_scheduled_transfers_found", "No scheduled transfers found.")}
+                        {t(
+                          "no_scheduled_transfers_found",
+                          "No scheduled transfers found.",
+                        )}
                       </td>
                     </tr>
                   )}
@@ -151,8 +154,11 @@ export default function ScheduledTransfersList({
                         {tItem.BENFNAME || tItem.payTo}
                       </h4>
                       <p className="text-xs text-slate-400 dark:text-white/45 mt-1">
-                        {tItem.howOften || tItem.FREQUENCY} · {t("until", "Until")}:{" "}
-                        {tItem.until || tItem.ENDDATE || t("endless", "-")}
+                        {tItem.howOften || tItem.FREQUENCY} ·{" "}
+                        {t("until", "Until")}:{" "}
+                        {tItem.until ||
+                          tItem.ENDDATE ||
+                          t("endless", "Endless")}
                       </p>
                     </div>
                     <span
@@ -169,7 +175,8 @@ export default function ScheduledTransfersList({
                   {/* Row 2: Amount & Action Buttons */}
                   <div className="flex items-center justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
                     <span className="text-sm font-extrabold text-slate-800 dark:text-white">
-                      {tItem.currency || tItem.BENFACCUR} {tItem.amount || tItem.TXNAMOUNT}
+                      {tItem.currency || tItem.BENFACCUR}{" "}
+                      {tItem.amount || tItem.TXNAMOUNT}
                     </span>
 
                     <div className="flex items-center gap-3">
@@ -180,15 +187,13 @@ export default function ScheduledTransfersList({
                       >
                         <Eye size={18} strokeWidth={2} />
                       </button>
-                      {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
-                        <button
-                          onClick={() => handleEdit(tItem)}
-                          className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                          title={t("edit", "Edit")}
-                        >
-                          <Pencil size={18} strokeWidth={2} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleEdit(tItem)}
+                        className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
+                        title={t("edit", "Edit")}
+                      >
+                        <Pencil size={18} strokeWidth={2} />
+                      </button>
                       <button
                         onClick={() => handleHistory(tItem)}
                         className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
@@ -196,22 +201,23 @@ export default function ScheduledTransfersList({
                       >
                         <Clock size={18} strokeWidth={2} />
                       </button>
-                      {(tItem.TXNSTATUS || tItem.status) !== "CANCELLED" && (
-                        <button
-                          onClick={() => handleDelete(tItem)}
-                          className="text-slate-500 hover:text-red-500 transition-colors"
-                          title={t("delete", "Delete")}
-                        >
-                          <Trash2 size={18} strokeWidth={2} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDelete(tItem)}
+                        className="text-slate-500 hover:text-red-500 transition-colors"
+                        title={t("delete", "Delete")}
+                      >
+                        <Trash2 size={18} strokeWidth={2} />
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
               {transfers.length === 0 && (
                 <div className="p-8 text-center text-slate-500 dark:text-white/50 text-sm bg-white dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
-                  {t("no_scheduled_transfers_found", "No scheduled transfers found.")}
+                  {t(
+                    "no_scheduled_transfers_found",
+                    "No scheduled transfers found.",
+                  )}
                 </div>
               )}
             </div>
