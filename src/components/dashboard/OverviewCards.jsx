@@ -1,31 +1,37 @@
-import { TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from "lucide-react"
-import { useDashboardContext } from "@/pages/dashboard/context"
-import { useLanguage } from "@/components/globals/LanguageProvider"
-
-// Helper function to format balance
-function formatBalance(amountStr, currencyStr) {
-  if (!amountStr) return `${currencyStr || 'XCG'} 0.00`;
-  const amount = parseFloat(amountStr) / 100;
-  return `${currencyStr || 'XCG'} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
-}
+import {
+  TrendingUp,
+  TrendingDown,
+  ArrowDownLeft,
+  ArrowUpRight,
+} from "lucide-react";
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export function OverviewCards() {
   const { profile, accounts, dashboardInfo } = useDashboardContext();
   const { t } = useLanguage();
 
   const mainAccount = accounts?.length > 0 ? accounts[0] : null;
-  const currencyStr = mainAccount?.CURSHRTNAME || 'XCG';
-  
+  const currencyStr = mainAccount?.CURSHRTNAME || "XCG";
+
   const totalBalanceRaw = mainAccount ? parseFloat(mainAccount.AVBALANCE) : 0;
-  const totalBalanceStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalBalanceRaw)}`;
+  const totalBalanceStr = `${currencyStr} ${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalBalanceRaw)}`;
 
-  const incomingRaw = dashboardInfo ? parseFloat(dashboardInfo.totalAmountIncoming || 0) : 0;
-  const incomingStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(incomingRaw)}`;
-  const incomingCount = dashboardInfo ? dashboardInfo.totalCountIncoming || 0 : 0;
+  const incomingRaw = dashboardInfo
+    ? parseFloat(dashboardInfo.totalAmountIncoming || 0)
+    : 0;
+  const incomingStr = `${currencyStr} ${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(incomingRaw)}`;
+  const incomingCount = dashboardInfo
+    ? dashboardInfo.totalCountIncoming || 0
+    : 0;
 
-  const outgoingRaw = dashboardInfo ? parseFloat(dashboardInfo.totalAmountOutgoing || 0) : 0;
-  const outgoingStr = `${currencyStr} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(outgoingRaw)}`;
-  const outgoingCount = dashboardInfo ? dashboardInfo.totalCountOutgoing || 0 : 0;
+  const outgoingRaw = dashboardInfo
+    ? parseFloat(dashboardInfo.totalAmountOutgoing || 0)
+    : 0;
+  const outgoingStr = `${currencyStr} ${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(outgoingRaw)}`;
+  const outgoingCount = dashboardInfo
+    ? dashboardInfo.totalCountOutgoing || 0
+    : 0;
 
   const cards = [
     {
@@ -61,21 +67,21 @@ export function OverviewCards() {
       bgClass: "bg-blue-50 dark:bg-blue-500/5",
       borderClass: "border-blue-200/50 dark:border-blue-500/20",
     },
-    {
-      label: t("thisMonth", "This Month"),
-      value: "XCG 0.00",
-      count: "May 2026",
-      trend: "up",
-      change: "0%",
-      icon: TrendingUp,
-      iconColor: "text-purple-600 dark:text-purple-400",
-      bgClass: "bg-purple-50 dark:bg-purple-500/5",
-      borderClass: "border-purple-200/50 dark:border-purple-500/20",
-    },
-  ]
+    // {
+    //   label: t("thisMonth", "This Month"),
+    //   value: "XCG 0.00",
+    //   count: "May 2026",
+    //   trend: "up",
+    //   change: "0%",
+    //   icon: TrendingUp,
+    //   iconColor: "text-purple-600 dark:text-purple-400",
+    //   bgClass: "bg-purple-50 dark:bg-purple-500/5",
+    //   borderClass: "border-purple-200/50 dark:border-purple-500/20",
+    // },
+  ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
       {cards.map((card) => (
         <div
           key={card.label}
@@ -85,7 +91,9 @@ export function OverviewCards() {
             <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/50">
               {card.label}
             </span>
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${card.iconColor}`}>
+            <div
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${card.iconColor}`}
+            >
               <card.icon size={16} className="sm:size-[18px]" />
             </div>
           </div>
@@ -95,15 +103,12 @@ export function OverviewCards() {
           </p>
 
           <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-white/30 truncate">{card.count}</span>
-            <span className={`text-[10px] sm:text-xs font-bold ${
-              card.trend === "up" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-white/30"
-            }`}>
-              {card.change}
+            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-white/30 truncate">
+              {card.count}
             </span>
           </div>
         </div>
       ))}
     </div>
-  )
+  );
 }
