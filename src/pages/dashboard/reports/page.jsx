@@ -148,7 +148,10 @@ export default function ReportsPage() {
         openGlobalPopup({
           type: "error",
           title: t("error", "Error"),
-          description: t("failed_generate_report", "Failed to generate report."),
+          description: t(
+            "failed_generate_report",
+            "Failed to generate report.",
+          ),
         });
       } finally {
         setIsDownloading(false);
@@ -157,20 +160,17 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto pb-10">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">
-          {t("ms_report", "Reports")}
-        </h1>
-        {/* <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white leading-snug">
-          {t("generateReportsByTransAndStatus", "Generate Reports By Transaction And Status")}
-        </h2> */}
-        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/50 mt-0.5">
-          {t(
-            "generateSalesReport",
-            "Generate Sales Report By Transaction Types And Status",
-          )}
-        </p>
+    <div className="w-full max-w-[1400px] mx-auto pb-10">
+      {/* ── Page Header ─────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
+            {t("ms_report", "Reports")}
+          </p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            {t("generateSalesReport", "Generate Reports")}
+          </h2>
+        </div>
       </div>
       <div className="w-full rounded-xl border border-slate-200 bg-white dark:bg-white/[0.03] p-4 sm:p-6 shadow-sm">
         <div className="flex gap-2 mb-6 border-b pb-4 overflow-x-auto no-scrollbar scroll-smooth">
