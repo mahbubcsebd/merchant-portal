@@ -9,6 +9,7 @@ import { useCashiers } from "@/hooks/useCashiers";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { getCashierPermissionsByCashier } from "@/lib/api/endpoints";
+import { useBranches } from "@/hooks/useBranches";
 
 const getCashierFormFields = (values, t) => [
   { name: "merCashierID", value: values.merCashierID, label: t("cashier_user_id", "Cashier User ID"), required: true },
@@ -23,7 +24,7 @@ const getCashierFormFields = (values, t) => [
 ];
 
 export default function ManageCashiersPage() {
-  const { openFormDialog, openConfirmDialog, openGlobalPopup } = useDialog();
+  const { openFormDialog, openConfirmDialog, openGlobalPopup, openDetailDialog } = useDialog();
   const {
     cashiersQuery,
     createCashierMutation,
@@ -35,6 +36,7 @@ export default function ManageCashiersPage() {
   } = useCashiers();
   const { validate } = useFormValidation();
   const { t } = useLanguage();
+  const { branches } = useBranches();
   const [searchTerm, setSearchTerm] = useState("");
 
   const cashiers = (cashiersQuery.data || []).map((c) => ({
@@ -139,10 +141,51 @@ export default function ManageCashiersPage() {
   };
 
   const handleView = (cashier) => {
-    openFormDialog({
+    const mobile = cashier.raw.cashierMobile 
+      ? (cashier.raw.cashierMobile.startsWith(cashier.raw.countryCode) 
+          ? cashier.raw.cashierMobile 
+          : (cashier.raw.countryCode || "") + cashier.raw.cashierMobile)
+      : "N/A";
+
+    const branch = branches.find(b => String(b.CORPCUSTSUBID) === String(cashier.raw.merSubID));
+    const branchName = branch ? branch.SUBNAME : cashier.raw.merSubID;
+
+    openDetailDialog({
       title: t("view_cashier_label", "View Cashier"),
-      isView: true,
-      content: <CashierFormFields data={cashier.raw} isView={true} />,
+      details: [
+        {
+          label: t("cashier_user_id", "Cashier User ID"),
+          value: cashier.raw.merCashierID || "N/A",
+        },
+        {
+          label: t("ucFirstName", "First Name"),
+          value: cashier.raw.cashierFName || "N/A",
+        },
+        {
+          label: t("ucLastName", "Last Name"),
+          value: cashier.raw.cashierLName || "N/A",
+        },
+        {
+          label: t("bp_email", "Email Address"),
+          value: cashier.raw.cashierEmail || "N/A",
+        },
+        {
+          label: t("global_mobile_no", "Mobile No."),
+          value: mobile,
+        },
+        {
+          label: t("myQr_subsidiary", "Branch"),
+          value: branchName || "N/A",
+        },
+        {
+          label: t("cashier_id_type", "Cashier ID Type"),
+          value: cashier.raw.cashierIDType || "N/A",
+        },
+        {
+          label: t("cashier_id_number", "Cashier ID Number"),
+          value: cashier.raw.cashierIDNum || "N/A",
+        },
+      ],
     });
   };
 
