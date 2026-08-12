@@ -10,10 +10,29 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { getCashierPermissionsByCashier } from "@/lib/api/endpoints";
 
+const getCashierFormFields = (values, t) => [
+  { name: "merCashierID", value: values.merCashierID, label: t("cashier_user_id", "Cashier User ID"), required: true },
+  { name: "cashierFName", value: values.cashierFName, label: t("ucFirstName", "First Name"), required: true },
+  { name: "cashierLName", value: values.cashierLName, label: t("ucLastName", "Last Name"), required: true },
+  { name: "cashierEmail", value: values.cashierEmail, label: t("bp_email", "Email Address"), required: true, type: "email" },
+  { name: "countryCode", value: values.countryCode, label: t("crCountry", "Country Code"), required: true, type: "select" },
+  { name: "cashierMobile", value: values.cashierMobile, label: t("global_mobile_no", "Mobile No."), required: true },
+  { name: "merSubID", value: values.merSubID, label: t("myQr_subsidiary", "Branch"), required: true, type: "select" },
+  { name: "cashierIDType", value: values.cashierIDType, label: t("cashier_id_type", "Cashier ID Type"), required: true, type: "select" },
+  { name: "cashierIDNum", value: values.cashierIDNum, label: t("cashier_id_number", "Cashier ID Number"), required: true }
+];
+
 export default function ManageCashiersPage() {
   const { openFormDialog, openConfirmDialog, openGlobalPopup } = useDialog();
-  const { cashiersQuery, createCashierMutation, updateCashierMutation, updateStatusMutation, savePermissionsMutation, deleteCashierMutation, resetPinMutation } =
-    useCashiers();
+  const {
+    cashiersQuery,
+    createCashierMutation,
+    updateCashierMutation,
+    updateStatusMutation,
+    savePermissionsMutation,
+    deleteCashierMutation,
+    resetPinMutation,
+  } = useCashiers();
   const { validate } = useFormValidation();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,32 +65,22 @@ export default function ManageCashiersPage() {
       disableAutoValidation: true,
       content: <CashierFormFields data={initialData} isView={false} />,
       onSave: async (values, setFormErrors) => {
-        const fields = [
-          { name: 'merCashierID', value: values.merCashierID, label: t("cashier_user_id", "Cashier User ID"), required: true },
-          { name: 'cashierFName', value: values.cashierFName, label: t("ucFirstName", "First Name"), required: true },
-          { name: 'cashierLName', value: values.cashierLName, label: t("ucLastName", "Last Name"), required: true },
-          { name: 'cashierEmail', value: values.cashierEmail, label: t("bp_email", "Email Address"), required: true, type: 'email' },
-          { name: 'countryCode', value: values.countryCode, label: t("crCountry", "Country Code"), required: true, type: 'select' },
-          { name: 'cashierMobile', value: values.cashierMobile, label: t("global_mobile_no", "Mobile No."), required: true },
-          { name: 'merSubID', value: values.merSubID, label: t("myQr_subsidiary", "Branch"), required: true, type: 'select' },
-          { name: 'cashierIDType', value: values.cashierIDType, label: t("cashier_id_type", "Cashier ID Type"), required: true, type: 'select' },
-          { name: 'cashierIDNum', value: values.cashierIDNum, label: t("cashier_id_number", "Cashier ID Number"), required: true }
-        ];
-        
+        const fields = getCashierFormFields(values, t);
+
         const validationResult = validate(fields);
         if (!validationResult.isValid) {
           setFormErrors(validationResult.errors);
           return false;
         }
-        
+
         const countryCode = values.countryCode || "";
         let rawMobile = values.cashierMobile || "";
         if (rawMobile && !rawMobile.startsWith(countryCode)) {
           rawMobile = countryCode + rawMobile;
         }
-        
+
         const payload = { ...values, cashierMobile: rawMobile };
-        
+
         const openPermissionsDialog = () => {
           openFormDialog({
             title: t("cashier_permissions", "Cashier Permissions"),
@@ -79,13 +88,19 @@ export default function ManageCashiersPage() {
             content: <CashierPermissionsList />,
             onSave: async (permValues, showPermError) => {
               try {
-                const functionalityIDs = permValues.functionalityIDs ? JSON.parse(permValues.functionalityIDs) : [];
-                const permPayload = { merCashierID: values.merCashierID, functionalityIDs };
-                const res = await savePermissionsMutation.mutateAsync(permPayload);
+                const functionalityIDs = permValues.functionalityIDs
+                  ? JSON.parse(permValues.functionalityIDs)
+                  : [];
+                const permPayload = {
+                  merCashierID: values.merCashierID,
+                  functionalityIDs,
+                };
+                const res =
+                  await savePermissionsMutation.mutateAsync(permPayload);
                 openGlobalPopup({
                   title: "Success",
                   description: res.message || "Permissions saved successfully.",
-                  type: "success"
+                  type: "success",
                 });
                 return false;
               } catch (err) {
@@ -93,11 +108,11 @@ export default function ManageCashiersPage() {
                   title: "Error",
                   description: err.message || "Failed to save permissions.",
                   type: "error",
-                  onClose: () => openPermissionsDialog()
+                  onClose: () => openPermissionsDialog(),
                 });
                 return false;
               }
-            }
+            },
           });
         };
 
@@ -107,7 +122,7 @@ export default function ManageCashiersPage() {
             title: "Success",
             description: res.message || "Cashier created successfully.",
             type: "success",
-            onClose: () => openPermissionsDialog()
+            onClose: () => openPermissionsDialog(),
           });
           return false;
         } catch (err) {
@@ -115,7 +130,7 @@ export default function ManageCashiersPage() {
             title: "Error",
             description: err.message || "Failed to create cashier.",
             type: "error",
-            onClose: () => handleAddCashier(values)
+            onClose: () => handleAddCashier(values),
           });
           return false;
         }
@@ -138,46 +153,44 @@ export default function ManageCashiersPage() {
       submitText: "Save",
       content: <CashierFormFields data={cashier.raw} isView={false} />,
       onSave: async (values, setFormErrors) => {
-        const fields = [
-          { name: 'merCashierID', value: values.merCashierID, label: t("cashier_user_id", "Cashier User ID"), required: true },
-          { name: 'cashierFName', value: values.cashierFName, label: t("ucFirstName", "First Name"), required: true },
-          { name: 'cashierLName', value: values.cashierLName, label: t("ucLastName", "Last Name"), required: true },
-          { name: 'cashierEmail', value: values.cashierEmail, label: t("bp_email", "Email Address"), required: true, type: 'email' },
-          { name: 'countryCode', value: values.countryCode, label: t("crCountry", "Country Code"), required: true, type: 'select' },
-          { name: 'cashierMobile', value: values.cashierMobile, label: t("global_mobile_no", "Mobile No."), required: true },
-          { name: 'merSubID', value: values.merSubID, label: t("myQr_subsidiary", "Branch"), required: true, type: 'select' },
-          { name: 'cashierIDType', value: values.cashierIDType, label: t("cashier_id_type", "Cashier ID Type"), required: true, type: 'select' },
-          { name: 'cashierIDNum', value: values.cashierIDNum, label: t("cashier_id_number", "Cashier ID Number"), required: true }
-        ];
-        
+        const fields = getCashierFormFields(values, t);
+
         const validationResult = validate(fields);
         if (!validationResult.isValid) {
           setFormErrors(validationResult.errors);
           return false;
         }
-        
+
         const countryCode = values.countryCode || "";
         let rawMobile = values.cashierMobile || "";
         if (rawMobile && !rawMobile.startsWith(countryCode)) {
           rawMobile = countryCode + rawMobile;
         }
-        
+
         const payload = { ...values, cashierMobile: rawMobile };
-        
+
         const openPermissionsDialog = (defaultSelected = []) => {
           openFormDialog({
             title: t("cashier_permissions", "Cashier Permissions"),
             submitText: "Save",
-            content: <CashierPermissionsList defaultSelected={defaultSelected} />,
+            content: (
+              <CashierPermissionsList defaultSelected={defaultSelected} />
+            ),
             onSave: async (permValues, showPermError) => {
               try {
-                const functionalityIDs = permValues.functionalityIDs ? JSON.parse(permValues.functionalityIDs) : [];
-                const permPayload = { merCashierID: values.merCashierID, functionalityIDs };
-                const res = await savePermissionsMutation.mutateAsync(permPayload);
+                const functionalityIDs = permValues.functionalityIDs
+                  ? JSON.parse(permValues.functionalityIDs)
+                  : [];
+                const permPayload = {
+                  merCashierID: values.merCashierID,
+                  functionalityIDs,
+                };
+                const res =
+                  await savePermissionsMutation.mutateAsync(permPayload);
                 openGlobalPopup({
                   title: "Success",
                   description: res.message || "Permissions saved successfully.",
-                  type: "success"
+                  type: "success",
                 });
                 return false;
               } catch (err) {
@@ -185,32 +198,34 @@ export default function ManageCashiersPage() {
                   title: "Error",
                   description: err.message || "Failed to save permissions.",
                   type: "error",
-                  onClose: () => openPermissionsDialog(defaultSelected)
+                  onClose: () => openPermissionsDialog(defaultSelected),
                 });
                 return false;
               }
-            }
+            },
           });
         };
-        
+
         try {
           const res = await updateCashierMutation.mutateAsync(payload);
-          
+
           let defaultSelected = [];
           try {
-            const permRes = await getCashierPermissionsByCashier({ merCashierID: values.merCashierID });
+            const permRes = await getCashierPermissionsByCashier({
+              merCashierID: values.merCashierID,
+            });
             if (permRes && permRes.permisions) {
-              defaultSelected = permRes.permisions.map(p => p.funcId);
+              defaultSelected = permRes.permisions.map((p) => p.funcId);
             }
           } catch (e) {
             console.error("Failed to fetch existing permissions", e);
           }
-          
+
           openGlobalPopup({
             title: "Success",
             description: res.message || "Cashier updated successfully.",
             type: "success",
-            onClose: () => openPermissionsDialog(defaultSelected)
+            onClose: () => openPermissionsDialog(defaultSelected),
           });
           return false;
         } catch (err) {
@@ -218,7 +233,7 @@ export default function ManageCashiersPage() {
             title: "Error",
             description: err.message || "Failed to update cashier.",
             type: "error",
-            onClose: () => handleEdit({ raw: values })
+            onClose: () => handleEdit({ raw: values }),
           });
           return false;
         }
@@ -235,21 +250,23 @@ export default function ManageCashiersPage() {
       onConfirm: async () => {
         try {
           const payload = {
-            cashierIDNum: cashier.raw.cashierIDNum ? String(cashier.raw.cashierIDNum) : "",
+            cashierIDNum: cashier.raw.cashierIDNum
+              ? String(cashier.raw.cashierIDNum)
+              : "",
             merCashierID: cashier.loginId,
           };
           const res = await resetPinMutation.mutateAsync(payload);
           openGlobalPopup({
             title: t("success_title", "Success"),
             description: res.message || "PIN reset successfully.",
-            type: "success"
+            type: "success",
           });
           return false;
         } catch (err) {
           openGlobalPopup({
             title: t("error_title", "Error"),
             description: err.message || "Failed to reset PIN.",
-            type: "error"
+            type: "error",
           });
           return false;
         }
@@ -260,23 +277,30 @@ export default function ManageCashiersPage() {
   const handleDelete = (cashier) => {
     openConfirmDialog({
       title: t("delete_cashier_title", "Delete Cashier?"),
-      description: t("delete_cashier_desc", "Are you sure you want to delete this cashier? This action cannot be undone."),
+      description: t(
+        "delete_cashier_desc",
+        "Are you sure you want to delete this cashier? This action cannot be undone.",
+      ),
       confirmText: t("delete", "Delete"),
       iconType: "danger",
       onConfirm: async () => {
         try {
-          const res = await deleteCashierMutation.mutateAsync({ merCashierID: cashier.id });
+          const res = await deleteCashierMutation.mutateAsync({
+            merCashierID: cashier.loginId,
+          });
           openGlobalPopup({
             title: t("success_title", "Success"),
-            description: res.message || t("deleted_cashier", "Cashier deleted successfully."),
-            type: "success"
+            description:
+              res.message ||
+              t("deleted_cashier", "Cashier deleted successfully."),
+            type: "success",
           });
           return false;
         } catch (err) {
           openGlobalPopup({
             title: t("error_title", "Error"),
             description: err.message || "Failed to delete cashier.",
-            type: "error"
+            type: "error",
           });
           return false;
         }
@@ -291,20 +315,24 @@ export default function ManageCashiersPage() {
     setStatusLoadingId(cashier.id);
     try {
       const res = await updateStatusMutation.mutateAsync({
-        cashierIDNum: cashier.raw.cashierIDNum ? String(cashier.raw.cashierIDNum) : "",
+        cashierIDNum: cashier.raw.cashierIDNum
+          ? String(cashier.raw.cashierIDNum)
+          : "",
         merCashierID: cashier.loginId,
-        cashierStatus: newStatus
+        cashierStatus: newStatus,
       });
       openGlobalPopup({
         title: t("success_title", "Success"),
-        description: res.message || t("update_cashier_msg", "Cashier updated successfully."),
-        type: "success"
+        description:
+          res.message ||
+          t("update_cashier_msg", "Cashier updated successfully."),
+        type: "success",
       });
     } catch (err) {
       openGlobalPopup({
         title: t("error_title", "Error"),
         description: err.message || "Failed to update status.",
-        type: "error"
+        type: "error",
       });
     } finally {
       setStatusLoadingId(null);
@@ -317,7 +345,7 @@ export default function ManageCashiersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Administration
+            Cashier
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {t("mc_title", "Manage Cashiers")}
