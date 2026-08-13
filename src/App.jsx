@@ -66,7 +66,7 @@ function BootLoader({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.DEV ? "/" : "/walletmc/merchantportal-v2/"}>
       <BootLoader>
         <Routes>
           {/* Auth routes */}

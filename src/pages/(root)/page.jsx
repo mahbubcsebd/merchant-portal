@@ -1,6 +1,6 @@
-import { LoginForm } from '@/components/LoginForm';
-import { useLanguage } from '@/components/globals/LanguageProvider';
-import { Link } from 'react-router-dom';
+import { LoginForm } from "@/components/LoginForm";
+import { useLanguage } from "@/components/globals/LanguageProvider";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -31,17 +31,20 @@ export default function Home() {
               className="absolute inset-0 opacity-[0.04]"
               style={{
                 backgroundImage:
-                  'linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px)',
-                backgroundSize: '48px 48px',
+                  "linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px)",
+                backgroundSize: "48px 48px",
               }}
             />
           </div>
 
           {/* Logo */}
           <div className="relative z-10">
-            <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <Link
+              to="/"
+              className="inline-block hover:opacity-90 transition-opacity"
+            >
               <img
-                src="/images/logo.svg"
+                src="./images/logo.svg"
                 alt="mPay Network"
                 width={120}
                 height={47}
@@ -56,7 +59,7 @@ export default function Home() {
             <div className="inline-flex w-fit items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-[#e65625] animate-pulse" />
               <span className="text-xs sm:text-sm font-medium text-slate-300 tracking-wide">
-                {t('merchant_operations_title', 'Merchant Portal')}
+                {t("merchant_operations_title", "Merchant Portal")}
               </span>
             </div>
 
@@ -70,7 +73,10 @@ export default function Home() {
               2xl:text-6xl
               font-bold leading-[1.12] tracking-tight"
             >
-              {t('mp_dashboard_subtitle', 'Changing the way your business moves forward.')}
+              {t(
+                "mp_dashboard_subtitle",
+                "Changing the way your business moves forward.",
+              )}
             </h1>
 
             <p
@@ -82,15 +88,21 @@ export default function Home() {
               2xl:text-lg
               text-slate-400 leading-relaxed max-w-[320px] xl:max-w-[360px]"
             >
-              {t('mp_hero_desc', 'An all-in-one dashboard that gives you total control — track payments, manage settlements, and grow your business.')}
+              {t(
+                "mp_hero_desc",
+                "An all-in-one dashboard that gives you total control — track payments, manage settlements, and grow your business.",
+              )}
             </p>
 
             {/* Stats */}
             <div className="flex gap-8 xl:gap-10 pt-2">
               {[
-                { value: '50K+', label: t('active_cashiers_title', 'Merchants') },
-                { value: '99.9%', label: 'Uptime' },
-                { value: '$2B+', label: 'Processed' },
+                {
+                  value: "50K+",
+                  label: t("active_cashiers_title", "Merchants"),
+                },
+                { value: "99.9%", label: "Uptime" },
+                { value: "$2B+", label: "Processed" },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-white">
@@ -122,8 +134,8 @@ export default function Home() {
             className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
             style={{
               backgroundImage:
-                'radial-gradient(circle, #2563eb 1px, transparent 1px)',
-              backgroundSize: '28px 28px',
+                "radial-gradient(circle, #2563eb 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
             }}
             aria-hidden="true"
           />
@@ -149,19 +161,22 @@ export default function Home() {
 
             {/* Below-form note */}
             <p className="mt-8 text-xs text-center text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              {t('agree_login_prefix', 'By signing in, you agree to mPay Network\'s')}{' '}
+              {t(
+                "agree_login_prefix",
+                "By signing in, you agree to mPay Network's",
+              )}{" "}
               <a
                 href="/terms-and-conditions"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
-                {t('term_cond', 'Terms of Service')}
-              </a>{' '}
-              {t('and', 'and')}{' '}
+                {t("term_cond", "Terms of Service")}
+              </a>{" "}
+              {t("and", "and")}{" "}
               <a
                 href="/privacy-policy"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
-                {t('privacy_policy', 'Privacy Policy')}
+                {t("privacy_policy", "Privacy Policy")}
               </a>
               .
             </p>

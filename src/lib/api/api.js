@@ -4,7 +4,7 @@ import CryptoJS from "crypto-js";
 const SECRET_KEY = "testkey1234";
 
 const apiClient = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.DEV ? "/api" : "https://core1.moadbusglobal.com/walletmc",
   headers: {
     "Content-Type": "application/json",
   },
