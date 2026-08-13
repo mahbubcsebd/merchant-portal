@@ -100,7 +100,7 @@ export function StatisticsChart() {
       <div style={{ height: 220 }}>
         {chartData.length === 0 ? (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-            No chart data available.
+            {t("no_chart_data", "No chart data available.")}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

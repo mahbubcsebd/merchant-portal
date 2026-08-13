@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Check } from "lucide-react";
 import { useCashiers } from "@/hooks/useCashiers";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function CashierPermissionsList({ defaultSelected = [] }) {
   const { permissionsQuery } = useCashiers();
   const permissions = permissionsQuery.data || [];
+  const { t } = useLanguage();
   
   const [selectedIds, setSelectedIds] = useState(defaultSelected);
 
@@ -15,11 +17,11 @@ export default function CashierPermissionsList({ defaultSelected = [] }) {
   };
 
   if (permissionsQuery.isLoading) {
-    return <div className="text-center py-6 text-slate-500 text-sm">Loading permissions...</div>;
+    return <div className="text-center py-6 text-slate-500 text-sm">{t("loading_permissions", "Loading permissions...")}</div>;
   }
 
   if (permissions.length === 0) {
-    return <div className="text-center py-6 text-slate-500 text-sm">No permissions found.</div>;
+    return <div className="text-center py-6 text-slate-500 text-sm">{t("no_permissions_found", "No permissions found.")}</div>;
   }
 
   return (

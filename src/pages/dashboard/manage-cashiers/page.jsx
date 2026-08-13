@@ -63,7 +63,7 @@ export default function ManageCashiersPage() {
     openFormDialog({
       title: t("add_cashier_label", "Add Cashier"),
       isView: false,
-      submitText: "Submit",
+      submitText: t("submit", "Submit"),
       disableAutoValidation: true,
       content: <CashierFormFields data={initialData} isView={false} />,
       onSave: async (values, setFormErrors) => {
@@ -86,7 +86,7 @@ export default function ManageCashiersPage() {
         const openPermissionsDialog = () => {
           openFormDialog({
             title: t("cashier_permissions", "Cashier Permissions"),
-            submitText: "Save",
+            submitText: t("save", "Save"),
             content: <CashierPermissionsList />,
             onSave: async (permValues, showPermError) => {
               try {
@@ -100,15 +100,15 @@ export default function ManageCashiersPage() {
                 const res =
                   await savePermissionsMutation.mutateAsync(permPayload);
                 openGlobalPopup({
-                  title: "Success",
-                  description: res.message || "Permissions saved successfully.",
+                  title: t("success_title", "Success"),
+                  description: res.message || t("permissions_saved", "Permissions saved successfully."),
                   type: "success",
                 });
                 return false;
               } catch (err) {
                 openGlobalPopup({
-                  title: "Error",
-                  description: err.message || "Failed to save permissions.",
+                  title: t("error_title", "Error"),
+                  description: err.message || t("permissions_failed", "Failed to save permissions."),
                   type: "error",
                   onClose: () => openPermissionsDialog(),
                 });
@@ -121,16 +121,16 @@ export default function ManageCashiersPage() {
         try {
           const res = await createCashierMutation.mutateAsync(payload);
           openGlobalPopup({
-            title: "Success",
-            description: res.message || "Cashier created successfully.",
+            title: t("success_title", "Success"),
+            description: res.message || t("cashier_created", "Cashier created successfully."),
             type: "success",
             onClose: () => openPermissionsDialog(),
           });
           return false;
         } catch (err) {
           openGlobalPopup({
-            title: "Error",
-            description: err.message || "Failed to create cashier.",
+            title: t("error_title", "Error"),
+            description: err.message || t("cashier_create_failed", "Failed to create cashier."),
             type: "error",
             onClose: () => handleAddCashier(values),
           });
@@ -193,7 +193,7 @@ export default function ManageCashiersPage() {
     openFormDialog({
       title: t("edit_cashier", "Edit Cashier"),
       isView: false,
-      submitText: "Save",
+      submitText: t("save", "Save"),
       content: <CashierFormFields data={cashier.raw} isView={false} />,
       onSave: async (values, setFormErrors) => {
         const fields = getCashierFormFields(values, t);
@@ -215,7 +215,7 @@ export default function ManageCashiersPage() {
         const openPermissionsDialog = (defaultSelected = []) => {
           openFormDialog({
             title: t("cashier_permissions", "Cashier Permissions"),
-            submitText: "Save",
+            submitText: t("save", "Save"),
             content: (
               <CashierPermissionsList defaultSelected={defaultSelected} />
             ),
@@ -231,15 +231,15 @@ export default function ManageCashiersPage() {
                 const res =
                   await savePermissionsMutation.mutateAsync(permPayload);
                 openGlobalPopup({
-                  title: "Success",
-                  description: res.message || "Permissions saved successfully.",
+                  title: t("success_title", "Success"),
+                  description: res.message || t("permissions_saved", "Permissions saved successfully."),
                   type: "success",
                 });
                 return false;
               } catch (err) {
                 openGlobalPopup({
-                  title: "Error",
-                  description: err.message || "Failed to save permissions.",
+                  title: t("error_title", "Error"),
+                  description: err.message || t("permissions_failed", "Failed to save permissions."),
                   type: "error",
                   onClose: () => openPermissionsDialog(defaultSelected),
                 });
@@ -265,16 +265,16 @@ export default function ManageCashiersPage() {
           }
 
           openGlobalPopup({
-            title: "Success",
-            description: res.message || "Cashier updated successfully.",
+            title: t("success_title", "Success"),
+            description: res.message || t("update_cashier_msg", "Cashier updated successfully."),
             type: "success",
             onClose: () => openPermissionsDialog(defaultSelected),
           });
           return false;
         } catch (err) {
           openGlobalPopup({
-            title: "Error",
-            description: err.message || "Failed to update cashier.",
+            title: t("error_title", "Error"),
+            description: err.message || t("update_cashier_failed", "Failed to update cashier."),
             type: "error",
             onClose: () => handleEdit({ raw: values }),
           });
@@ -286,9 +286,9 @@ export default function ManageCashiersPage() {
 
   const handleResetPin = (cashier) => {
     openConfirmDialog({
-      title: "Reset PIN?",
-      description: `Are you sure you want to reset PIN for cashier ${cashier.name}?`,
-      confirmText: "Reset",
+      title: t("reset_pin_title", "Reset PIN?"),
+      description: `${t("reset_pin_confirm", "Are you sure you want to reset PIN for cashier")} ${cashier.name}?`,
+      confirmText: t("reset", "Reset"),
       iconType: "warning",
       onConfirm: async () => {
         try {
@@ -301,14 +301,14 @@ export default function ManageCashiersPage() {
           const res = await resetPinMutation.mutateAsync(payload);
           openGlobalPopup({
             title: t("success_title", "Success"),
-            description: res.message || "PIN reset successfully.",
+            description: res.message || t("pin_reset_success", "PIN reset successfully."),
             type: "success",
           });
           return false;
         } catch (err) {
           openGlobalPopup({
             title: t("error_title", "Error"),
-            description: err.message || "Failed to reset PIN.",
+            description: err.message || t("pin_reset_failed", "Failed to reset PIN."),
             type: "error",
           });
           return false;
@@ -388,7 +388,7 @@ export default function ManageCashiersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Cashier
+            {t("cashier", "Cashier")}
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {t("mc_title", "Manage Cashiers")}
@@ -442,7 +442,7 @@ export default function ManageCashiersPage() {
                     colSpan="4"
                     className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
                   >
-                    Loading cashiers...
+                    {t("loading_cashiers", "Loading cashiers...")}
                   </td>
                 </tr>
               ) : filteredCashiers.length === 0 ? (
@@ -451,7 +451,7 @@ export default function ManageCashiersPage() {
                     colSpan="4"
                     className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
                   >
-                    No cashiers found.
+                    {t("no_cashiers_found", "No cashiers found.")}
                   </td>
                 </tr>
               ) : (
@@ -470,7 +470,7 @@ export default function ManageCashiersPage() {
                       <span
                         className={`px-2.5 py-1 rounded-full text-xs font-semibold ${cashier.status === "Active" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"}`}
                       >
-                        {cashier.status}
+                        {cashier.status === "Active" ? t("global_active", "Active") : t("global_inactive", "Inactive")}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -478,28 +478,28 @@ export default function ManageCashiersPage() {
                         <button
                           onClick={() => handleView(cashier)}
                           className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
-                          title="View"
+                          title={t("buttonsView", "View")}
                         >
                           <Eye size={18} />
                         </button>
                         <button
                           onClick={() => handleEdit(cashier)}
                           className="text-slate-400 hover:text-emerald-500 transition-colors"
-                          title="Edit"
+                          title={t("edit_cashier", "Edit")}
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(cashier)}
                           className="text-slate-400 hover:text-rose-500 transition-colors"
-                          title="Delete"
+                          title={t("delete", "Delete")}
                         >
                           <Trash2 size={16} />
                         </button>
                         <button
                           onClick={() => handleResetPin(cashier)}
                           className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                          title="Reset Pin"
+                          title={t("reset_pin_title", "Reset PIN")}
                         >
                           <Lock size={16} />
                         </button>
@@ -536,11 +536,11 @@ export default function ManageCashiersPage() {
         <div className="md:hidden space-y-3 mb-8">
           {cashiersQuery.isLoading ? (
             <div className="text-center py-8 text-slate-500 dark:text-white/50 text-sm">
-              Loading cashiers...
+              {t("loading_cashiers", "Loading cashiers...")}
             </div>
           ) : filteredCashiers.length === 0 ? (
             <div className="text-center py-8 text-slate-500 dark:text-white/50 text-sm">
-              No cashiers found.
+              {t("no_cashiers_found", "No cashiers found.")}
             </div>
           ) : (
             filteredCashiers.map((cashier, idx) => (

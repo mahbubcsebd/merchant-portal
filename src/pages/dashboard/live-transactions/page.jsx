@@ -46,35 +46,35 @@ export default function LiveTransactionsPage() {
 
   const subOptions = useMemo(
     () => [
-      { value: "selected", label: "All Subsidiaries" },
+      { value: "selected", label: t("all_subsidiaries", "All Subsidiaries") },
       ...(subData?.data || []).map((s) => ({
         value: s.CORPCUSTSUBID,
         label: s.SUBNAME,
       })),
     ],
-    [subData],
+    [subData, t],
   );
 
   const cashierOptions = useMemo(
     () => [
-      { value: "selected", label: "All Cashiers" },
+      { value: "selected", label: t("all_cashiers", "All Cashiers") },
       ...(cashierData?.records || []).map((c) => ({
         value: c.merCashierID,
         label: `${c.cashierFName} ${c.cashierLName}`,
       })),
     ],
-    [cashierData],
+    [cashierData, t],
   );
 
   const terminalOptions = useMemo(
     () => [
-      { value: "selected", label: "All Terminals" },
-      ...(terminalData?.listOfTerminal || []).map((t) => ({
-        value: t.terminalId,
-        label: t.terminalName,
+      { value: "selected", label: t("all_terminals", "All Terminals") },
+      ...(terminalData?.listOfTerminal || []).map((tItem) => ({
+        value: tItem.terminalId,
+        label: tItem.terminalName,
       })),
     ],
-    [terminalData],
+    [terminalData, t],
   );
 
   const defaultAccountId = accounts?.[0]?.ACCOUNTNUMBER || "";
@@ -176,10 +176,10 @@ export default function LiveTransactionsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            Activity
+            {t("activity", "Activity")}
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Live Transactions
+            {t("liveTransactions", "Live Transactions")}
           </h2>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function LiveTransactionsPage() {
         {/* Filters Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-[#2563eb] dark:text-white flex items-center gap-2">
-            Live Transactions
+            {t("liveTransactions", "Live Transactions")}
             {isFetching && (
               <Loader2 className="w-4 h-4 animate-spin text-[#2563eb]" />
             )}
@@ -197,14 +197,14 @@ export default function LiveTransactionsPage() {
             onClick={handleResetFilters}
             className="text-xs sm:text-sm font-semibold text-[#2563eb] hover:underline"
           >
-            Reset Filter
+            {t("resetFilter", "Reset Filter")}
           </button>
         </div>
 
         {/* Filters Grid */}
         <div className="flex flex-col xl:flex-row gap-4 mb-8 items-stretch xl:items-end">
           <GlobalSelect
-            label="Status"
+            label={t("global_status", "Status")}
             value={status}
             onChange={setStatus}
             containerClassName="flex-1 min-w-[180px]"
@@ -217,7 +217,7 @@ export default function LiveTransactionsPage() {
             ]}
           />
           <GlobalSelect
-            label="Branch"
+            label={t("myQr_subsidiary", "Branch")}
             value={branch}
             onChange={setBranch}
             containerClassName="flex-1 min-w-[180px]"
@@ -225,7 +225,7 @@ export default function LiveTransactionsPage() {
             options={subOptions}
           />
           <GlobalSelect
-            label="Cashier"
+            label={t("cashier", "Cashier")}
             value={cashier}
             onChange={setCashier}
             containerClassName="flex-1 min-w-[180px]"
@@ -233,7 +233,7 @@ export default function LiveTransactionsPage() {
             options={cashierOptions}
           />
           <GlobalSelect
-            label="Terminal ID"
+            label={t("myqr_terminalID", "Terminal ID")}
             value={terminal}
             onChange={setTerminal}
             containerClassName="flex-1 min-w-[180px]"
@@ -245,7 +245,7 @@ export default function LiveTransactionsPage() {
             variant="primary"
             className="w-full xl:w-auto shrink-0 h-10 px-8 text-xs font-bold uppercase tracking-wider"
           >
-            Filter
+            {t("global_filter", "Filter")}
           </GlobalButton>
         </div>
 
@@ -285,8 +285,8 @@ export default function LiveTransactionsPage() {
                     className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
                   >
                     {isFetching
-                      ? "Loading transactions..."
-                      : "No transactions available"}
+                      ? t("loading_transactions", "Loading transactions...")
+                      : t("no_transactions_available", "No transactions available")}
                   </td>
                 </tr>
               ) : (
@@ -343,8 +343,8 @@ export default function LiveTransactionsPage() {
           {transactions.length === 0 ? (
             <div className="text-center py-8 text-slate-500 dark:text-white/50 border border-slate-200 dark:border-white/10 rounded-xl">
               {isFetching
-                ? "Loading transactions..."
-                : "No transactions available"}
+                ? t("loading_transactions", "Loading transactions...")
+                : t("no_transactions_available", "No transactions available")}
             </div>
           ) : (
             transactions.map((tx, idx) => (
