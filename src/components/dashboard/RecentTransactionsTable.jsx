@@ -100,30 +100,38 @@ export function RecentTransactionsTable({ currencyDropdown }) {
         shadow-sm dark:shadow-none">
         <table className="w-full">
           <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4
-                  hover:bg-slate-50 dark:hover:bg-white/[0.03]
-                  transition-colors"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    style={cell.column.id === "amount" ? { marginLeft: "auto" } : undefined}
-                    className={
-                      cell.column.id === "type" 
-                        ? "flex-1 min-w-0" 
-                        : cell.column.id === "date" 
-                          ? "hidden sm:block" 
-                          : ""
-                    }
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td className="py-8 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+                  {t("no_transactions_found", "No transactions found")}
+                </td>
               </tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4
+                    hover:bg-slate-50 dark:hover:bg-white/[0.03]
+                    transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      style={cell.column.id === "amount" ? { marginLeft: "auto" } : undefined}
+                      className={
+                        cell.column.id === "type" 
+                          ? "flex-1 min-w-0" 
+                          : cell.column.id === "date" 
+                            ? "hidden sm:block" 
+                            : ""
+                      }
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
