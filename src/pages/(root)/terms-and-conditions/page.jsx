@@ -19,7 +19,7 @@ export default function TermsAndConditionsPage() {
                 {t("terms_and_conditions", "Terms and Conditions")}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Last updated: August 2026
+                {t("last_updated", "Last updated: August 2026")}
               </p>
             </div>
           </div>

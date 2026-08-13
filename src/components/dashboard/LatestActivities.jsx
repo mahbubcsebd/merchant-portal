@@ -23,7 +23,7 @@ export function LatestActivities() {
         divide-y divide-slate-100 dark:divide-white/5">
         
         {recentNotifications.length === 0 ? (
-          <div className="px-5 py-8 text-center text-slate-500 text-sm">No recent activities found.</div>
+          <div className="px-5 py-8 text-center text-slate-500 text-sm">{t("no_recent_activities", "No recent activities found.")}</div>
         ) : (
           recentNotifications.map((activity) => (
             <div
