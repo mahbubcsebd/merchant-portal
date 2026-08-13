@@ -534,7 +534,7 @@ export default function BranchesPage() {
             Branches
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Manage Branches
+            {t("manage_branches", "Manage Branches")}
           </h2>
         </div>
       </div>
@@ -543,7 +543,7 @@ export default function BranchesPage() {
         {/* Top Controls */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <GlobalInput
-            placeholder="Search Branches"
+            placeholder={t("search_branches", "Search Branches")}
             leftIcon={<Search size={16} />}
             containerClassName="w-full sm:w-80"
             value={searchTerm}
