@@ -345,7 +345,7 @@ export default function BusinessProfilePage() {
         imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
         dotsOptions: { type: "extra-rounded", color: "#000" },
         backgroundOptions: { color: "#ffffff" },
-        image: "/images/logo.svg",
+        image: "./images/logo.svg",
       });
       if (qrRef.current) {
         // Clear anything currently in the ref
@@ -553,7 +553,10 @@ export default function BusinessProfilePage() {
         {/* Right Column (QR Code) */}
         <div className="xl:col-span-4 flex flex-col">
           <Card
-            title={t("business_qr_code", t("businessQrCode", "Business QR Code"))}
+            title={t(
+              "business_qr_code",
+              t("businessQrCode", "Business QR Code"),
+            )}
             className="flex-1 flex flex-col h-full"
           >
             <div className="flex flex-col items-center flex-1">
