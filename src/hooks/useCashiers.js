@@ -7,6 +7,7 @@ import {
   saveMerchantCashierPermission,
   unenrollCashier,
   updateStatusCashier,
+  resetPinCashier,
 } from "@/lib/api/endpoints";
 
 export function useCashiers() {
@@ -119,6 +120,19 @@ export function useCashiers() {
     },
   });
 
+  const resetPinMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await resetPinCashier(payload);
+      if (
+        response.status !== "success" ||
+        (response.statusCode !== "0" && response.statusCode !== 0)
+      ) {
+        throw new Error(response.message || "Failed to reset cashier PIN");
+      }
+      return response;
+    },
+  });
+
   return {
     cashiersQuery,
     permissionsQuery,
@@ -127,5 +141,6 @@ export function useCashiers() {
     updateStatusMutation,
     savePermissionsMutation,
     deleteCashierMutation,
+    resetPinMutation,
   };
 }

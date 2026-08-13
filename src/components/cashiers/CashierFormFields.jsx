@@ -101,51 +101,7 @@ export default function CashierFormFields({
           onInput={enforceEmail}
         />
 
-        <GlobalSelect
-          name="merSubID"
-          label={t("branch", "Branch")}
-          required
-          value={merSubID}
-          onChange={(val) => {
-            setMerSubID(val);
-            clearError("merSubID");
-          }}
-          options={activeSubsidiaries.map((s) => ({
-            value: s.CORPCUSTSUBID,
-            label: s.SUBNAME,
-          }))}
-          disabled={isView}
-          error={errors.merSubID}
-        />
 
-        <GlobalSelect
-          name="cashierIDType"
-          label={t("crIdType", "ID Type")}
-          required
-          value={cashierIDType}
-          onChange={(val) => {
-            setCashierIDType(val);
-            clearError("cashierIDType");
-          }}
-          options={identifyTypes.map((i) => ({
-            value: i.id,
-            label: i.title,
-          }))}
-          disabled={isView}
-          error={errors.cashierIDType}
-        />
-
-        <GlobalInput
-          name="cashierIDNo"
-          label={t("crIdNumber", "ID Number")}
-          required
-          defaultValue={data?.cashierIDNo || ""}
-          disabled={isView}
-          error={errors.cashierIDNo}
-          onChange={() => clearError("cashierIDNo")}
-          maxLength={20}
-          onInput={enforceAlphanumericSpace}
-        />
 
         {/* Mobile Number Field */}
         <div className="flex flex-col gap-1.5">

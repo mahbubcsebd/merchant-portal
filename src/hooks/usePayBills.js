@@ -48,6 +48,10 @@ export function usePayBills() {
       }
       return response;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboardInfo"] });
+      queryClient.invalidateQueries({ queryKey: ["welcome"] });
+    },
   });
 
   // 4. Fetch All System Billers

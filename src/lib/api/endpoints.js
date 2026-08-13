@@ -278,6 +278,10 @@ export async function unenrollCashier(payload = {}) {
   return post("/unenrollCashier", payload);
 }
 
+export async function resetPinCashier(payload = {}) {
+  return post("/resetPinCashier", payload);
+}
+
 // -------------------------------------------------------
 // Beneficiary APIs
 // -------------------------------------------------------
