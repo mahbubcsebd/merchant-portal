@@ -20,7 +20,7 @@ export default function DashboardPage() {
             {t("overview", "Overview")}
           </p>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Business Summary
+            {t("business_summary", "Business Summary")}
           </h2>
         </div>
         <div className="flex justify-end">
