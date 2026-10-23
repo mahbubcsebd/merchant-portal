@@ -62,16 +62,19 @@ export function LoginForm() {
   const [otpErrorMessage, setOtpErrorMessage] = useState("");
   const [resendSuccessMsg, setResendSuccessMsg] = useState("");
 
+  const [isDemoLogin, setIsDemoLogin] = useState(false);
+
   const schema = useMemo(() => getFormSchema(t), [t]);
 
   const {
     register,
     handleSubmit,
     setError,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", pin: "" },
+    defaultValues: { email: "demo@gmail.com", pin: "123456" },
   });
 
   const loginMutation = useMutation({
@@ -85,6 +88,7 @@ export function LoginForm() {
           setShowOtpDialog(true);
         } else {
           localStorage.setItem("is_authenticated", "true");
+          localStorage.removeItem("is_demo");
           router("/dashboard");
         }
       } else {
@@ -118,6 +122,7 @@ export function LoginForm() {
       if (data.status === "success" && data.statusCode === 0) {
         console.log("OTP Verification Success Data:", data);
         localStorage.setItem("is_authenticated", "true");
+        localStorage.removeItem("is_demo");
         setShowOtpDialog(false);
         router("/dashboard");
       } else {
@@ -175,6 +180,13 @@ export function LoginForm() {
   async function onSubmit(values) {
     // Clear any previous root errors
     setError("root.serverError", { type: "manual", message: "" });
+    const isDemo = values.email?.toLowerCase().trim() === "demo@gmail.com";
+    if (isDemo) {
+      setIsDemoLogin(true);
+      setShowOtpDialog(true);
+      return;
+    }
+    localStorage.removeItem("is_demo");
     loginMutation.mutate(values);
   }
 
@@ -321,6 +333,14 @@ export function LoginForm() {
                   setOtpError(false);
                 }}
                 onComplete={(val) => {
+                  const currentEmail = getValues("email")?.toLowerCase().trim();
+                  if (isDemoLogin || currentEmail === "demo@gmail.com") {
+                    localStorage.setItem("is_authenticated", "true");
+                    localStorage.setItem("is_demo", "true");
+                    setShowOtpDialog(false);
+                    router("/dashboard");
+                    return;
+                  }
                   verifyOTPMutation.mutate({ otp: val });
                 }}
                 disabled={
@@ -363,6 +383,14 @@ export function LoginForm() {
               className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline underline-offset-2 ml-1.5 cursor-pointer disabled:opacity-50"
               onClick={() => {
                 setResendSuccessMsg("");
+                const currentEmail = getValues("email")?.toLowerCase().trim();
+                if (isDemoLogin || currentEmail === "demo@gmail.com") {
+                  setOtpValue("");
+                  setOtpError(false);
+                  setResendSuccessMsg("The OTP has been successfully resent.");
+                  setTimeout(() => setResendSuccessMsg(""), 5000);
+                  return;
+                }
                 resendOTPMutation.mutate();
               }}
             >

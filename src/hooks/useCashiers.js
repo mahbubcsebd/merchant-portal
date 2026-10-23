@@ -13,9 +13,59 @@ import {
 export function useCashiers() {
   const queryClient = useQueryClient();
 
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
+  const demoCashiers = [
+    {
+      merCashierID: "CASHIER_01",
+      cashierFName: "Sarah",
+      cashierLName: "Jenkins",
+      cashierEmail: "sarah.j@demo.com",
+      cashierMobile: "5551234567",
+      countryCode: "+1",
+      merSubID: "SUB-001",
+      cashierStatus: "A",
+      cashierIDType: "National ID",
+      cashierIDNum: "NID-99218",
+    },
+    {
+      merCashierID: "CASHIER_02",
+      cashierFName: "David",
+      cashierLName: "Miller",
+      cashierEmail: "david.m@demo.com",
+      cashierMobile: "5552345678",
+      countryCode: "+1",
+      merSubID: "SUB-001",
+      cashierStatus: "A",
+      cashierIDType: "Passport",
+      cashierIDNum: "P-882719",
+    },
+    {
+      merCashierID: "CASHIER_03",
+      cashierFName: "Emily",
+      cashierLName: "Watson",
+      cashierEmail: "emily.w@demo.com",
+      cashierMobile: "5553456789",
+      countryCode: "+1",
+      merSubID: "SUB-002",
+      cashierStatus: "A",
+      cashierIDType: "Driver License",
+      cashierIDNum: "DL-388127",
+    },
+  ];
+
+  const demoPermissions = [
+    { permissionId: "1", permissionName: "Process QR Payments", description: "Accept QR code transactions" },
+    { permissionId: "2", permissionName: "Issue Refunds", description: "Process customer refund requests" },
+    { permissionId: "3", permissionName: "View Daily Summary", description: "Access terminal end-of-day reports" },
+  ];
+
   const cashiersQuery = useQuery({
     queryKey: ["cashiers"],
     queryFn: async () => {
+      if (isDemo) return demoCashiers;
       const response = await getCashierList();
       if (
         response.status !== "success" ||
@@ -31,6 +81,7 @@ export function useCashiers() {
   const permissionsQuery = useQuery({
     queryKey: ["cashierPermissions"],
     queryFn: async () => {
+      if (isDemo) return demoPermissions;
       const response = await getCashierPermssionList({});
       if (
         response.status !== "success" ||

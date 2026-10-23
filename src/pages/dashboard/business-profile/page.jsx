@@ -331,6 +331,8 @@ export default function BusinessProfilePage() {
   const qrValue = `${p.custName}#${p.userName}`;
 
   useEffect(() => {
+    const logoSrc = import.meta.env.DEV ? "/images/logo.svg" : "./images/logo.svg";
+
     if (!qrCodeInstance.current) {
       qrCodeInstance.current = new QRCodeStyling({
         width: 170,
@@ -345,7 +347,7 @@ export default function BusinessProfilePage() {
         imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
         dotsOptions: { type: "extra-rounded", color: "#000" },
         backgroundOptions: { color: "#ffffff" },
-        image: "./images/logo.svg",
+        image: logoSrc,
       });
       if (qrRef.current) {
         // Clear anything currently in the ref
@@ -353,7 +355,7 @@ export default function BusinessProfilePage() {
         qrCodeInstance.current.append(qrRef.current);
       }
     } else {
-      qrCodeInstance.current.update({ data: qrValue });
+      qrCodeInstance.current.update({ data: qrValue, image: logoSrc });
     }
   }, [qrValue]);
 

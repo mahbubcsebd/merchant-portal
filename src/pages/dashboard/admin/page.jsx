@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import QRCodeStyling from "qr-code-styling";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useSearchParams } from "react-router-dom";
@@ -69,6 +69,8 @@ function MyQrView() {
   useEffect(() => {
     if (!qrValue) return;
 
+    const logoSrc = import.meta.env.DEV ? "/images/logo.svg" : "./images/logo.svg";
+
     if (!qrCodeInstance.current) {
       qrCodeInstance.current = new QRCodeStyling({
         width: 220,
@@ -83,14 +85,14 @@ function MyQrView() {
         imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
         dotsOptions: { type: "extra-rounded", color: "#000" },
         backgroundOptions: { color: "#ffffff" },
-        image: "./images/logo.svg",
+        image: logoSrc,
       });
       if (qrRef.current) {
         qrRef.current.innerHTML = "";
         qrCodeInstance.current.append(qrRef.current);
       }
     } else {
-      qrCodeInstance.current.update({ data: qrValue });
+      qrCodeInstance.current.update({ data: qrValue, image: logoSrc });
     }
   }, [qrValue]);
 
@@ -153,14 +155,64 @@ function MyQrView() {
   );
 }
 
+const DEMO_LIMITS = [
+  {
+    TXNNAME: "Pay by QR Code",
+    TXNID: "PAYQRCODE",
+    CURRNAME: "XCG",
+    USERTXNDAILYLIMIT: "50000.00",
+    USERTXNDAILYUSED: "12450.00",
+    USERTXNDAILYREMAIN: "37550.00",
+    USERTXNMONTHLYLIMIT: "500000.00",
+    USERTXNMONTHLYUSED: "84200.00",
+    USERTXNMONTHLYREMAIN: "415800.00",
+    USERTXNANNUALLIMIT: "5000000.00",
+    USERTXNANNUALUSED: "348500.00",
+    USERTXNANNUALREMAIN: "4651500.00",
+  },
+  {
+    TXNNAME: "Direct Bank Transfer",
+    TXNID: "PAYTOBANK",
+    CURRNAME: "XCG",
+    USERTXNDAILYLIMIT: "100000.00",
+    USERTXNDAILYUSED: "1850.00",
+    USERTXNDAILYREMAIN: "98150.00",
+    USERTXNMONTHLYLIMIT: "1000000.00",
+    USERTXNMONTHLYUSED: "45000.00",
+    USERTXNMONTHLYREMAIN: "955000.00",
+    USERTXNANNUALLIMIT: "10000000.00",
+    USERTXNANNUALUSED: "123050.00",
+    USERTXNANNUALREMAIN: "9876950.00",
+  },
+  {
+    TXNNAME: "Bill Payment",
+    TXNID: "PAYBILL",
+    CURRNAME: "USD",
+    USERTXNDAILYLIMIT: "25000.00",
+    USERTXNDAILYUSED: "320.00",
+    USERTXNDAILYREMAIN: "24680.00",
+    USERTXNMONTHLYLIMIT: "250000.00",
+    USERTXNMONTHLYUSED: "12000.00",
+    USERTXNMONTHLYREMAIN: "238000.00",
+    USERTXNANNUALLIMIT: "2500000.00",
+    USERTXNANNUALUSED: "45200.00",
+    USERTXNANNUALREMAIN: "2454800.00",
+  },
+];
+
 function PaymentLimitsView() {
   const { t } = useLanguage();
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
   const { data: limitsData, isLoading } = useQuery({
     queryKey: ["transactionLimits"],
     queryFn: () => getTransactionLimits(),
+    enabled: !isDemo,
   });
 
-  const limitsList = limitsData?.txnLimitUsers || [];
+  const limitsList = isDemo ? DEMO_LIMITS : limitsData?.txnLimitUsers || [];
 
   // Extract unique currency names
   const currencies = Array.from(
@@ -354,15 +406,41 @@ const accountTypeMap = {
   1: "Savings",
 };
 
+const DEMO_SETTLEMENT_ACCOUNTS = {
+  records: [
+    {
+      bankId: "MCBKCWCU",
+      bankAccount: "9876543210",
+      bankAcctCurr: "0",
+      bankAcctType: "6",
+      bankRouting: "RT-88219",
+    },
+    {
+      bankId: "ORBACWCU",
+      bankAccount: "1234567890",
+      bankAcctCurr: "1",
+      bankAcctType: "1",
+      bankRouting: "RT-11928",
+    },
+  ],
+};
+
 function SettlementSettingsView() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
-  const { data: accountsData, isLoading } = useQuery({
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
+  const { data: realAccountsData, isLoading } = useQuery({
     queryKey: ["userSetAccounts"],
     queryFn: () => getUserSetAccounts(),
+    enabled: !isDemo,
   });
+
+  const accountsData = isDemo ? DEMO_SETTLEMENT_ACCOUNTS : realAccountsData;
 
   const [view, setView] = useState("list"); // 'list', 'form', 'confirm', 'success'
   const [formData, setFormData] = useState({
@@ -374,29 +452,39 @@ function SettlementSettingsView() {
   const [errors, setErrors] = useState({});
   const [editIndex, setEditIndex] = useState(null);
 
-  const [banks, setBanks] = useState([]);
-
-  useEffect(() => {
-    if (accountsData?.records) {
-      const formattedBanks = accountsData.records.map((record, index) => ({
-        id: index,
-        name: bankNamesMap[record.bankId] || record.bankId || "Bank Account",
-        account: record.bankAccount
-          ? `**** ${record.bankAccount.slice(-4)}`
-          : "****",
-        rawAccount: record.bankAccount || "",
-        bic: record.bankId || "",
-        routing: record.bankRouting || null,
-        currency: record.bankAcctCurr || "0",
-        accountType: record.bankAcctType || "6",
-      }));
-      setBanks(formattedBanks);
-    }
+  const rawRecords = useMemo(() => {
+    if (!accountsData) return [];
+    if (Array.isArray(accountsData.records)) return accountsData.records;
+    if (Array.isArray(accountsData.data)) return accountsData.data;
+    if (Array.isArray(accountsData.accounts)) return accountsData.accounts;
+    if (Array.isArray(accountsData)) return accountsData;
+    return [];
   }, [accountsData]);
+
+  const banks = useMemo(() => {
+    return rawRecords.map((record, index) => ({
+      id: index,
+      name: bankNamesMap[record.bankId] || record.bankName || record.bankId || "Bank Account",
+      account: record.bankAccount
+        ? `**** ${String(record.bankAccount).slice(-4)}`
+        : "****",
+      rawAccount: record.bankAccount != null ? String(record.bankAccount) : "",
+      bic: record.bankId || "",
+      routing: record.bankRouting || null,
+      currency: record.bankAcctCurr != null ? String(record.bankAcctCurr) : "0",
+      accountType: record.bankAcctType != null ? String(record.bankAcctType) : "6",
+    }));
+  }, [rawRecords]);
 
   // Create Mutation
   const createMutation = useMutation({
-    mutationFn: (payload) => createUserSetAccount(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "Bank account added successfully.",
+          })
+        : createUserSetAccount(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
@@ -426,7 +514,13 @@ function SettlementSettingsView() {
 
   // Update Mutation
   const updateMutation = useMutation({
-    mutationFn: (payload) => updateUserSetAccount(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "Bank account updated successfully.",
+          })
+        : updateUserSetAccount(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
@@ -456,7 +550,13 @@ function SettlementSettingsView() {
 
   // Delete Mutation
   const deleteMutation = useMutation({
-    mutationFn: (payload) => deleteUserSetAccount(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "Settlement account deleted successfully.",
+          })
+        : deleteUserSetAccount(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({ queryKey: ["userSetAccounts"] });
@@ -937,15 +1037,30 @@ function SettlementSettingsView() {
   );
 }
 
+const DEMO_SETTINGS_DATA = {
+  alertNotiFlag: {
+    smsFlag: true,
+    emailFlag: true,
+    whtFlag: false,
+  },
+};
+
 function ManageNotificationsView() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
-  const { data: settingsData, isLoading } = useQuery({
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
+  const { data: realSettingsData, isLoading } = useQuery({
     queryKey: ["alertNotificationSetting"],
     queryFn: () => loadAlertNotificationSetting(),
+    enabled: !isDemo,
   });
+
+  const settingsData = isDemo ? DEMO_SETTINGS_DATA : realSettingsData;
 
   const [notifications, setNotifications] = useState({
     sms: false,
@@ -962,7 +1077,11 @@ function ManageNotificationsView() {
         whatsapp: !!settingsData.alertNotiFlag.whtFlag,
       });
     }
-  }, [settingsData]);
+  }, [
+    settingsData?.alertNotiFlag?.smsFlag,
+    settingsData?.alertNotiFlag?.emailFlag,
+    settingsData?.alertNotiFlag?.whtFlag,
+  ]);
 
   const toggle = (key) => {
     const updated = {
@@ -980,7 +1099,13 @@ function ManageNotificationsView() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: (payload) => updateAlertNotification(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "Alert notification updated successfully.",
+          })
+        : updateAlertNotification(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
         queryClient.invalidateQueries({
@@ -1083,6 +1208,10 @@ function ChangeLanguageView() {
   const { profile } = useDashboardContext();
   const { setLanguage } = useLanguage();
 
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
   const langMap = {
     nl: "Dutch",
     en: "English",
@@ -1114,7 +1243,13 @@ function ChangeLanguageView() {
   }, [profile]);
 
   const updateMutation = useMutation({
-    mutationFn: (payload) => updateLanguage(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "Preferred language updated successfully.",
+          })
+        : updateLanguage(payload),
     onSuccess: (data, variables) => {
       if (data.status === "success") {
         setLanguage(variables.languageId);
@@ -1197,6 +1332,10 @@ function ChangePinView() {
   const { t } = useLanguage();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
   const [formData, setFormData] = useState({
     oldPin: "",
     newPin: "",
@@ -1217,7 +1356,13 @@ function ChangePinView() {
   };
 
   const changePinMutation = useMutation({
-    mutationFn: (payload) => changePIN(payload),
+    mutationFn: (payload) =>
+      isDemo
+        ? Promise.resolve({
+            status: "success",
+            message: "PIN changed successfully.",
+          })
+        : changePIN(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
         openSuccessDialog({

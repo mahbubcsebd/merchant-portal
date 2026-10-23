@@ -89,6 +89,66 @@ export default function LiveTransactionsPage() {
     setAppliedFilters((prev) => ({ ...prev, accountId: defaultAccountId }));
   }
 
+  const isDemo =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_demo") === "true";
+
+  const demoLiveTransactions = useMemo(
+    () => [
+      {
+        creationDate: "20261023",
+        confirmationNumber: "REF-983101",
+        amount: "450.00",
+        currencyCode: "XCG",
+        txnName: "QR Code Sale",
+        cashierID: "CASHIER_01",
+        txnStatus: "P",
+        custSubID: "SUB-001",
+      },
+      {
+        creationDate: "20261023",
+        confirmationNumber: "REF-983100",
+        amount: "12450.00",
+        currencyCode: "XCG",
+        txnName: "Merchant Settlement",
+        cashierID: "CASHIER_01",
+        txnStatus: "P",
+        custSubID: "SUB-001",
+      },
+      {
+        creationDate: "20261022",
+        confirmationNumber: "REF-983099",
+        amount: "285.50",
+        currencyCode: "XCG",
+        txnName: "Card POS Payment",
+        cashierID: "CASHIER_02",
+        txnStatus: "P",
+        custSubID: "SUB-001",
+      },
+      {
+        creationDate: "20261022",
+        confirmationNumber: "REF-983098",
+        amount: "1850.00",
+        currencyCode: "XCG",
+        txnName: "Vendor Supplier Payout",
+        cashierID: "CASHIER_03",
+        txnStatus: "P",
+        custSubID: "SUB-002",
+      },
+      {
+        creationDate: "20261021",
+        confirmationNumber: "REF-983097",
+        amount: "120.00",
+        currencyCode: "XCG",
+        txnName: "Direct Bill Pay",
+        cashierID: "CASHIER_01",
+        txnStatus: "C",
+        custSubID: "SUB-001",
+      },
+    ],
+    [],
+  );
+
   const {
     data: txData,
     isFetching,
@@ -97,10 +157,12 @@ export default function LiveTransactionsPage() {
     queryKey: ["transactionHistory", appliedFilters],
     queryFn: () => transactionHistory(appliedFilters),
     staleTime: 0,
-    enabled: !!appliedFilters.accountId,
+    enabled: !isDemo && !!appliedFilters.accountId,
   });
 
-  const transactions = txData?.transactionHistories || [];
+  const transactions = isDemo
+    ? demoLiveTransactions
+    : (txData?.transactionHistories || []);
 
   const handleApplyFilter = () => {
     const payload = {
