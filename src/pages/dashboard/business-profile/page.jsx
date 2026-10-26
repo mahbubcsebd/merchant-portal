@@ -2,6 +2,7 @@ import { MapPin, Pencil, User, Share2, Download } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import QRCodeStyling from "qr-code-styling";
+import { APP_ICON_BASE64 } from "@/assets/appIconTransBase64";
 import { useRef, useState, useEffect, useMemo } from "react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
@@ -97,10 +98,6 @@ export default function BusinessProfilePage() {
     }
   }, [accounts, selectedAccountId]);
 
-  // Force a fresh fetch every time this tab is visited
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-  }, [queryClient]);
 
   // Fallback to empty if profile is somehow missing
   const p = profile || {};
@@ -328,38 +325,62 @@ export default function BusinessProfilePage() {
     updateMutation.mutate(payload);
   };
 
-  const qrValue = `${p.custName}#${p.userName}`;
+  const qrList = p.qrcode || [];
+  const selectedAccount = accounts?.find(
+    (acc) => acc.ACCOUNTNUMBER === selectedAccountId,
+  );
+  const selectedQr = qrList.find(
+    (q) => q.currency === selectedAccount?.CURSHRTNAME,
+  );
+  const qrValue =
+    selectedQr?.qrcode ||
+    (p.userName && p.mobilePhone
+      ? `${p.userName}#${p.mobilePhone}`
+      : p.custName
+        ? `${p.custName}#${p.userName}`
+        : "");
 
   useEffect(() => {
-    if (!qrCodeInstance.current) {
-      qrCodeInstance.current = new QRCodeStyling({
-        width: 170,
-        height: 170,
-        data: qrValue,
+    if (!qrRef.current || !qrValue) return;
+
+    qrRef.current.innerHTML = "";
+    const qrCode = new QRCodeStyling({
+      type: "svg",
+      width: 176,
+      height: 176,
+      data: qrValue,
+      margin: 0,
+      qrOptions: {
+        typeNumber: 0,
+        mode: "Byte",
+        errorCorrectionLevel: "Q",
+      },
+      imageOptions: {
+        saveAsBlob: false,
+        hideBackgroundDots: true,
+        imageSize: 0.35,
         margin: 0,
-        qrOptions: {
-          typeNumber: 0,
-          mode: "Byte",
-          errorCorrectionLevel: "Q",
-        },
-        imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
-        dotsOptions: { type: "extra-rounded", color: "#000" },
-        backgroundOptions: { color: "#ffffff" },
-        image: "./images/logo.svg",
-      });
-      if (qrRef.current) {
-        // Clear anything currently in the ref
-        qrRef.current.innerHTML = "";
-        qrCodeInstance.current.append(qrRef.current);
-      }
-    } else {
-      qrCodeInstance.current.update({ data: qrValue });
-    }
+      },
+      dotsOptions: {
+        type: "extra-rounded",
+        color: "#000000",
+      },
+      backgroundOptions: {
+        color: "#ffffff",
+      },
+      image: APP_ICON_BASE64,
+    });
+
+    qrCode.append(qrRef.current);
+    qrCodeInstance.current = qrCode;
   }, [qrValue]);
 
   const handleDownloadQR = () => {
     if (qrCodeInstance.current) {
-      qrCodeInstance.current.download({ name: "my-qr-code", extension: "png" });
+      qrCodeInstance.current.download({
+        name: `business-qr-${selectedAccount?.CURSHRTNAME || "account"}`,
+        extension: "png",
+      });
     }
   };
 
