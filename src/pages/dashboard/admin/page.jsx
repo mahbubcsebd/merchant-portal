@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import QRCodeStyling from "qr-code-styling";
+import { APP_ICON_BASE64 } from "@/assets/appIconTransBase64";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -59,39 +60,50 @@ function MyQrView() {
   }, [qrOptions, selectedCurrency]);
 
   const selectedQr = qrList.find((q) => q.currency === selectedCurrency);
-  // If we have a qrcode string from the profile, use it; otherwise fallback
   const qrValue =
-    selectedQr?.qrcode || (p.custName ? `${p.custName}#${p.userName}` : "mPay");
+    selectedQr?.qrcode ||
+    (p.userName && p.mobilePhone
+      ? `${p.userName}#${p.mobilePhone}`
+      : p.custName
+        ? `${p.custName}#${p.userName}`
+        : "mPay");
 
   const qrRef = useRef(null);
   const qrCodeInstance = useRef(null);
 
   useEffect(() => {
-    if (!qrValue) return;
+    if (!qrRef.current || !qrValue) return;
 
-    if (!qrCodeInstance.current) {
-      qrCodeInstance.current = new QRCodeStyling({
-        width: 220,
-        height: 220,
-        data: qrValue,
+    qrRef.current.innerHTML = "";
+    const qrCode = new QRCodeStyling({
+      type: "svg",
+      width: 220,
+      height: 220,
+      data: qrValue,
+      margin: 0,
+      qrOptions: {
+        typeNumber: 0,
+        mode: "Byte",
+        errorCorrectionLevel: "Q",
+      },
+      imageOptions: {
+        saveAsBlob: false,
+        hideBackgroundDots: true,
+        imageSize: 0.35,
         margin: 0,
-        qrOptions: {
-          typeNumber: 0,
-          mode: "Byte",
-          errorCorrectionLevel: "Q",
-        },
-        imageOptions: { hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
-        dotsOptions: { type: "extra-rounded", color: "#000" },
-        backgroundOptions: { color: "#ffffff" },
-        image: "./images/logo.svg",
-      });
-      if (qrRef.current) {
-        qrRef.current.innerHTML = "";
-        qrCodeInstance.current.append(qrRef.current);
-      }
-    } else {
-      qrCodeInstance.current.update({ data: qrValue });
-    }
+      },
+      dotsOptions: {
+        type: "extra-rounded",
+        color: "#000000",
+      },
+      backgroundOptions: {
+        color: "#ffffff",
+      },
+      image: APP_ICON_BASE64,
+    });
+
+    qrCode.append(qrRef.current);
+    qrCodeInstance.current = qrCode;
   }, [qrValue]);
 
   const handleDownloadQR = () => {
