@@ -80,7 +80,6 @@ export function LoginForm() {
     onSuccess: (data) => {
       // Based on portal-old logic
       if (data.status === "success") {
-        console.log("Login Success Data:", data);
         if (data.show_otp) {
           setShowOtpDialog(true);
         } else {
@@ -116,7 +115,6 @@ export function LoginForm() {
     mutationFn: (values) => verifyOTP({ otp: values.otp }),
     onSuccess: (data) => {
       if (data.status === "success" && data.statusCode === 0) {
-        console.log("OTP Verification Success Data:", data);
         localStorage.setItem("is_authenticated", "true");
         setShowOtpDialog(false);
         router("/dashboard");
@@ -249,6 +247,7 @@ export function LoginForm() {
           <GlobalInput
             id="pin"
             type="password"
+            autoComplete="current-password"
             placeholder="••••••"
             maxLength={6}
             leftIcon={<Lock size={16} />}

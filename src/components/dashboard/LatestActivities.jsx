@@ -48,9 +48,9 @@ export function LatestActivities() {
                     {activity.notificationTypeName}
                   </p>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed line-clamp-2"
-                   dangerouslySetInnerHTML={{ __html: activity.notificationMsg?.replace(/\n/g, "<br>") }}
-                />
+                <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed line-clamp-2 whitespace-pre-line">
+                  {activity.notificationMsg}
+                </p>
                 <p className="text-[10px] text-slate-400 dark:text-white/25 font-medium mt-1.5">
                   {activity.timeAgo}
                 </p>

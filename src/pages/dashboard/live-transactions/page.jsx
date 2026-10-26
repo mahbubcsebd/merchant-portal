@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Eye, Loader2 } from "lucide-react";
 import { useDialog } from "@/components/globals/DialogProvider";
 import GlobalSelect from "@/components/globals/GlobalSelect";
@@ -11,12 +11,18 @@ import {
   listOfTerminal,
 } from "@/lib/api/endpoints";
 import { useDashboardContext } from "@/pages/dashboard/context";
-import { formatDate, formatAmount, formatStatus } from "@/lib/utils/formatters";
+import {
+  formatDate,
+  formatAmount,
+  formatStatus,
+  getStatusBadgeClass,
+  getTransactionStatusCode,
+} from "@/lib/utils/formatters";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function LiveTransactionsPage() {
   const { t } = useLanguage();
-  const { profile, accounts } = useDashboardContext();
+  const { profile, accounts, currency } = useDashboardContext();
   const { openDetailDialog } = useDialog();
   const queryClient = useQueryClient();
 
@@ -77,17 +83,24 @@ export default function LiveTransactionsPage() {
     [terminalData, t],
   );
 
-  const defaultAccountId = accounts?.[0]?.ACCOUNTNUMBER || "";
+  const currentAccountId = currency || accounts?.[0]?.ACCOUNTNUMBER || "";
 
   const [appliedFilters, setAppliedFilters] = useState({
     pageNum: 1,
     pageSize: 10,
-    accountId: defaultAccountId,
+    accountId: currentAccountId,
   });
 
-  if (!appliedFilters.accountId && defaultAccountId) {
-    setAppliedFilters((prev) => ({ ...prev, accountId: defaultAccountId }));
-  }
+  useEffect(() => {
+    if (currentAccountId) {
+      setAppliedFilters((prev) => {
+        if (prev.accountId !== currentAccountId) {
+          return { ...prev, accountId: currentAccountId };
+        }
+        return prev;
+      });
+    }
+  }, [currentAccountId]);
 
   const {
     data: txData,
@@ -100,13 +113,27 @@ export default function LiveTransactionsPage() {
     enabled: !!appliedFilters.accountId,
   });
 
-  const transactions = txData?.transactionHistories || [];
+  const rawTransactions = txData?.transactionHistories || [];
+
+  const transactions = useMemo(() => {
+    if (!appliedFilters.txnStatus || appliedFilters.txnStatus === "selected") {
+      return rawTransactions;
+    }
+    const targetStatus = appliedFilters.txnStatus.toUpperCase();
+    return rawTransactions.filter((tx) => {
+      const code = getTransactionStatusCode(tx);
+      if (targetStatus === "R" || targetStatus === "F") {
+        return code === "R";
+      }
+      return code === targetStatus;
+    });
+  }, [rawTransactions, appliedFilters.txnStatus]);
 
   const handleApplyFilter = () => {
     const payload = {
       pageNum: 1,
       pageSize: 10,
-      accountId: defaultAccountId,
+      accountId: currentAccountId,
     };
     if (status !== "selected") payload.txnStatus = status;
     if (branch !== "selected") payload.custSubID = branch;
@@ -123,7 +150,7 @@ export default function LiveTransactionsPage() {
     setAppliedFilters({
       pageNum: 1,
       pageSize: 10,
-      accountId: defaultAccountId,
+      accountId: currentAccountId,
     });
   };
 
@@ -149,15 +176,9 @@ export default function LiveTransactionsPage() {
             </span>
           </span>
           <span
-            className={`text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider ${
-              tx.txnStatus === "R"
-                ? "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10"
-                : tx.txnStatus === "C"
-                  ? "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10"
-                  : "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10"
-            }`}
+            className={`text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider ${getStatusBadgeClass(tx)}`}
           >
-            {formatStatus(tx.txnStatus, t)}
+            {formatStatus(tx, t)}
           </span>
         </>
       ),
@@ -166,6 +187,7 @@ export default function LiveTransactionsPage() {
         { label: t("bp_ref1", "Reference No"), value: tx.confirmationNumber },
         { label: t("transaction_type", "Transaction Type"), value: tx.txnName },
         { label: t("mba_currency", "Currency Code"), value: tx.currencyCode },
+        { label: t("teStatus", "Status"), value: formatStatus(tx, t) },
       ],
     });
   };
@@ -312,15 +334,9 @@ export default function LiveTransactionsPage() {
                     </td>
                     <td className="px-5 py-4 text-slate-600 dark:text-white/70">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          tx.txnStatus === "R"
-                            ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
-                            : tx.txnStatus === "C"
-                              ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-                              : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                        }`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(tx)}`}
                       >
-                        {formatStatus(tx.txnStatus, t)}
+                        {formatStatus(tx, t)}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-center">
@@ -358,12 +374,10 @@ export default function LiveTransactionsPage() {
                   <span className="text-xs font-semibold text-[#2563eb] dark:text-blue-400 uppercase tracking-wider">
                     {tx.txnName}
                   </span>
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
-                    tx.txnStatus === 'R' ? 'text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10' :
-                    tx.txnStatus === 'C' ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10' :
-                    'text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
-                  }`}>
-                    {formatStatus(tx.txnStatus, t)}
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${getStatusBadgeClass(tx, "pill")}`}
+                  >
+                    {formatStatus(tx, t)}
                   </span>
                 </div>
 

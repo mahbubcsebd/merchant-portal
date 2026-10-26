@@ -49,6 +49,9 @@ export default defineConfig({
       },
     },
   },
+  oxc: {
+    drop: ['console', 'debugger'],
+  },
   build: {
     rollupOptions: {
       output: {
