@@ -1,11 +1,13 @@
-import axios from "axios";
-import CryptoJS from "crypto-js";
-const SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || "testkey1234";
+import axios from 'axios';
+import CryptoJS from 'crypto-js';
+const SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || 'testkey1234';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? "/api" : "https://core1.moadbusglobal.com/walletmc",
+  baseURL: import.meta.env.DEV
+    ? '/api'
+    : 'https://core1.moadbusglobal.com/walletmc',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
@@ -16,7 +18,7 @@ apiClient.interceptors.request.use(
     if (config.data) {
       const str = new URLSearchParams(config.data).toString();
       const hash = CryptoJS.SHA256(str + SECRET_KEY).toString(CryptoJS.enc.Hex);
-      config.headers["requestsignature"] = hash;
+      config.headers['requestsignature'] = hash;
     }
     return config;
   },
@@ -26,18 +28,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.error("API Error:", error.response || error.message);
+    console.error('API Error:', error.response || error.message);
     return Promise.reject(error);
   },
 );
 
 export const globalDefaultParams = {
-  respType: "json",
-  coordLat: "1.1",
-  coordLong: "1.1",
-  langId: "en",
-  institutionID: "",
-  custType: "C",
+  respType: 'json',
+  coordLat: '1.1',
+  coordLong: '1.1',
+  langId: 'en',
+  institutionID: '',
+  custType: 'C',
 };
 
 export const get = async (url, params = {}) => {
@@ -54,7 +56,7 @@ export const postFile = async (url, data = {}) => {
   const mergedData = { ...globalDefaultParams, ...data };
   return apiClient.post(url, mergedData, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      'Content-Type': 'multipart/form-data',
     },
   });
 };
@@ -62,7 +64,7 @@ export const postFile = async (url, data = {}) => {
 export const postBlob = async (url, data = {}) => {
   const mergedData = { ...globalDefaultParams, ...data };
   return apiClient.post(url, mergedData, {
-    responseType: "blob",
+    responseType: 'blob',
   });
 };
 

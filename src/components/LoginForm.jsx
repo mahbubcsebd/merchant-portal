@@ -310,8 +310,10 @@ export function LoginForm() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="my-8">
-            <div className={otpError ? "animate-shake" : ""}>
+          <div className="my-8 flex flex-col items-center w-full">
+            <div
+              className={`flex justify-center w-full ${otpError ? "animate-shake" : ""}`}
+            >
               <InputOTP
                 maxLength={6}
                 value={otpValue}
@@ -325,8 +327,9 @@ export function LoginForm() {
                 disabled={
                   verifyOTPMutation.isPending || resendOTPMutation.isPending
                 }
+                containerClassName="justify-center"
               >
-                <InputOTPGroup className="gap-2.5">
+                <InputOTPGroup className="gap-2.5 justify-center">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <InputOTPSlot
                       key={i}
@@ -338,17 +341,17 @@ export function LoginForm() {
               </InputOTP>
             </div>
             {otpError && (
-              <p className="text-red-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+              <p className="text-red-500 text-xs font-semibold mt-3 text-center max-w-[320px] animate-[fade-in_0.2s_ease-out]">
                 {otpErrorMessage || "Invalid OTP code. Please try again."}
               </p>
             )}
             {resendSuccessMsg && (
-              <p className="text-emerald-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+              <p className="text-emerald-500 text-xs font-semibold mt-3 text-center max-w-[320px] animate-[fade-in_0.2s_ease-out]">
                 {resendSuccessMsg}
               </p>
             )}
             {verifyOTPMutation.isPending && (
-              <p className="text-blue-500 text-xs font-semibold mt-3 animate-[fade-in_0.2s_ease-out]">
+              <p className="text-blue-500 text-xs font-semibold mt-3 text-center max-w-[320px] animate-[fade-in_0.2s_ease-out]">
                 {t("verifying", "Verifying...")}
               </p>
             )}

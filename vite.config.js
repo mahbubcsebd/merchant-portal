@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import tailwindcss from '@tailwindcss/postcss'
+import tailwindcss from '@tailwindcss/postcss';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   css: {
@@ -24,21 +24,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // Don't verify SSL certs
         rewrite: (path) => path.replace(/^\/api/, '/walletmc'),
-        cookieDomainRewrite: "localhost",
-        cookiePathRewrite: { "*": "/" },
+        cookieDomainRewrite: 'localhost',
+        cookiePathRewrite: { '*': '/' },
         configure: (proxy, _options) => {
           proxy.on('proxyRes', (proxyRes, req, res) => {
             const setCookie = proxyRes.headers['set-cookie'];
             if (setCookie) {
               // Strip out Secure and SameSite attributes so localhost accepts the cookie
-              proxyRes.headers['set-cookie'] = setCookie.map(cookie => {
+              proxyRes.headers['set-cookie'] = setCookie.map((cookie) => {
                 return cookie
                   .replace(/;\s*Secure/gi, '')
                   .replace(/;\s*SameSite=(Lax|Strict|None)/gi, '');
               });
             }
           });
-        }
+        },
       },
     },
   },
@@ -55,8 +55,8 @@ export default defineConfig({
             return 'assets/css/styles.css';
           }
           return 'assets/[name]-[hash].[ext]';
-        }
-      }
-    }
-  }
-})
+        },
+      },
+    },
+  },
+});
