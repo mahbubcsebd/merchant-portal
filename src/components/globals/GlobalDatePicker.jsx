@@ -37,8 +37,10 @@ export default function GlobalDatePicker({
           mode="single"
           selected={value}
           onSelect={(date) => {
-            onChange(date);
-            setOpen(false);
+            if (date) {
+              onChange?.(date);
+              setOpen(false);
+            }
           }}
           captionLayout="dropdown"
           startMonth={new Date(2000, 0)}

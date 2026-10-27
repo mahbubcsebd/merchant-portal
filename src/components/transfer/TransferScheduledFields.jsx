@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useLanguage } from "@/components/globals/LanguageProvider";
@@ -14,6 +14,9 @@ import { buttonVariants } from "@/components/ui/button";
 
 export default function TransferScheduledFields({ formData, handleSelectChange, errors }) {
   const { t } = useLanguage();
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+
   if (formData.when !== "Scheduled") return null;
 
   return (
@@ -27,7 +30,7 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
             size={16}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"
           />
-          <Popover>
+          <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
             <PopoverTrigger
               type="button"
               className={cn(
@@ -51,7 +54,10 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
                 mode="single"
                 selected={formData.startDate}
                 onSelect={(date) => {
-                  handleSelectChange("startDate", date);
+                  if (date) {
+                    handleSelectChange("startDate", date);
+                    setStartDateOpen(false);
+                  }
                 }}
                 disabled={(date) =>
                   date < new Date().setHours(0, 0, 0, 0)
@@ -114,7 +120,7 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
                   size={16}
                   className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"
                 />
-                <Popover>
+                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                   <PopoverTrigger
                     type="button"
                     className={cn(
@@ -138,7 +144,10 @@ export default function TransferScheduledFields({ formData, handleSelectChange, 
                       mode="single"
                       selected={formData.endDate}
                       onSelect={(date) => {
-                        handleSelectChange("endDate", date);
+                        if (date) {
+                          handleSelectChange("endDate", date);
+                          setEndDateOpen(false);
+                        }
                       }}
                       disabled={(date) =>
                         date < new Date().setHours(0, 0, 0, 0) ||

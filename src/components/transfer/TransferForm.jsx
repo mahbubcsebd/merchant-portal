@@ -386,11 +386,15 @@ export default function TransferForm({ setView }) {
           <button
             onClick={() => setView("manage_scheduled")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
-          >{t("manage_scheduled_transfer2", "Manage Scheduled Transfers")}</button>
+          >
+            {t("manage_scheduled_transfer2", "Manage Scheduled Transfers")}
+          </button>
           <button
             onClick={() => setView("manage_beneficiaries")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
-          >{t("manage.beneficiaries", "Manage Beneficiaries")}</button>
+          >
+            {t("manage.beneficiaries", "Manage Beneficiaries")}
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -494,7 +498,9 @@ export default function TransferForm({ setView }) {
                 payToBankMutation.isPending ||
                 isFetchingRouting
               }
-            >{t("buttonPayNow", "Submit")}</GlobalButton>
+            >
+              {t("buttonSubmit", "Submit")}
+            </GlobalButton>
           </div>
         </form>
       </div>

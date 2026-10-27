@@ -50,7 +50,8 @@ export function ForgotPinForm() {
     defaultValues: { email: "" },
   })
 
-  const dobValue = watch("dob")
+  const [dobOpen, setDobOpen] = useState(false);
+  const dobValue = watch("dob");
 
   async function onSubmit(values) {
     setIsSubmitting(true)
@@ -133,7 +134,7 @@ export function ForgotPinForm() {
           </label>
           <div className="relative w-full flex">
             <CalendarIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-            <Popover>
+            <Popover open={dobOpen} onOpenChange={setDobOpen}>
               <PopoverTrigger
                 className={cn(
                   buttonVariants({ variant: "outline" }),
@@ -148,8 +149,11 @@ export function ForgotPinForm() {
                   mode="single"
                   selected={dobValue}
                   onSelect={(date) => {
-                    setValue("dob", date, { shouldValidate: true })
-                    setApiError("")
+                    if (date) {
+                      setValue("dob", date, { shouldValidate: true });
+                      setApiError("");
+                      setDobOpen(false);
+                    }
                   }}
                   disabled={(date) =>
                     date > new Date() || date < new Date("1900-01-01")
