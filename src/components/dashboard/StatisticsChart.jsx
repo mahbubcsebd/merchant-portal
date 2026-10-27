@@ -1,131 +1,211 @@
 import {
-  AreaChart, Area,
-  XAxis, YAxis,
-  CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
-} from "recharts"
-import { useTheme } from "next-themes"
-import { useState, useEffect, useMemo } from "react"
-import { useDashboardContext } from "@/pages/dashboard/context"
-import { useLanguage } from "@/components/globals/LanguageProvider"
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white dark:bg-[#1a2540] border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 shadow-xl text-xs">
-        <p className="text-slate-500 dark:text-white/50 font-medium mb-1">{label}</p>
-        {payload.map((entry) => (
-          <p key={entry.name} className="font-semibold" style={{ color: entry.color }}>
-            {entry.name}: XCG {entry.value.toFixed(2)}
-          </p>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { useTheme } from "next-themes";
+import { useState, useEffect, useMemo } from "react";
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export function StatisticsChart() {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const { dashboardInfo, period } = useDashboardContext();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const { dashboardInfo, period, accounts, currency } = useDashboardContext();
   const { t } = useLanguage();
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => setMounted(true), []);
 
-  const isDark = mounted ? theme === "dark" : true
-  const axisColor = isDark ? "rgba(255,255,255,0.3)" : "#94a3b8"
-  const gridColor = isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"
+  const isDark = mounted ? theme === "dark" : true;
+  const axisColor = isDark ? "rgba(255,255,255,0.4)" : "#64748b";
+  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "#f1f5f9";
+
+  const currentAccount =
+    accounts?.find((a) => a.ACCOUNTNO === currency) || accounts?.[0];
+  const selectedCurrency = currentAccount?.CURSHRTNAME || "XCG";
 
   const chartData = useMemo(() => {
-    if (!dashboardInfo || !dashboardInfo.chart || dashboardInfo.chart.length === 0) {
-      return [
-        { month: "Jan", Incoming: 0, Outgoing: 0 },
-        { month: "Feb", Incoming: 0, Outgoing: 0 },
-        { month: "Mar", Incoming: 0, Outgoing: 0 },
-        { month: "Apr", Incoming: 0, Outgoing: 0 },
-        { month: "May", Incoming: 0, Outgoing: 0 },
-      ];
+    if (
+      !dashboardInfo ||
+      !dashboardInfo.chart ||
+      dashboardInfo.chart.length === 0
+    ) {
+      return [];
     }
-    
-    let data = dashboardInfo.chart.map(item => ({
+
+    return dashboardInfo.chart.map((item) => ({
       month: item.itemLabel || "",
-      Incoming: parseFloat(item.totalAmountIncoming || 0),
-      Outgoing: parseFloat(item.totalAmountOutgoing || 0),
+      incomingCount: parseInt(item.totalCountIncoming || 0, 10),
+      outgoingCount: parseInt(item.totalCountOutgoing || 0, 10),
+      incomingAmount: parseFloat(item.totalAmountIncoming || 0),
+      outgoingAmount: parseFloat(item.totalAmountOutgoing || 0),
+      incomingFormatted: new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(parseFloat(item.totalAmountIncoming || 0)),
+      outgoingFormatted: new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(parseFloat(item.totalAmountOutgoing || 0)),
     }));
-
-    if (data.length === 1) {
-      const singleLabel = data[0].month.toString();
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      let prevLabel = "Prev";
-      let nextLabel = "Next";
-      
-      const idx = monthNames.findIndex(m => singleLabel.includes(m));
-      if (idx !== -1) {
-        prevLabel = monthNames[(idx - 1 + 12) % 12];
-        nextLabel = monthNames[(idx + 1) % 12];
-      } else if (!isNaN(parseInt(singleLabel)) && singleLabel.length === 4) {
-        const yr = parseInt(singleLabel);
-        prevLabel = (yr - 1).toString();
-        nextLabel = (yr + 1).toString();
-      }
-
-      data = [
-        { month: prevLabel, Incoming: 0, Outgoing: 0 },
-        data[0],
-        { month: nextLabel, Incoming: 0, Outgoing: 0 }
-      ];
-    }
-
-    return data;
   }, [dashboardInfo]);
 
-  const periodLabel = {
-    last3months: t("threeMonths", "Last 3 Months"),
-    thismonth: t("thisMonth", "This Month"),
-    thisyear: t("thisYear", "This Year"),
-    alltime: t("allTime", "All Time"),
-  }[period] || t("threeMonths", "Last 5 Months");
+  const periodLabel =
+    {
+      last3months: t("threeMonths", "Last 3 Months"),
+      thismonth: t("thisMonth", "This Month"),
+      thisyear: t("thisYear", "This Year"),
+      alltime: t("allTime", "All Time"),
+    }[period] || t("threeMonths", "Last 3 Months");
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const item = payload[0].payload;
+      return (
+        <div className="bg-white dark:bg-[#1a2540] border border-slate-200 dark:border-white/10 rounded-xl p-3 shadow-xl text-xs space-y-1.5">
+          <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-white/10 pb-1">
+            {item.month}
+          </p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 text-[#44c273] font-semibold">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#44c273] shrink-0" />
+              Incoming:
+            </span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {selectedCurrency} {item.incomingFormatted} ({item.incomingCount})
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 text-[#DC3545] font-semibold">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#DC3545] shrink-0" />
+              Outgoing:
+            </span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {selectedCurrency} {item.outgoingFormatted} ({item.outgoingCount})
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderCustomTick = ({ x, y, payload }) => {
+    const item = chartData[payload.index];
+    if (!item) return null;
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={14}
+          textAnchor="middle"
+          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-medium"
+        >
+          Incoming: {selectedCurrency} {item.incomingFormatted}
+        </text>
+        <text
+          x={0}
+          y={28}
+          textAnchor="middle"
+          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-medium"
+        >
+          Outgoing: {selectedCurrency} {item.outgoingFormatted}
+        </text>
+        <text
+          x={0}
+          y={44}
+          textAnchor="middle"
+          className="fill-slate-700 dark:fill-slate-200 text-xs font-bold"
+        >
+          {item.month}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-5">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t("mStatistics", "Transaction History")}</h3>
-        <span className="text-xs font-medium text-slate-500 dark:text-white/30 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 px-3 py-1 rounded-md">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          {t("mStatistics", "Statistics")}
+        </h3>
+        <span className="text-xs font-medium text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 px-3 py-1 rounded-md">
           {periodLabel}
         </span>
       </div>
 
-      {/* Fixed height — required for ResponsiveContainer to work */}
-      <div style={{ height: 220 }}>
+      <div className="text-center mb-1">
+        <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300">
+          {t("transaction_history", "Transaction History")}
+        </p>
+      </div>
+
+      <div style={{ height: 380 }} className="w-full">
         {chartData.length === 0 ? (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
             {t("no_chart_data", "No chart data available.")}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="incomingGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563eb" stopOpacity={isDark ? 0.4 : 0.18} />
-                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="outgoingGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#e65625" stopOpacity={isDark ? 0.35 : 0.15} />
-                  <stop offset="95%" stopColor="#e65625" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} dy={8} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 15, left: -15, bottom: 45 }}
+              barGap={4}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={gridColor}
+                vertical={false}
+              />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={renderCustomTick}
+                interval={0}
+              />
+              <YAxis
+                tick={{ fill: axisColor, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
               <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: "11px", color: axisColor, paddingTop: "10px" }} />
-              <Area type="monotone" dataKey="Incoming" stroke="#2563eb" strokeWidth={2.5} fill="url(#incomingGrad)" dot={false} activeDot={{ r: 4, fill: "#2563eb" }} />
-              <Area type="monotone" dataKey="Outgoing" stroke="#e65625" strokeWidth={2.5} fill="url(#outgoingGrad)" dot={false} activeDot={{ r: 4, fill: "#e65625" }} />
-            </AreaChart>
+              <Legend
+                verticalAlign="top"
+                align="center"
+                iconType="rect"
+                iconSize={14}
+                wrapperStyle={{
+                  paddingBottom: "16px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              />
+              <Bar
+                dataKey="incomingCount"
+                name={t("incoming", "Incoming")}
+                fill="#44c273"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
+              />
+              <Bar
+                dataKey="outgoingCount"
+                name={t("outgoing", "Outgoing")}
+                fill="#DC3545"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
+              />
+            </BarChart>
           </ResponsiveContainer>
         )}
       </div>
     </div>
-  )
+  );
 }

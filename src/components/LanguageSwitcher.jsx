@@ -5,13 +5,20 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { useLanguage, SUPPORTED_LANGUAGES } from "@/components/globals/LanguageProvider";
+import {
+  useLanguage,
+  SUPPORTED_LANGUAGES,
+} from "@/components/globals/LanguageProvider";
 
 export function LanguageSwitcher() {
   const { language, setLanguage, supportedLanguages } = useLanguage();
-  const languagesList = supportedLanguages && supportedLanguages.length > 0 ? supportedLanguages : SUPPORTED_LANGUAGES;
+  const languagesList =
+    supportedLanguages && supportedLanguages.length > 0
+      ? supportedLanguages
+      : SUPPORTED_LANGUAGES;
 
-  const currentLang = languagesList.find((l) => l.code === language) || languagesList[0];
+  const currentLang =
+    languagesList.find((l) => l.code === language) || languagesList[0];
 
   return (
     <div className="flex items-center gap-2">
@@ -37,9 +44,10 @@ export function LanguageSwitcher() {
             className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200 shrink-0"
           />
           <span className="flex items-center gap-1.5 shrink-0">
-            <span className="hidden sm:inline">{currentLang.flag}</span>
             <span className="hidden sm:inline">{currentLang.label}</span>
-            <span className="inline sm:hidden uppercase font-bold text-xs tracking-wider">{currentLang.code}</span>
+            <span className="inline sm:hidden uppercase font-bold text-xs tracking-wider">
+              {currentLang.code}
+            </span>
           </span>
         </SelectTrigger>
 
@@ -47,19 +55,19 @@ export function LanguageSwitcher() {
           align="end"
           className="min-w-[160px] sm:min-w-[170px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-xl shadow-slate-200/50 dark:shadow-black/40 p-1 z-50"
         >
-          {languagesList.map(({ code, flag, label }) => (
+          {languagesList.map(({ code, label }) => (
             <SelectItem
               key={code}
               value={code}
               className="rounded-lg px-3 py-2 text-xs font-medium cursor-pointer focus:bg-slate-100 dark:focus:bg-white/5"
             >
               <span className="flex items-center justify-between w-full gap-2">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm leading-none">{flag}</span>
-                  <span>{label}</span>
-                </span>
+                <span>{label}</span>
                 {code === language && (
-                  <Check size={14} className="text-[#2563eb] dark:text-blue-400 shrink-0" />
+                  <Check
+                    size={14}
+                    className="text-[#2563eb] dark:text-blue-400 shrink-0"
+                  />
                 )}
               </span>
             </SelectItem>
