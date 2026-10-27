@@ -3,6 +3,15 @@ import { Eye, Pencil, Clock, Trash2 } from "lucide-react";
 import GlobalButton from "@/components/globals/GlobalButton";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 
+export const isPendingScheduledTxn = (itemOrStatus) => {
+  const status =
+    typeof itemOrStatus === "string"
+      ? itemOrStatus
+      : itemOrStatus?.TXNSTATUS || itemOrStatus?.status || "";
+  const s = String(status).trim().toUpperCase();
+  return s === "WAITING" || (s !== "" && s !== "CANCELLED" && s !== "SUCCESS");
+};
+
 export default function ScheduledTransfersList({
   transfers,
   isLoading,
@@ -64,65 +73,88 @@ export default function ScheduledTransfersList({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                  {transfers.map((tItem, idx) => (
-                    <tr
-                      key={tItem.SCHEDULEDTXNID || tItem.id || idx}
-                      className={`${
-                        idx % 2 === 0
-                          ? "bg-blue-50/50 dark:bg-white/[0.02]"
-                          : "bg-white dark:bg-transparent"
-                      } hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
-                    >
-                      <td className="px-5 py-4 text-slate-600 dark:text-white/70">
-                        {tItem.BENFNAME || tItem.payTo}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center">
-                        {tItem.howOften || tItem.FREQUENCY}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center">
-                        {tItem.until || tItem.ENDDATE}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-right">
-                        {tItem.currency || tItem.BENFACCUR}{" "}
-                        {tItem.amount || tItem.TXNAMOUNT}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center uppercase text-xs font-semibold">
-                        {tItem.TXNSTATUS || tItem.status}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-3">
-                          <button
-                            onClick={() => handleView(tItem)}
-                            className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
-                            title={t("view", "View")}
+                  {transfers.map((tItem, idx) => {
+                    const isPending = isPendingScheduledTxn(tItem);
+                    const statusStr = String(
+                      tItem.TXNSTATUS || tItem.status || "",
+                    )
+                      .trim()
+                      .toUpperCase();
+
+                    return (
+                      <tr
+                        key={tItem.SCHEDULEDTXNID || tItem.id || idx}
+                        className={`${
+                          idx % 2 === 0
+                            ? "bg-blue-50/50 dark:bg-white/[0.02]"
+                            : "bg-white dark:bg-transparent"
+                        } hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
+                      >
+                        <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                          {tItem.BENFNAME || tItem.payTo}
+                        </td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center">
+                          {tItem.howOften || tItem.FREQUENCY}
+                        </td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-center">
+                          {tItem.until || tItem.ENDDATE}
+                        </td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-white/70 text-right">
+                          {tItem.currency || tItem.BENFACCUR}{" "}
+                          {tItem.amount || tItem.TXNAMOUNT}
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
+                              statusStr === "WAITING" || isPending
+                                ? "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
+                                : statusStr === "SUCCESS"
+                                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+                                  : "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
+                            }`}
                           >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(tItem)}
-                            className="text-slate-400 hover:text-emerald-500 transition-colors"
-                            title={t("edit", "Edit")}
-                          >
-                            <Pencil size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleHistory(tItem)}
-                            className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
-                            title={t("history", "History")}
-                          >
-                            <Clock size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(tItem)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors"
-                            title={t("delete", "Delete")}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {tItem.TXNSTATUS || tItem.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center justify-end gap-3">
+                            <button
+                              onClick={() => handleView(tItem)}
+                              className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
+                              title={t("view", "View")}
+                            >
+                              <Eye size={18} />
+                            </button>
+                            {isPending && (
+                              <button
+                                onClick={() => handleEdit(tItem)}
+                                className="text-slate-400 hover:text-emerald-500 transition-colors"
+                                title={t("edit", "Edit")}
+                              >
+                                <Pencil size={18} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleHistory(tItem)}
+                              className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
+                              title={t("history", "History")}
+                            >
+                              <Clock size={18} />
+                            </button>
+                            {isPending && (
+                              <button
+                                onClick={() => handleDelete(tItem)}
+                                className="text-slate-400 hover:text-rose-500 transition-colors"
+                                title={t("delete", "Delete")}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {transfers.length === 0 && (
                     <tr>
                       <td
@@ -142,76 +174,90 @@ export default function ScheduledTransfersList({
 
             {/* Card Feed — Mobile View (Hidden on desktop) */}
             <div className="md:hidden space-y-3 mb-8">
-              {transfers.map((tItem, idx) => (
-                <div
-                  key={tItem.SCHEDULEDTXNID || tItem.id || idx}
-                  className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
-                >
-                  {/* Row 1: Name & Status */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
-                        {tItem.BENFNAME || tItem.payTo}
-                      </h4>
-                      <p className="text-xs text-slate-400 dark:text-white/45 mt-1">
-                        {tItem.howOften || tItem.FREQUENCY} ·{" "}
-                        {t("until", "Until")}:{" "}
-                        {tItem.until ||
-                          tItem.ENDDATE ||
-                          t("endless", "Endless")}
-                      </p>
+              {transfers.map((tItem, idx) => {
+                const isPending = isPendingScheduledTxn(tItem);
+                const statusStr = String(
+                  tItem.TXNSTATUS || tItem.status || "",
+                )
+                  .trim()
+                  .toUpperCase();
+                return (
+                  <div
+                    key={tItem.SCHEDULEDTXNID || tItem.id || idx}
+                    className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4"
+                  >
+                    {/* Row 1: Name & Status */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
+                          {tItem.BENFNAME || tItem.payTo}
+                        </h4>
+                        <p className="text-xs text-slate-400 dark:text-white/45 mt-1">
+                          {tItem.howOften || tItem.FREQUENCY} ·{" "}
+                          {t("until", "Until")}:{" "}
+                          {tItem.until ||
+                            tItem.ENDDATE ||
+                            t("endless", "Endless")}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          statusStr === "WAITING" || isPending
+                            ? "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
+                            : statusStr === "SUCCESS"
+                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+                              : "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
+                        }`}
+                      >
+                        {tItem.TXNSTATUS || tItem.status}
+                      </span>
                     </div>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        (tItem.TXNSTATUS || tItem.status) === "WAITING"
-                          ? "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
-                          : "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
-                      }`}
-                    >
-                      {tItem.TXNSTATUS || tItem.status}
-                    </span>
-                  </div>
 
-                  {/* Row 2: Amount & Action Buttons */}
-                  <div className="flex items-center justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
-                    <span className="text-sm font-extrabold text-slate-800 dark:text-white">
-                      {tItem.currency || tItem.BENFACCUR}{" "}
-                      {tItem.amount || tItem.TXNAMOUNT}
-                    </span>
+                    {/* Row 2: Amount & Action Buttons */}
+                    <div className="flex items-center justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10">
+                      <span className="text-sm font-extrabold text-slate-800 dark:text-white">
+                        {tItem.currency || tItem.BENFACCUR}{" "}
+                        {tItem.amount || tItem.TXNAMOUNT}
+                      </span>
 
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleView(tItem)}
-                        className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                        title={t("view", "View")}
-                      >
-                        <Eye size={18} strokeWidth={2} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(tItem)}
-                        className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                        title={t("edit", "Edit")}
-                      >
-                        <Pencil size={18} strokeWidth={2} />
-                      </button>
-                      <button
-                        onClick={() => handleHistory(tItem)}
-                        className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
-                        title={t("history", "History")}
-                      >
-                        <Clock size={18} strokeWidth={2} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(tItem)}
-                        className="text-slate-500 hover:text-red-500 transition-colors"
-                        title={t("delete", "Delete")}
-                      >
-                        <Trash2 size={18} strokeWidth={2} />
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleView(tItem)}
+                          className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
+                          title={t("view", "View")}
+                        >
+                          <Eye size={18} strokeWidth={2} />
+                        </button>
+                        {isPending && (
+                          <button
+                            onClick={() => handleEdit(tItem)}
+                            className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
+                            title={t("edit", "Edit")}
+                          >
+                            <Pencil size={18} strokeWidth={2} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleHistory(tItem)}
+                          className="text-slate-500 hover:text-[#1b55ad] dark:hover:text-blue-400 transition-colors"
+                          title={t("history", "History")}
+                        >
+                          <Clock size={18} strokeWidth={2} />
+                        </button>
+                        {isPending && (
+                          <button
+                            onClick={() => handleDelete(tItem)}
+                            className="text-slate-500 hover:text-red-500 transition-colors"
+                            title={t("delete", "Delete")}
+                          >
+                            <Trash2 size={18} strokeWidth={2} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {transfers.length === 0 && (
                 <div className="p-8 text-center text-slate-500 dark:text-white/50 text-sm bg-white dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
                   {t(

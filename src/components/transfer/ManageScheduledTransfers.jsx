@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDialog } from "@/components/globals/DialogProvider";
-import ScheduledTransfersList from "./scheduled/ScheduledTransfersList";
+import ScheduledTransfersList, { isPendingScheduledTxn } from "./scheduled/ScheduledTransfersList";
 import ScheduledTransferFormFields from "./scheduled/ScheduledTransferFormFields";
+import ScheduledTransferHistoryContent from "./scheduled/ScheduledTransferHistoryContent";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useScheduledTransfers } from "@/hooks/useScheduledTransfers";
@@ -54,7 +55,6 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
 
   const formatDateForApi = (dateStr) => {
     if (!dateStr) return dateStr;
-    // YYYY-MM-DD to YYYYMMDD
     return dateStr.replace(/-/g, "");
   };
 
@@ -85,8 +85,8 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
     });
   };
 
-    const handleEdit = (transfer) => {
-    if (transfer.TXNSTATUS === "CANCELLED") return;
+  const handleEdit = (transfer) => {
+    if (!isPendingScheduledTxn(transfer)) return;
 
     const initialValues = {
       ...transfer,
@@ -171,7 +171,6 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
           message: t("confirm_update_desc", "Are you sure you want to update this scheduled transfer?"),
           details: preconfirmDetails,
           onChange: () => {
-             // Let them go back to the dialog
              handleEdit(transfer);
           },
           onSubmit: async () => {
@@ -198,7 +197,7 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
   };
 
   const handleDelete = (transfer) => {
-    if (transfer.TXNSTATUS === "CANCELLED") return;
+    if (!isPendingScheduledTxn(transfer)) return;
 
     const details = {
       [t("p2b_benname", "Beneficiary Name")]: transfer.BENFNAME,
@@ -238,8 +237,17 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
   };
 
   const handleHistory = (transfer) => {
-    // Future integration for scheduledTxnHistory API
-    console.log("View history for", transfer.SCHEDULEDTXNID);
+    openFormDialog({
+      title: t("menu_history", "Scheduled Transfer History"),
+      isView: true,
+      size: "sm:max-w-2xl",
+      content: (
+        <ScheduledTransferHistoryContent
+          transfer={transfer}
+          welcomeData={welcomeData}
+        />
+      ),
+    });
   };
 
   // -------------------------------------------------------------

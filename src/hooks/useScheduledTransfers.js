@@ -3,17 +3,16 @@ import {
   scheduledTxn,
   updateScheduledTxn,
   deleteScheduledTxn,
+  scheduledTxnHistory,
 } from "@/lib/api/endpoints";
 
 export function useScheduledTransfers() {
   const queryClient = useQueryClient();
 
-  // 1. Query for Scheduled Transfers
+  // Query for Scheduled Transfers
   const transfersQuery = useQuery({
     queryKey: ["scheduledTransfers"],
     queryFn: async () => {
-      // old-portal payload: { txnCode: "PAYTOBANK" } 
-      // Assuming PAYTOBANK for now; we may need to make it dynamic later if PAYBILL is also needed here
       const res = await scheduledTxn({ txnCode: "PAYTOBANK" });
       
       if (res.statusCode !== 0 || res.status !== "success") {
@@ -21,10 +20,10 @@ export function useScheduledTransfers() {
       }
       return res.scheduledTxns || [];
     },
-    staleTime: 0, // No aggressive caching (Banking rules)
+    staleTime: 0,
   });
 
-  // 2. Mutation for Updating a Scheduled Transfer
+  // Mutation for Updating a Scheduled Transfer
   const updateTransferMutation = useMutation({
     mutationFn: async (payload) => {
       const res = await updateScheduledTxn(payload);
@@ -38,7 +37,7 @@ export function useScheduledTransfers() {
     },
   });
 
-  // 3. Mutation for Deleting a Scheduled Transfer
+  // Mutation for Deleting a Scheduled Transfer
   const deleteTransferMutation = useMutation({
     mutationFn: async (scheduledTxnId) => {
       const res = await deleteScheduledTxn({ scheduledTxnId });
@@ -58,3 +57,24 @@ export function useScheduledTransfers() {
     deleteTransferMutation,
   };
 }
+
+export function useScheduledTxnHistory(scheduledTxnId) {
+  return useQuery({
+    queryKey: ["scheduledTxnHistory", scheduledTxnId],
+    queryFn: async () => {
+      const res = await scheduledTxnHistory({ scheduledTxnId });
+      if (res.statusCode !== 0 || res.status !== "success") {
+        throw new Error(
+          res.message || res.statusDesc || "Failed to load scheduled transfer history",
+        );
+      }
+      return {
+        history: res.scheduledTxnHistory || [],
+        message: res.message || "",
+      };
+    },
+    enabled: Boolean(scheduledTxnId),
+    staleTime: 0,
+  });
+}
+
