@@ -54,11 +54,7 @@ export default function BillerTemplateFormFields({
       <GlobalSelect
         name="billerId"
         required
-        label={
-          <>
-            {t("r_billerName", "Biller Name")} <span className="text-red-500">*</span>
-          </>
-        }
+        label={t("r_billerName", "Biller Name")}
         disabled={isView || allBillersQuery.isLoading}
         value={billerId}
         onChange={(val) => {
@@ -72,11 +68,7 @@ export default function BillerTemplateFormFields({
       <GlobalInput
         name="billName"
         required
-        label={
-          <>
-            {t("bp_tpName1", "Template Name")} <span className="text-red-500">*</span>
-          </>
-        }
+        label={t("bp_tpName1", "Template Name")}
         disabled={isView}
         defaultValue={data?.templateName || ""}
         placeholder="e.g. Bill Template 001"
@@ -88,11 +80,7 @@ export default function BillerTemplateFormFields({
       <GlobalInput
         name="refNum"
         required
-        label={
-          <>
-            {t("bp_ref", "Reference Number")} <span className="text-red-500">*</span>
-          </>
-        }
+        label={t("bp_ref", "Reference Number")}
         disabled={isView}
         defaultValue={data?.referenceNo || ""}
         placeholder="e.g. 12345"

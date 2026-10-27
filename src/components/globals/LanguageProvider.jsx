@@ -57,18 +57,15 @@ export function LanguageProvider({ children }) {
     return getDynamicSupportedLanguages(welcomeData);
   }, [welcomeData]);
 
-  // Read initial language from localStorage or default to English ('en')
   const [lang, setLangState] = useState(() => {
     return localStorage.getItem('app_language') || 'en';
   });
 
-  // Keep global request parameters in sync with active language
   useEffect(() => {
     globalDefaultParams.langId = lang;
     globalDefaultParams.langID = lang;
   }, [lang]);
 
-  // Cached translation map from localStorage to avoid flashes of untranslated text on initial render
   const [cachedTranslationMap, setCachedTranslationMap] = useState(() => {
     try {
       const stored = localStorage.getItem(`lang_pack_${lang}`);
@@ -78,15 +75,20 @@ export function LanguageProvider({ children }) {
     }
   });
 
-  // Fetch translation pack from backend for current language using React Query
   const { data: langPackResponse, isLoading: isLangLoading } = useQuery({
     queryKey: ['langPack', lang],
     queryFn: () => getLangPack({ langID: lang, langId: lang }),
-    staleTime: 0, // Always fetch fresh translation pack when language changes
+    staleTime: 0, 
     refetchOnWindowFocus: false,
   });
 
-  // Build lookup dictionary whenever language or API response changes
+  const cleanAsterisks = (val) => {
+    if (typeof val === "string") {
+      return val.replace(/[\s*]+$/, "").trim();
+    }
+    return val;
+  };
+
   const translationMap = useMemo(() => {
     const languageObj = langPackResponse?.language;
     const langData =
@@ -98,11 +100,10 @@ export function LanguageProvider({ children }) {
       const dict = {};
       langData.forEach((item) => {
         if (item.labelId) {
-          dict[item.labelId] = item.labelValue;
+          dict[item.labelId] = cleanAsterisks(item.labelValue);
         }
       });
 
-      // Persist to localStorage for offline and immediate startup use
       try {
         localStorage.setItem(`lang_pack_${lang}`, JSON.stringify(dict));
       } catch (e) {}
@@ -112,10 +113,9 @@ export function LanguageProvider({ children }) {
     return cachedTranslationMap;
   }, [langPackResponse, lang, cachedTranslationMap]);
 
-  // Update localStorage, global params, and cached map when language changes
   const setLanguage = (newLang) => {
     setLangState(newLang);
-    localStorage.setItem('app_language', newLang);
+    localStorage.setItem("app_language", newLang);
     globalDefaultParams.langId = newLang;
     globalDefaultParams.langID = newLang;
     try {
@@ -126,9 +126,14 @@ export function LanguageProvider({ children }) {
     }
   };
 
-  // Translation function with fallback
   const t = (key, fallback) => {
-    return translationMap[key] || fallback || key;
+    const raw =
+      translationMap[key] !== undefined
+        ? translationMap[key]
+        : fallback !== undefined
+          ? fallback
+          : key;
+    return cleanAsterisks(raw);
   };
 
   return (

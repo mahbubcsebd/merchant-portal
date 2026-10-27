@@ -81,7 +81,7 @@ const GlobalSelect = forwardRef(
               labelClassName,
             )}
           >
-            {typeof label === 'string' ? label.replace(/\s*\*\s*$/, '') : label}
+            {typeof label === "string" ? label.replace(/[\s*]+$/, "") : label}
             {required && <span className="ml-1 text-[#e65625]">*</span>}
           </label>
         )}
