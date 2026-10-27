@@ -83,7 +83,7 @@ export default function ScheduledTransfersForm({
               }
               options={[
                 { value: "1", label: t("freq_once", "Once") },
-                { value: "2", label: t("freq_daily", "Daily") },
+                // { value: "2", label: t("freq_daily", "Daily") },
                 { value: "3", label: t("freq_weekly", "Weekly") },
                 { value: "4", label: t("freq_biweekly", "Bi-Weekly") },
                 { value: "5", label: t("freq_monthly", "Monthly") },

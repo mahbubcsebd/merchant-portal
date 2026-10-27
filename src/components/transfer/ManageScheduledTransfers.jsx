@@ -29,17 +29,15 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
   const { transfersQuery, updateTransferMutation, deleteTransferMutation } =
     useScheduledTransfers();
 
-  // Helper functions
   const getFrequencyLabel = (val) => {
     const map = {
       1: t("schedule_once", "Once"),
-      2: t("schedule_daily", "Daily"),
-      3: t("schedule_weekly", "Weekly"),
-      4: t("schedule_biweekly", "Bi-Weekly"),
-      5: t("schedule_monthly", "Monthly"),
-      6: t("schedule_quarterly", "Quarterly"),
-      7: t("schedule_halfyearly", "Half-Yearly"),
-      8: t("schedule_annual", "Annually"),
+      2: t("schedule_weekly", "Weekly"),
+      3: t("schedule_biweekly", "Bi-Weekly"),
+      4: t("schedule_monthly", "Monthly"),
+      5: t("schedule_quarterly", "Quarterly"),
+      6: t("schedule_halfyearly", "Half-Yearly"),
+      7: t("schedule_annual", "Annually"),
     };
     return map[val] || val;
   };
