@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalInput from "@/components/globals/GlobalInput";
@@ -23,15 +23,6 @@ import {
   welcomeApi,
 } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { useDialog } from "@/components/globals/DialogProvider";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
@@ -39,14 +30,11 @@ import {
 } from "@/components/ui/popover";
 import { InputOTP, InputOTPSlot } from "@/components/ui/input-otp";
 import { cn } from "@/lib/utils";
+import { getDynamicCountryOptions } from "@/lib/constants/countries";
 import {
-  COUNTRY_OPTIONS,
-  getDynamicCountryOptions,
-} from "@/lib/constants/countries";
-import {
-  enforceNumeric,
   enforceAlphanumericSpace,
   enforceEmail,
+  enforceNumeric,
 } from "@/lib/utils/inputFormatters";
 
 const getFormSchema = (t) =>
@@ -72,7 +60,7 @@ const getFormSchema = (t) =>
           "Store Name must contain letters, numbers, and spaces only.",
         ),
       }),
-    email: z
+    emailID: z
       .string()
       .min(1, {
         message: t("email_required", "Business Email Address is required."),
@@ -86,12 +74,10 @@ const getFormSchema = (t) =>
           "Email Address cannot exceed 80 characters.",
         ),
       }),
-    countryCode: z
-      .string()
-      .min(1, {
-        message: t("country_code_required", "Select a country code."),
-      }),
-    phone: z
+    countryCode: z.string().min(1, {
+      message: t("country_code_required", "Select a country code."),
+    }),
+    phoneNumber: z
       .string()
       .min(1, {
         message: t("phone_required", "Business Phone Number is required."),
@@ -99,7 +85,7 @@ const getFormSchema = (t) =>
       .min(7, {
         message: t(
           "phone_min_error",
-          "Phone number must be at least 7 digits.",
+          "Business Phone Number length should be at least 7 characters.",
         ),
       })
       .max(12, {
@@ -111,20 +97,23 @@ const getFormSchema = (t) =>
           "Phone number must contain digits only.",
         ),
       }),
-    acceptTerms: z.boolean().refine((v) => v === true, {
+    terms_and_conditions_checkbox: z.boolean().refine((v) => v === true, {
       message: t(
         "accept_terms_required",
         "You must accept the Terms and Conditions.",
       ),
     }),
-    acceptDevice: z.boolean().refine((v) => v === true, {
+    removing_customer_check: z.boolean().refine((v) => v === true, {
       message: t(
         "accept_device_required",
         "You must agree to the device account agreement.",
       ),
     }),
     appConsent: z.enum(["Y", "N"], {
-      required_error: t("app_consent_required", "Please select an option."),
+      required_error: t(
+        "app_consent_required",
+        "Please select Yes or No to proceed.",
+      ),
     }),
   });
 
@@ -136,7 +125,6 @@ export function EnrollForm() {
     staleTime: Infinity,
   });
   const { t } = useLanguage();
-  const { openConfirmDialog } = useDialog();
 
   const [step, setStep] = useState("form"); // 'form' | 'confirm' | 'otp' | 'success'
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,6 +154,22 @@ export function EnrollForm() {
 
   const schema = useMemo(() => getFormSchema(t), [t]);
 
+  const defaultValues = useMemo(() => {
+    try {
+      const saved = sessionStorage.getItem("enroll_form_draft");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      storeName: "",
+      emailID: "",
+      countryCode: "",
+      phoneNumber: "",
+      terms_and_conditions_checkbox: false,
+      removing_customer_check: false,
+      appConsent: "Y",
+    };
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -175,34 +179,18 @@ export function EnrollForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: {
-      storeName: "",
-      email: "",
-      countryCode: "",
-      phone: "",
-      acceptTerms: false,
-      acceptDevice: false,
-      appConsent: "Y",
-    },
+    defaultValues,
   });
 
-  const handleOpenTermsModal = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openConfirmDialog({
-      title: t("terms_and_conditions", "Terms and Conditions"),
-      description: t(
-        "terms_and_conditions_full_text",
-        "By enrolling a Merchant Account, you agree to comply with all applicable terms, conditions, and regulatory policies governing payment processing on the mPay Network platform. Enrolling a new merchant account on this device will remove the existing customer account linked to this device.",
-      ),
-      confirmText: t("accept", "I Agree & Accept"),
-      iconType: "info",
-      onConfirm: () => {
-        setValue("acceptTerms", true, { shouldValidate: true });
-        setValue("acceptDevice", true, { shouldValidate: true });
-      },
+  // Persist form values so SPA navigation to /terms-and-conditions doesn't lose inputs
+  useEffect(() => {
+    const subscription = watch((values) => {
+      try {
+        sessionStorage.setItem("enroll_form_draft", JSON.stringify(values));
+      } catch (e) {}
     });
-  };
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const formValues = watch();
 
@@ -222,9 +210,9 @@ export function EnrollForm() {
       const values = getValues();
       const payload = {
         storeName: values.storeName,
-        emailID: values.email,
+        emailID: values.emailID,
         countryCode: values.countryCode,
-        phoneNumber: `${values.countryCode}${values.phone}`,
+        phoneNumber: `${values.countryCode}${values.phoneNumber}`,
         terms_and_conditions_checkbox: true,
         removing_customer_check: true,
         appConsent: values.appConsent,
@@ -269,8 +257,8 @@ export function EnrollForm() {
       const values = getValues();
       const payload = {
         custType: "C",
-        emailID: values.email,
-        phoneNumber: `${values.countryCode}${values.phone}`,
+        emailID: values.emailID,
+        phoneNumber: `${values.countryCode}${values.phoneNumber}`,
       };
 
       const res = await resendOTP(payload);
@@ -313,8 +301,8 @@ export function EnrollForm() {
       const values = getValues();
       const payload = {
         otp: otpCode,
-        emailID: values.email,
-        phoneNumber: `${values.countryCode}${values.phone}`,
+        emailID: values.emailID,
+        phoneNumber: `${values.countryCode}${values.phoneNumber}`,
         storeName: values.storeName,
         countryCode: values.countryCode,
         phCountryCode: values.countryCode,
@@ -324,6 +312,11 @@ export function EnrollForm() {
       const res = await verifyMerchantOTP(payload);
 
       if (res?.status === "success" || res?.statusCode === 0) {
+        // Clear stored draft upon success
+        try {
+          sessionStorage.removeItem("enroll_form_draft");
+        } catch (e) {}
+
         setSuccessMessage(
           res?.message ||
             t(
@@ -353,34 +346,29 @@ export function EnrollForm() {
 
   return (
     <div className="w-full">
-      {/* Error Alert */}
-      {apiError && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-3 text-red-600 dark:text-red-400 animate-[fade-up_0.3s_ease-out]">
-          <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          <p className="text-sm font-medium leading-relaxed">{apiError}</p>
-        </div>
-      )}
-
       {/* Resend OTP Success Alert */}
       {resendSuccessMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 text-emerald-600 dark:text-emerald-400 animate-[fade-up_0.3s_ease-out]">
-          <Check size={18} className="shrink-0 mt-0.5" />
-          <p className="text-sm font-medium leading-relaxed">
-            {resendSuccessMsg}
-          </p>
+        <div className="mb-6 p-4 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center gap-2.5 animate-[fade-down_0.3s_ease-out]">
+          <Check size={18} className="text-emerald-500 shrink-0" />
+          <span>{resendSuccessMsg}</span>
         </div>
       )}
 
-      {/* ── STEP 1: FORM FILL ────────────────────────────────────────────── */}
+      {/* Global Form Error Message */}
+      {apiError && (
+        <div className="mb-6 p-4 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 text-sm font-medium flex items-center gap-2.5 animate-[fade-down_0.3s_ease-out]">
+          <AlertCircle size={18} className="text-red-500 shrink-0" />
+          <span>{apiError}</span>
+        </div>
+      )}
+
+      {/* ── STEP 1: INITIAL DETAILS ───────────────────────────────────────── */}
       {step === "form" && (
         <div className="w-full">
-          {/* Heading */}
-          <div className="mb-8 animate-[fade-up_0.4s_ease-out_both]">
-            <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-              {t(
-                "merNewToMobileBanking",
-                t("registerMerchant", "Merchant Registration"),
-              )}
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1b55ad] dark:text-blue-400 uppercase">
+              {t("registerMerchant", "MERCHANT REGISTRATION")}
             </h2>
             <p className="mt-2 text-sm xl:text-base font-medium text-slate-500 dark:text-slate-400 tracking-wide">
               {t(
@@ -397,10 +385,10 @@ export function EnrollForm() {
           >
             {/* Store Name */}
             <GlobalInput
-              id="storeName"
-              label={t("crMerchantname", t("storeName", "Store Name"))}
+              id="custname"
+              label={t("storeName", "Store Name")}
               required
-              placeholder={t("ph_business_name", "Your Business Name")}
+              placeholder={t("storeName", "Store Name")}
               leftIcon={<Building2 size={16} />}
               error={errors.storeName?.message}
               aria-invalid={!!errors.storeName}
@@ -413,27 +401,27 @@ export function EnrollForm() {
             <GlobalInput
               id="email"
               type="email"
-              label={t("merCrEmail", t("crEmail", "Business Email Address"))}
+              label={t("merCrEmail", "Business Email Address")}
               required
               placeholder="business@example.com"
               leftIcon={<Mail size={16} />}
-              error={errors.email?.message}
-              aria-invalid={!!errors.email}
+              error={errors.emailID?.message}
+              aria-invalid={!!errors.emailID}
               maxLength={80}
               onInput={enforceEmail}
-              {...register("email")}
+              {...register("emailID")}
             />
 
-            {/* Phone Number */}
+            {/* Business Phone Number */}
             <div className="w-full">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t("merCrPhoneNo", t("mobile_phone", "Business Phone Number"))}{" "}
+                {t("merCrPhoneNo", "Business Phone Number")}{" "}
                 <span className="text-[#e65625]">*</span>
               </label>
               <div
                 className={cn(
                   "flex items-stretch w-full h-10 rounded-lg border bg-slate-50 dark:bg-white/5 transition-all duration-150 overflow-hidden",
-                  errors.phone
+                  errors.phoneNumber || errors.countryCode
                     ? "border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
                     : "border-slate-200 dark:border-white/10 focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-[#2563eb] dark:focus-within:ring-blue-500/20",
                 )}
@@ -465,7 +453,7 @@ export function EnrollForm() {
                       </span>
                     ) : (
                       <span className="text-xs text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
-                        {t("select_country", "Select Country")}
+                        {t("select_country", "Select")}
                       </span>
                     )}
                     <ChevronsUpDown className="h-3.5 w-3.5 opacity-55 shrink-0" />
@@ -503,7 +491,7 @@ export function EnrollForm() {
                             : "text-slate-500 dark:text-slate-400",
                         )}
                       >
-                        <span>{t("select_country", "Select Country")}</span>
+                        <span>{t("select_country", "Select")}</span>
                         {!watch("countryCode") && (
                           <Check className="h-3.5 w-3.5 text-[#2563eb] dark:text-blue-400 shrink-0" />
                         )}
@@ -567,15 +555,21 @@ export function EnrollForm() {
                     maxLength={12}
                     onInput={enforceNumeric}
                     className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
-                    aria-invalid={!!errors.phone}
-                    {...register("phone")}
+                    aria-invalid={!!errors.phoneNumber}
+                    {...register("phoneNumber")}
                   />
                 </div>
               </div>
-              {errors.phone && (
+              {errors.phoneNumber && (
                 <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                  {errors.phone.message}
+                  {errors.phoneNumber.message}
+                </p>
+              )}
+              {errors.countryCode && !errors.phoneNumber && (
+                <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  {errors.countryCode.message}
                 </p>
               )}
             </div>
@@ -586,9 +580,10 @@ export function EnrollForm() {
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center mt-0.5 w-4 h-4 shrink-0">
                   <input
+                    id="accept_terms"
                     type="checkbox"
                     className="peer sr-only"
-                    {...register("acceptTerms")}
+                    {...register("terms_and_conditions_checkbox")}
                   />
                   <div className="absolute inset-0 rounded border border-slate-300 dark:border-white/20 peer-checked:border-[#2563eb] peer-checked:bg-[#2563eb] transition-all bg-white dark:bg-white/5" />
                   <Check
@@ -598,21 +593,23 @@ export function EnrollForm() {
                   />
                 </div>
                 <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
-                  {t("accept_terms", "Accept")}{" "}
-                  <button
-                    type="button"
-                    onClick={handleOpenTermsModal}
-                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                  {t("accept", "Accept")}{" "}
+                  <Link
+                    to="/terms-and-conditions"
+                    className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer inline"
                   >
-                    {t("terms_and_conditions", "Terms and Conditions")}
-                  </button>{" "}
+                    {t(
+                      "term_cond",
+                      t("terms_and_conditions", "Terms and Conditions"),
+                    )}
+                  </Link>{" "}
                   <span className="text-[#e65625]">*</span>
                 </span>
               </label>
-              {errors.acceptTerms && (
+              {errors.terms_and_conditions_checkbox && (
                 <p className="text-xs font-semibold text-red-500 flex items-center gap-1.5 -mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                  {errors.acceptTerms.message}
+                  {errors.terms_and_conditions_checkbox.message}
                 </p>
               )}
 
@@ -620,9 +617,10 @@ export function EnrollForm() {
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center mt-0.5 w-4 h-4 shrink-0">
                   <input
+                    id="removing_customer_check"
                     type="checkbox"
                     className="peer sr-only"
-                    {...register("acceptDevice")}
+                    {...register("removing_customer_check")}
                   />
                   <div className="absolute inset-0 rounded border border-slate-300 dark:border-white/20 peer-checked:border-[#2563eb] peer-checked:bg-[#2563eb] transition-all bg-white dark:bg-white/5" />
                   <Check
@@ -633,63 +631,66 @@ export function EnrollForm() {
                 </div>
                 <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
                   {t(
-                    "device_consent_text",
+                    "agreement",
                     "I agree that enrolling a new customer will remove the existing account linked on this device.",
                   )}{" "}
                   <span className="text-[#e65625]">*</span>
                 </span>
               </label>
-              {errors.acceptDevice && (
+              {errors.removing_customer_check && (
                 <p className="text-xs font-semibold text-red-500 flex items-center gap-1.5 -mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                  {errors.acceptDevice.message}
+                  {errors.removing_customer_check.message}
                 </p>
               )}
             </div>
 
-            {/* App Consent Radio */}
-            <div className="space-y-2.5 pt-2">
-              <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+            {/* Cross App Consent Radio */}
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2.5 leading-relaxed">
                 {t(
-                  "app_consent_question",
+                  "crossAppConsent",
                   "Do you agree that your email and phone number may be used for both the Merchant and Consumer Wallet apps?",
                 )}
-              </p>
-              <div className="flex gap-6">
+              </label>
+              <div className="flex items-center gap-6">
                 {[
-                  { label: t("yes", "Yes"), value: "Y" },
-                  { label: t("no", "No"), value: "N" },
-                ].map((opt) => (
+                  { value: "Y", label: t("yes", "Yes") },
+                  { value: "N", label: t("no", "No") },
+                ].map(({ value, label }) => (
                   <label
-                    key={opt.value}
+                    key={value}
                     className="flex items-center gap-2.5 cursor-pointer group"
                   >
-                    <div className="relative flex items-center justify-center w-4 h-4 shrink-0">
-                      <input
-                        type="radio"
-                        value={opt.value}
-                        className="peer sr-only"
-                        {...register("appConsent")}
-                      />
-                      <div className="absolute inset-0 rounded-full border border-slate-300 dark:border-white/20 peer-checked:border-[#2563eb] transition-all bg-white dark:bg-white/5" />
-                      <div className="w-2 h-2 rounded-full bg-[#2563eb] absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {opt.label}
+                    <input
+                      type="radio"
+                      value={value}
+                      className="peer sr-only"
+                      {...register("appConsent")}
+                    />
+                    <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-white/20 peer-checked:border-[#2563eb] peer-checked:border-4 transition-all bg-white dark:bg-white/5" />
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                      {label}
                     </span>
                   </label>
                 ))}
               </div>
+              {errors.appConsent && (
+                <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  {errors.appConsent.message}
+                </p>
+              )}
             </div>
 
-            {/* Submit */}
+            {/* Submit / Next Button */}
             <GlobalButton
               type="submit"
               variant="primary"
               fullWidth
-              className="mt-4"
+              className="mt-6 uppercase font-bold tracking-wider"
             >
-              {t("next", "Next →")}
+              {t("buttonNext", t("next", "NEXT"))}
             </GlobalButton>
           </form>
 
@@ -698,7 +699,7 @@ export function EnrollForm() {
             {t("already_have_account", "Already have an account?")}{" "}
             <Link
               to="/"
-              className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline"
+              className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline uppercase"
             >
               {t("authenticateSignIn", "SIGN IN")}
             </Link>
@@ -727,20 +728,20 @@ export function EnrollForm() {
             {/* Business Email */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
-                {t("crEmail", "Business Email Address")}
+                {t("merCrEmail", "Business Email Address")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium break-all">
-                {formValues.email}
+                {formValues.emailID}
               </span>
             </div>
 
             {/* Business Phone */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-blue-50/60 dark:bg-white/5 gap-1">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
-                {t("mobile_phone", "Business Phone Number")}
+                {t("merCrPhoneNo", "Business Phone Number")}
               </span>
               <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium">
-                +{formValues.countryCode} {formValues.phone}
+                +{formValues.countryCode} {formValues.phoneNumber}
               </span>
             </div>
 
@@ -748,7 +749,7 @@ export function EnrollForm() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">
               <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-2/3 leading-relaxed">
                 {t(
-                  "app_consent_question",
+                  "crossAppConsent",
                   "Do you agree that your email and phone number may be used for both the Merchant and Consumer Wallet apps?",
                 )}
               </span>
@@ -761,14 +762,15 @@ export function EnrollForm() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center gap-4">
             <GlobalButton
               type="button"
               variant="outline"
               onClick={() => setStep("form")}
-              className="flex-1 max-w-[160px] uppercase font-bold"
+              disabled={isSubmitting}
+              className="flex-1 uppercase font-bold"
             >
-              {t("buttonChange", t("change", "CHANGE"))}
+              {t("buttonCancel", t("back", "BACK"))}
             </GlobalButton>
             <GlobalButton
               type="button"
@@ -776,7 +778,7 @@ export function EnrollForm() {
               onClick={handleRegisterSubmit}
               isLoading={isSubmitting}
               loadingText={t("submitting", "Submitting…")}
-              className="flex-1 max-w-[160px] uppercase font-bold"
+              className="flex-1 uppercase font-bold"
             >
               {t("buttonSubmit", t("submit", "SUBMIT"))}
             </GlobalButton>
@@ -878,9 +880,9 @@ export function EnrollForm() {
             type="button"
             variant="primary"
             onClick={() => navigate("/")}
-            className="px-8 uppercase font-bold text-xs tracking-wider"
+            className="w-full max-w-[200px] uppercase font-bold"
           >
-            {t("go_to_login", "GO TO LOGIN PAGE")}
+            {t("back_to_login", "BACK TO LOGIN")}
           </GlobalButton>
         </div>
       )}

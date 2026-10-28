@@ -1,88 +1,177 @@
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { Link } from "react-router-dom";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, ShieldCheck, X } from "lucide-react";
 import GlobalButton from "@/components/globals/GlobalButton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TERMS_AND_CONDITIONS } from "@/lib/constants/termsContent";
 
 export default function TermsAndConditionsPage() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const navigate = useNavigate();
+
+  const langKey = language ? language.toLowerCase() : "en";
+  const content = TERMS_AND_CONDITIONS[langKey] || TERMS_AND_CONDITIONS.en;
+
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0d1220] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
-      <div className="w-full max-w-3xl bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-6 sm:p-10 animate-[fade-up_0.4s_ease-out]">
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100 dark:border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-white/5 flex items-center justify-center text-[#2563eb] dark:text-blue-400">
-              <ShieldCheck size={22} />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0d1220] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+      <div className="w-full max-w-4xl bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-6 sm:p-12 animate-[fade-up_0.4s_ease-out]">
+        {/* ── Header ────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200/80 dark:border-white/10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#2563eb] dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0">
+              <ShieldCheck size={24} />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                {t("terms_and_conditions", "Terms and Conditions")}
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                {content.title ||
+                  t("terms_and_conditions", "Terms and Conditions")}
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t("last_updated", "Last updated: August 2026")}
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {t("official_agreement", "Official Service & User Agreement")}
               </p>
             </div>
           </div>
-          <Link to="/">
-            <GlobalButton variant="outline" className="h-9 px-3 text-xs gap-1.5">
+
+          <div className="flex items-center gap-2.5 self-end sm:self-center">
+            <LanguageSwitcher />
+            <GlobalButton
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="h-8 sm:h-9 px-3 text-xs gap-1.5 rounded-full"
+            >
               <ArrowLeft size={14} />
-              {t("buttonBack", t("back", "Back"))}
+              <span className="hidden sm:inline">
+                {t("buttonBack", t("back", "Back"))}
+              </span>
             </GlobalButton>
-          </Link>
-        </div>
-
-        <div className="space-y-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          <p className="font-semibold text-slate-900 dark:text-white text-base">
-            {t("terms_agreement_title", "mPay Merchant Account Service Agreement")}
-          </p>
-          <p>
-            {t(
-              "terms_intro",
-              "By creating or operating a Merchant Account on the mPay Network platform, you agree to adhere to all terms, operational guidelines, and regulatory requirements outlined below."
-            )}
-          </p>
-
-          <div className="space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-              1. {t("terms_sec_1_title", "Account Enrollment & Device Consent")}
-            </h3>
-            <p>
-              {t(
-                "device_consent_text",
-                "Enrolling a new merchant account on this device will remove the existing customer account linked to this device. You represent that you have legal authority to operate the merchant store account."
-              )}
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-              2. {t("terms_sec_2_title", "Security & Wallet PIN")}
-            </h3>
-            <p>
-              {t(
-                "terms_sec_2_desc",
-                "You are responsible for keeping your 6-digit Wallet PIN and login credentials safe. mPay will never ask for your PIN via phone or email."
-              )}
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-              3. {t("terms_sec_3_title", "Cross-App & Transaction Consent")}
-            </h3>
-            <p>
-              {t(
-                "app_consent_question",
-                "Do you agree that your email and phone number may be used for both the Merchant and Consumer Wallet apps?"
-              )}
-            </p>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/10 flex justify-end">
-          <Link to="/enroll">
-            <GlobalButton variant="primary" className="px-6 text-xs font-bold uppercase">
-              {t("buttonContinue", t("continue_registration", "Continue to Registration"))}
+        {/* ── Content Body ──────────────────────────────────── */}
+        <div className="space-y-7 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          {/* Articles 1 through 13 */}
+          {content.articles.map((article, idx) => (
+            <section key={idx} className="space-y-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                {article.number}. {article.title}
+              </h2>
+
+              {article.paragraphs?.map((p, pIdx) => (
+                <p key={pIdx} className="text-slate-600 dark:text-slate-300">
+                  {p}
+                </p>
+              ))}
+
+              {article.list && article.list.length > 0 && (
+                <div className="pl-4 sm:pl-6">
+                  {article.listType === "alpha" ? (
+                    <ol className="list-[lower-alpha] space-y-1.5 pl-4 text-slate-600 dark:text-slate-300">
+                      {article.list.map((item, lIdx) => (
+                        <li key={lIdx} className="pl-1">
+                          {item}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : article.listType === "numeric" ? (
+                    <ol className="list-decimal space-y-1.5 pl-4 text-slate-600 dark:text-slate-300">
+                      {article.list.map((item, lIdx) => (
+                        <li key={lIdx} className="pl-1">
+                          {item}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <ul className="list-disc space-y-1.5 pl-4 text-slate-600 dark:text-slate-300">
+                      {article.list.map((item, lIdx) => (
+                        <li key={lIdx} className="pl-1">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {article.definitions?.map((def, dIdx) => (
+                <p
+                  key={dIdx}
+                  className="font-semibold text-slate-900 dark:text-slate-100 pl-1 border-l-2 border-[#2563eb]/40 my-2"
+                >
+                  {def}
+                </p>
+              ))}
+
+              {article.extraParagraphs?.map((ep, epIdx) => (
+                <p key={epIdx} className="text-slate-600 dark:text-slate-300">
+                  {ep}
+                </p>
+              ))}
+            </section>
+          ))}
+
+          {/* Pricing Section */}
+          {content.pricing && (
+            <section className="space-y-3 pt-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                {content.pricing.title}
+              </h3>
+              <ul className="list-disc space-y-2 pl-8 sm:pl-10 text-slate-600 dark:text-slate-300">
+                {content.pricing.items.map((item, pIdx) => (
+                  <li key={pIdx} className="pl-1">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Security Section */}
+          {content.security && (
+            <section className="space-y-3 pt-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                {content.security.title}
+              </h3>
+              <ul className="list-disc space-y-2 pl-8 sm:pl-10 text-slate-600 dark:text-slate-300">
+                {content.security.items.map((item, sIdx) => (
+                  <li key={sIdx} className="pl-1">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* ── Footer / Actions ──────────────────────────────── */}
+        <div className="mt-10 pt-6 border-t border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <GlobalButton
+            type="button"
+            variant="primary"
+            onClick={handleClose}
+            className="w-full sm:w-auto min-w-[140px] h-11 px-8 text-sm font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20"
+          >
+            {content.closeBtn || t("buttonsClose", "CLOSE")}
+          </GlobalButton>
+
+          <Link to="/enroll" className="w-full sm:w-auto">
+            <GlobalButton
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto h-11 px-6 text-xs font-bold uppercase rounded-xl"
+            >
+              {t(
+                "buttonContinue",
+                t("continue_registration", "Continue to Registration"),
+              )}
             </GlobalButton>
           </Link>
         </div>

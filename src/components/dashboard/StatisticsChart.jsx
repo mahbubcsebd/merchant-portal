@@ -193,14 +193,14 @@ export function StatisticsChart() {
                 name={t("incoming", "Incoming")}
                 fill="#44c273"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={32}
+                maxBarSize={38}
               />
               <Bar
                 dataKey="outgoingCount"
                 name={t("outgoing", "Outgoing")}
                 fill="#DC3545"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={32}
+                maxBarSize={38}
               />
             </BarChart>
           </ResponsiveContainer>
