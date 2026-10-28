@@ -15,6 +15,8 @@ const GlobalSelect = forwardRef(
       labelClassName = "",
       selectClassName = "",
       containerClassName = "",
+      dropdownClassName = "",
+      dropdownPosition = "bottom",
       disabled = false,
       value,
       isReadOnly = false,
@@ -30,7 +32,9 @@ const GlobalSelect = forwardRef(
 
     // Find selected option
     useEffect(() => {
-      const option = options.find((opt) => opt.value === value);
+      const option = options.find(
+        (opt) => opt.value === value || String(opt.value) === String(value),
+      );
       setSelectedOption(option || null);
     }, [value, options]);
 
@@ -138,7 +142,13 @@ const GlobalSelect = forwardRef(
           {isOpen && !disabled && (
             <div
               ref={dropdownRef}
-              className="absolute left-0 top-full z-[100] w-full mt-1 overflow-y-auto bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-lg shadow-[0_10px_30px_-5px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] max-h-60 py-1"
+              className={cn(
+                "absolute left-0 z-[100] w-full overflow-y-auto bg-white dark:bg-[#131c31] border border-slate-200 dark:border-white/10 rounded-lg shadow-[0_10px_30px_-5px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] max-h-60 py-1",
+                dropdownPosition === "top"
+                  ? "bottom-full mb-1"
+                  : "top-full mt-1",
+                dropdownClassName,
+              )}
             >
               {options.map((option) => (
                 <button
@@ -151,7 +161,8 @@ const GlobalSelect = forwardRef(
                     option.className,
                     !option.disabled &&
                       "hover:bg-slate-50 dark:hover:bg-white/5 focus:bg-slate-50 dark:focus:bg-white/5 focus:outline-none cursor-pointer text-slate-700 dark:text-slate-300",
-                    selectedOption?.value === option.value &&
+                    (selectedOption?.value === option.value ||
+                      String(selectedOption?.value) === String(option.value)) &&
                       "bg-blue-50 dark:bg-blue-500/10 text-[#2563eb] dark:text-blue-400 font-semibold",
                     option.disabled &&
                       "cursor-not-allowed opacity-40 text-slate-500",

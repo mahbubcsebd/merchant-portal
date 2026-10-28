@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Eye, Loader2 } from "lucide-react";
 import { useDialog } from "@/components/globals/DialogProvider";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
+import GlobalPagination from "@/components/globals/GlobalPagination";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   transactionHistory,
@@ -84,6 +85,7 @@ export default function LiveTransactionsPage() {
   );
 
   const currentAccountId = currency || accounts?.[0]?.ACCOUNTNUMBER || "";
+  const tableRef = useRef(null);
 
   const [appliedFilters, setAppliedFilters] = useState({
     pageNum: 1,
@@ -95,7 +97,7 @@ export default function LiveTransactionsPage() {
     if (currentAccountId) {
       setAppliedFilters((prev) => {
         if (prev.accountId !== currentAccountId) {
-          return { ...prev, accountId: currentAccountId };
+          return { ...prev, accountId: currentAccountId, pageNum: 1 };
         }
         return prev;
       });
@@ -115,6 +117,22 @@ export default function LiveTransactionsPage() {
 
   const rawTransactions = txData?.transactionHistories || [];
 
+  const totalRecords = useMemo(() => {
+    const raw =
+      txData?.totalRecords ??
+      txData?.totalCount ??
+      txData?.totalTransactions ??
+      txData?.recordsTotal ??
+      txData?.totalRows ??
+      txData?.total ??
+      txData?.count;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const num = parseInt(raw, 10);
+      if (!isNaN(num)) return num;
+    }
+    return null;
+  }, [txData]);
+
   const transactions = useMemo(() => {
     if (!appliedFilters.txnStatus || appliedFilters.txnStatus === "selected") {
       return rawTransactions;
@@ -129,10 +147,27 @@ export default function LiveTransactionsPage() {
     });
   }, [rawTransactions, appliedFilters.txnStatus]);
 
+  const handlePageChange = (newPage) => {
+    setAppliedFilters((prev) => ({
+      ...prev,
+      pageNum: newPage,
+    }));
+    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    setAppliedFilters((prev) => ({
+      ...prev,
+      pageNum: 1,
+      pageSize: newPageSize,
+    }));
+    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const handleApplyFilter = () => {
     const payload = {
       pageNum: 1,
-      pageSize: 10,
+      pageSize: appliedFilters.pageSize || 10,
       accountId: currentAccountId,
     };
     if (status !== "selected") payload.txnStatus = status;
@@ -209,12 +244,13 @@ export default function LiveTransactionsPage() {
       <div className="rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
         {/* Filters Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-[#2563eb] dark:text-white flex items-center gap-2">
+          {/* <h3 className="text-base sm:text-lg font-semibold text-[#2563eb] dark:text-white flex items-center gap-2">
             {t("liveTransactions", "Live Transactions")}
             {isFetching && (
               <Loader2 className="w-4 h-4 animate-spin text-[#2563eb]" />
             )}
-          </h3>
+          </h3> */}
+          <div></div>
           <button
             onClick={handleResetFilters}
             className="text-xs sm:text-sm font-semibold text-[#2563eb] hover:underline"
@@ -272,7 +308,10 @@ export default function LiveTransactionsPage() {
         </div>
 
         {/* Data Table — Desktop View (Hidden on mobile) */}
-        <div className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 mb-8">
+        <div
+          ref={tableRef}
+          className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 mb-4"
+        >
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
@@ -355,7 +394,7 @@ export default function LiveTransactionsPage() {
         </div>
 
         {/* Card Feed — Mobile View (Hidden on desktop) */}
-        <div className="md:hidden space-y-3 mb-8">
+        <div className="md:hidden space-y-3 mb-4">
           {transactions.length === 0 ? (
             <div className="text-center py-8 text-slate-500 dark:text-white/50 border border-slate-200 dark:border-white/10 rounded-xl">
               {isFetching
@@ -404,6 +443,18 @@ export default function LiveTransactionsPage() {
             ))
           )}
         </div>
+
+        {/* Pagination Controls */}
+        <GlobalPagination
+          currentPage={appliedFilters.pageNum}
+          pageSize={appliedFilters.pageSize}
+          totalRecords={totalRecords}
+          currentCount={transactions.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isFetching}
+          className="border-t border-slate-100 dark:border-white/5 pt-3 mb-6"
+        />
 
         <div className="flex justify-center mb-4">
           <GlobalButton
