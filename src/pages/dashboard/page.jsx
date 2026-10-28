@@ -1,10 +1,13 @@
-import { OverviewCards } from "@/components/dashboard/OverviewCards"
-import { LatestActivities } from "@/components/dashboard/LatestActivities"
-import { RecentTransactionsTable } from "@/components/dashboard/RecentTransactionsTable"
-import { StatisticsChart } from "@/components/dashboard/StatisticsChart"
-import { PeriodDropdown, CurrencyDropdown } from "@/components/dashboard/Dropdowns"
-import { useDashboardContext } from "@/pages/dashboard/context"
-import { useLanguage } from "@/components/globals/LanguageProvider"
+import { OverviewCards } from "@/components/dashboard/OverviewCards";
+import { LatestActivities } from "@/components/dashboard/LatestActivities";
+import { RecentTransactionsTable } from "@/components/dashboard/RecentTransactionsTable";
+import { StatisticsChart } from "@/components/dashboard/StatisticsChart";
+import {
+  PeriodDropdown,
+  CurrencyDropdown,
+} from "@/components/dashboard/Dropdowns";
+import { useDashboardContext } from "@/pages/dashboard/context";
+import { useLanguage } from "@/components/globals/LanguageProvider";
 
 export default function DashboardPage() {
   const { period, setPeriod, currency, setCurrency } = useDashboardContext();
@@ -12,7 +15,6 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full">
-
       {/* ── Page Header ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -31,23 +33,20 @@ export default function DashboardPage() {
       {/* ── Overview Stat Cards (full-width row) ─────────── */}
       <OverviewCards />
 
-      {/* ── Two-column content grid ──────────────────────── */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* ── Two-column content row: Latest Activities & Recent Transactions (Equal Height) ── */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <LatestActivities />
+        <RecentTransactionsTable
+          currencyDropdown={
+            <CurrencyDropdown value={currency} onChange={setCurrency} />
+          }
+        />
+      </div>
 
-        {/* Left column: Latest Activities */}
-        <div className="min-w-0">
-          <LatestActivities />
-        </div>
-
-        {/* Right column: Transactions + Chart */}
-        <div className="min-w-0 flex flex-col gap-6">
-          <RecentTransactionsTable
-            currencyDropdown={<CurrencyDropdown value={currency} onChange={setCurrency} />}
-          />
-          <StatisticsChart />
-        </div>
-
+      {/* ── Bottom Section: Full Width Statistics Chart ──── */}
+      <div className="mt-6 w-full">
+        <StatisticsChart />
       </div>
     </div>
-  )
+  );
 }

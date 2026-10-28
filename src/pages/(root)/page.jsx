@@ -118,7 +118,7 @@ export default function Home() {
 
           {/* Copyright */}
           <p className="relative z-10 text-xs text-slate-400 font-medium">
-            © 2025 mPay Network. All rights reserved.
+            © {new Date().getFullYear()} mPay Network. All rights reserved.
           </p>
         </div>
 
@@ -165,20 +165,24 @@ export default function Home() {
                 "agree_login_prefix",
                 "By signing in, you agree to mPay Network's",
               )}{" "}
-              <a
-                href="/terms-and-conditions"
+              <Link
+                to="/terms-and-conditions"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
-                {t("term_cond", "Terms of Service")}
-              </a>{" "}
+                {t(
+                  "terms_and_conditions",
+                  t("term_cond", "Terms and Conditions"),
+                )}
+              </Link>
+              .
+              {/* {" "}
               {t("and", "and")}{" "}
-              <a
-                href="/privacy-policy"
+              <Link
+                to="/privacy-policy"
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
                 {t("privacy_policy", "Privacy Policy")}
-              </a>
-              .
+              </Link> */}
             </p>
           </div>
         </div>
