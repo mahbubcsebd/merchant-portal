@@ -26,7 +26,9 @@ export function StatisticsChart() {
   const gridColor = isDark ? "rgba(255,255,255,0.06)" : "#f1f5f9";
 
   const currentAccount =
-    accounts?.find((a) => a.ACCOUNTNO === currency) || accounts?.[0];
+    accounts?.find(
+      (a) => a.ACCOUNTNUMBER === currency || a.ACCOUNTNO === currency,
+    ) || accounts?.[0];
   const selectedCurrency = currentAccount?.CURSHRTNAME || "XCG";
 
   const chartData = useMemo(() => {
@@ -95,8 +97,11 @@ export function StatisticsChart() {
     return null;
   };
 
-  const renderCustomTick = ({ x, y, payload }) => {
-    const item = chartData[payload.index];
+  const renderCustomTick = ({ x, y, payload, index }) => {
+    const item =
+      chartData.find((d) => d.month === payload?.value) ||
+      chartData[index] ||
+      (payload && chartData[payload.index]);
     if (!item) return null;
 
     return (
@@ -105,7 +110,7 @@ export function StatisticsChart() {
           x={0}
           y={14}
           textAnchor="middle"
-          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-medium"
+          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-normal"
         >
           Incoming: {selectedCurrency} {item.incomingFormatted}
         </text>
@@ -113,13 +118,13 @@ export function StatisticsChart() {
           x={0}
           y={28}
           textAnchor="middle"
-          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-medium"
+          className="fill-slate-500 dark:fill-slate-400 text-[10px] sm:text-[11px] font-normal"
         >
           Outgoing: {selectedCurrency} {item.outgoingFormatted}
         </text>
         <text
           x={0}
-          y={44}
+          y={46}
           textAnchor="middle"
           className="fill-slate-700 dark:fill-slate-200 text-xs font-bold"
         >
@@ -131,7 +136,7 @@ export function StatisticsChart() {
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-5">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">
           {t("mStatistics", "Statistics")}
         </h3>
@@ -146,7 +151,7 @@ export function StatisticsChart() {
         </p>
       </div>
 
-      <div style={{ height: 380 }} className="w-full">
+      <div style={{ height: 400 }} className="w-full">
         {chartData.length === 0 ? (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
             {t("no_chart_data", "No chart data available.")}
@@ -155,8 +160,9 @@ export function StatisticsChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 10, right: 15, left: -15, bottom: 45 }}
-              barGap={4}
+              margin={{ top: 10, right: 20, left: -10, bottom: 25 }}
+              barGap={6}
+              barCategoryGap="20%"
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -165,25 +171,27 @@ export function StatisticsChart() {
               />
               <XAxis
                 dataKey="month"
-                axisLine={false}
+                axisLine={{ stroke: gridColor }}
                 tickLine={false}
                 tick={renderCustomTick}
                 interval={0}
+                height={65}
               />
               <YAxis
                 tick={{ fill: axisColor, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
+                domain={[0, "auto"]}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Legend
                 verticalAlign="top"
                 align="center"
                 iconType="rect"
-                iconSize={14}
+                iconSize={12}
                 wrapperStyle={{
-                  paddingBottom: "16px",
+                  paddingBottom: "14px",
                   fontSize: "12px",
                   fontWeight: "600",
                 }}
@@ -192,15 +200,15 @@ export function StatisticsChart() {
                 dataKey="incomingCount"
                 name={t("incoming", "Incoming")}
                 fill="#44c273"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={38}
+                radius={[3, 3, 0, 0]}
+                barSize={30}
               />
               <Bar
                 dataKey="outgoingCount"
                 name={t("outgoing", "Outgoing")}
                 fill="#DC3545"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={38}
+                radius={[3, 3, 0, 0]}
+                barSize={30}
               />
             </BarChart>
           </ResponsiveContainer>
