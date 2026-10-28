@@ -14,6 +14,7 @@ export default function ConfirmationDialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   onConfirm,
+  onCancel,
   iconType,
   hideCancel = false,
   onClose,
@@ -27,6 +28,23 @@ export default function ConfirmationDialog({
       setLoading(true);
       try {
         shouldClose = await onConfirm();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (shouldClose !== false) {
+      onClose();
+    }
+  };
+
+  const handleCancel = async () => {
+    let shouldClose = true;
+    if (onCancel) {
+      setLoading(true);
+      try {
+        shouldClose = await onCancel();
       } catch (err) {
         console.error(err);
       } finally {
@@ -73,7 +91,7 @@ export default function ConfirmationDialog({
         {!hideCancel && (
           <GlobalButton
             variant="outline"
-            onClick={onClose}
+            onClick={handleCancel}
             disabled={loading}
             className="flex-1 max-w-[150px] uppercase font-bold h-10 text-xs"
           >

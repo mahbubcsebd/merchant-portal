@@ -25,10 +25,62 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+function checkSessionExpired(data) {
+  if (!data) return false;
+  const statusStr = String(data.statusCode ?? "");
+  const errCodeStr = String(data.errorCode ?? "");
+  const msg = String(data.message || data.errorMessage || "").toLowerCase();
+
+  const isExpired =
+    statusStr === "110" ||
+    errCodeStr === "100" ||
+    statusStr === "100" ||
+    (data.status === "error" &&
+      (msg.includes("session") ||
+        msg.includes("logged in") ||
+        msg.includes("another device") ||
+        msg.includes("another location")));
+
+  if (isExpired) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("app:session-expired", {
+          detail: {
+            message:
+              data.message ||
+              data.errorMessage ||
+              "Your session has expired or is invalid. Please sign in again.",
+            reason: data.reason,
+            statusCode: data.statusCode,
+          },
+        }),
+      );
+    }
+    return true;
+  }
+  return false;
+}
+
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    checkSessionExpired(response.data);
+    return response.data;
+  },
   (error) => {
-    console.error('API Error:', error.response || error.message);
+    console.error("API Error:", error.response || error.message);
+    if (error.response?.data) {
+      checkSessionExpired(error.response.data);
+    } else if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("app:session-expired", {
+            detail: {
+              message: "Your session has expired. Please sign in again.",
+            },
+          }),
+        );
+      }
+    }
     return Promise.reject(error);
   },
 );

@@ -78,11 +78,12 @@ export function LoginForm() {
     mutationFn: (values) =>
       loginWithPin({ username: values.email, pin: values.pin }),
     onSuccess: (data) => {
-      // Based on portal-old logic
       if (data.status === "success") {
         if (data.show_otp) {
           setShowOtpDialog(true);
         } else {
+          const sessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          localStorage.setItem("session_active_id", sessionId);
           localStorage.setItem("is_authenticated", "true");
           router("/dashboard");
         }
@@ -115,6 +116,8 @@ export function LoginForm() {
     mutationFn: (values) => verifyOTP({ otp: values.otp }),
     onSuccess: (data) => {
       if (data.status === "success" && data.statusCode === 0) {
+        const sessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem("session_active_id", sessionId);
         localStorage.setItem("is_authenticated", "true");
         setShowOtpDialog(false);
         router("/dashboard");

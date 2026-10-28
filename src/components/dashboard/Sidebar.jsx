@@ -106,6 +106,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           console.error("Logout error", err);
         }
         localStorage.removeItem("is_authenticated");
+        localStorage.removeItem("session_active_id");
         navigate("/");
       },
     });

@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { useSessionManager } from "@/hooks/useSessionManager";
 import { DashboardContext } from "./context";
 
 export default function DashboardLayout() {
@@ -23,7 +24,6 @@ export default function DashboardLayout() {
   const [currency, setCurrency] = useState("");
   const [sessionExpiredShown, setSessionExpiredShown] = useState(false);
 
-  // Instant Client Check: If user is not authenticated at all, redirect immediately without showing full-screen spinner
   const isAuthenticatedFlag =
     typeof window !== "undefined" &&
     localStorage.getItem("is_authenticated") === "true";
@@ -32,7 +32,6 @@ export default function DashboardLayout() {
     return <Navigate to="/" replace />;
   }
 
-  // 1. Session Protection Query: Check & Update User Session
   const {
     data: sessionResponse,
     isLoading: isLoadingSession,
@@ -42,13 +41,14 @@ export default function DashboardLayout() {
     queryFn: () => updateSession(),
     staleTime: 60 * 1000, // 1 minute
     retry: false,
-    refetchInterval: 2 * 60 * 1000, // Keep session alive every 2 minutes
+    refetchOnWindowFocus: false,
   });
 
   const isSessionValid =
     sessionResponse?.status === "success" || sessionResponse?.statusCode === 0;
 
-  // Handle Session Expiration with App's Consistent Dialog Popup
+  useSessionManager(isAuthenticatedFlag && isSessionValid);
+
   useEffect(() => {
     if (
       !isLoadingSession &&
@@ -57,6 +57,7 @@ export default function DashboardLayout() {
     ) {
       setSessionExpiredShown(true);
       localStorage.removeItem("is_authenticated");
+      localStorage.removeItem("session_active_id");
       openConfirmDialog({
         title: t("session_expired", "Session Expired"),
         description:
@@ -66,6 +67,9 @@ export default function DashboardLayout() {
         iconType: "danger",
         hideCancel: true,
         onConfirm: () => {
+          navigate("/", { replace: true });
+        },
+        onClose: () => {
           navigate("/", { replace: true });
         },
       });
@@ -81,7 +85,6 @@ export default function DashboardLayout() {
     t,
   ]);
 
-  // 2. Profile & Accounts queries (Only executed if session is valid)
   const {
     data: profileResponse,
     isLoading: isLoadingProfile,
@@ -137,7 +140,6 @@ export default function DashboardLayout() {
     enabled: isSessionValid && !!activeAccountId,
   });
 
-  // 3. Loading State (Only for authenticated users while verifying profile data)
   if (isLoadingSession || (isSessionValid && isLoadingProfile)) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
@@ -151,7 +153,6 @@ export default function DashboardLayout() {
     );
   }
 
-  // 4. Protection Fallback Check
   if (
     isSessionError ||
     !isSessionValid ||
