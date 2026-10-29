@@ -1,21 +1,13 @@
 import { useState } from "react";
 import {
-  Calendar as CalendarIcon,
   Download,
-  FileText,
-  Printer,
   Loader2,
+  Calendar,
+  RotateCcw,
 } from "lucide-react";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useDialog } from "@/components/globals/DialogProvider";
@@ -27,17 +19,23 @@ import {
 } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
-
 import ResultTable from "@/components/reports/ResultTable";
 import { downloadBlob } from "@/lib/utils/reportUtils";
 import GlobalDatePicker from "@/components/globals/GlobalDatePicker";
+import { cn } from "@/lib/utils";
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
+const REPORT_TABS = [
+  { id: "transaction", label: "Transaction Report", translationKey: "transaction_report" },
+  { id: "settlement", label: "Settlement Report", translationKey: "report_settlement" },
+  { id: "refund", label: "Refund Report", translationKey: "report_refunds" },
+];
+
 export default function ReportsPage() {
   const { t } = useLanguage();
   const { accounts, profile } = useDashboardContext();
   const { openGlobalPopup } = useDialog();
   const { validate, errors, clearError, clearAllErrors } = useFormValidation();
+
   const [activeTab, setActiveTab] = useState("transaction");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -47,6 +45,7 @@ export default function ReportsPage() {
   const [reportTitle, setReportTitle] = useState("");
   const [appliedFilters, setAppliedFilters] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingType, setDownloadingType] = useState(null);
 
   const accountId = accounts?.[0]?.ACCOUNTNUMBER;
   const merchantId = profile?.custId;
@@ -71,7 +70,7 @@ export default function ReportsPage() {
   };
 
   const handleGenerate = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
 
     const fieldsToValidate = [
       {
@@ -111,6 +110,7 @@ export default function ReportsPage() {
       });
     } else {
       setIsDownloading(true);
+      setDownloadingType(activeTab);
       try {
         const payload = {
           fromDate: fromDateStr,
@@ -140,116 +140,145 @@ export default function ReportsPage() {
         const formattedDate = format(new Date(), "MMM dd yyyy").toUpperCase();
         const prefix =
           activeTab === "settlement"
-            ? `${t("report_settlement", "Settlement")} Report ${t("as_of", "as of")} `
-            : `${t("report_refunds", "Refund")} Report ${t("as_of", "as of")} `;
+            ? `${t("report_settlement", "Settlement")} Report as of `
+            : `${t("report_refunds", "Refund")} Report as of `;
 
         downloadBlob(blob, `${prefix}${formattedDate}.csv`);
       } catch (err) {
         openGlobalPopup({
           type: "error",
           title: t("error", "Error"),
-          description: t(
-            "failed_generate_report",
-            "Failed to generate report.",
-          ),
+          description: t("failed_generate_report", "Failed to generate report."),
         });
       } finally {
         setIsDownloading(false);
+        setDownloadingType(null);
       }
     }
   };
 
+  const handleDownloadBalanceStatement = async () => {
+    if (!merchantId) return;
+    setIsDownloading(true);
+    setDownloadingType("balance");
+    try {
+      const blob = await generateReportBalanceStatement({
+        merchantId,
+      });
+
+      if (blob.type && blob.type.indexOf("application/json") !== -1) {
+        const text = await blob.text();
+        try {
+          const data = JSON.parse(text);
+          if (data && data.message) {
+            openGlobalPopup({
+              type: "error",
+              title: t("error", "Error"),
+              description: data.message,
+            });
+            return;
+          }
+        } catch (e) {}
+      }
+
+      const formattedDate = format(new Date(), "MMM dd yyyy").toUpperCase();
+      const prefix = `${t("report_balance", "Balance Statement")} as of `;
+      downloadBlob(blob, `${prefix}${formattedDate}.csv`);
+    } catch (e) {
+      openGlobalPopup({
+        type: "error",
+        title: t("error", "Error"),
+        description: t("failed_generate_report", "Failed to generate statement."),
+      });
+    } finally {
+      setIsDownloading(false);
+      setDownloadingType(null);
+    }
+  };
+
   return (
-    <div className="w-full max-w-[1400px] mx-auto pb-10">
-      {/* ── Page Header ─────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full space-y-4 pb-8">
+      {/* ── Page Header ─────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            {t("ms_report", "Reports")}
-          </p>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            {t("generateSalesReport", "Generate Reports")}
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {t("generateSalesReport", "Reports")}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {t("reports_subtitle", "Export settlement logs, refund records, and transaction activity")}
+          </p>
         </div>
       </div>
-      <div className="w-full rounded-xl border border-slate-200 bg-white dark:bg-white/[0.03] p-4 sm:p-6 shadow-sm">
-        <div className="flex gap-2 mb-6 border-b pb-4 overflow-x-auto no-scrollbar scroll-smooth">
-          {[
-            { key: "transaction", label: t("transaction", "Transaction") },
-            { key: "settlement", label: t("report_settlement", "Settlement") },
-            { key: "refund", label: t("report_refunds", "Refund") },
-          ].map((tab) => (
+
+      {/* ── Main Filter Bar Card ────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+        {/* Top Row: Clean Segmented Report Type Tabs & Quick Balance Statement Action */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-slate-100 dark:border-slate-800/60">
+          <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-0.5 shadow-2xs shrink-0">
+            {REPORT_TABS.map((tab, idx) => {
+              const isActive = activeTab === tab.id;
+              const isNextActive = REPORT_TABS[idx + 1]?.id === activeTab;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    handleReset();
+                  }}
+                  className={cn(
+                    "h-8 px-3.5 flex items-center justify-center text-xs font-semibold transition-all rounded-md cursor-pointer whitespace-nowrap shrink-0",
+                    isActive
+                      ? "bg-[#2563eb] text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800",
+                    !isActive &&
+                      !isNextActive &&
+                      idx < REPORT_TABS.length - 1 &&
+                      "border-r border-slate-200/70 dark:border-slate-700/60",
+                  )}
+                >
+                  {t(tab.translationKey, tab.label)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {(fromDate || toDate || txType !== "selected" || status !== "selected" || appliedFilters) && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <RotateCcw size={12} />
+                <span>{t("reset", "Reset")}</span>
+              </button>
+            )}
+
+            {/* Quick Balance Statement Download Action inside top-right of the card */}
             <button
-              key={tab.key}
               type="button"
-              onClick={() => {
-                setActiveTab(tab.key);
-                handleReset();
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeTab === tab.key ? "bg-[#2563eb] text-white shadow-md" : "bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-600 dark:text-white/70"}`}
+              onClick={handleDownloadBalanceStatement}
+              disabled={isDownloading}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
             >
-              {tab.label} {t("ms_report", "Report")}
+              {isDownloading && downloadingType === "balance" ? (
+                <Loader2 className="animate-spin w-3.5 h-3.5 text-[#2563eb]" />
+              ) : (
+                <Download size={13} className="text-slate-500 dark:text-slate-400" />
+              )}
+              <span>{t("report_balance", "Balance Statement")}</span>
             </button>
-          ))}
-          <button
-            type="button"
-            onClick={async () => {
-              if (!merchantId) return;
-              setIsDownloading(true);
-              try {
-                const blob = await generateReportBalanceStatement({
-                  merchantId,
-                });
-
-                if (blob.type && blob.type.indexOf("application/json") !== -1) {
-                  const text = await blob.text();
-                  try {
-                    const data = JSON.parse(text);
-                    if (data && data.message) {
-                      openGlobalPopup({
-                        type: "error",
-                        title: "Error",
-                        description: data.message,
-                      });
-                      return;
-                    }
-                  } catch (e) {
-                    // Not JSON, continue to download
-                  }
-                }
-
-                const formattedDate = format(
-                  new Date(),
-                  "MMM dd yyyy",
-                ).toUpperCase();
-                const prefix = `${t("report_balance", "Balance Statement")} as of `;
-                downloadBlob(blob, `${prefix}${formattedDate}.csv`);
-              } catch (e) {
-                openGlobalPopup({
-                  type: "error",
-                  title: "Error",
-                  description: "Failed to generate statement.",
-                });
-              } finally {
-                setIsDownloading(false);
-              }
-            }}
-            className="px-4 py-2 rounded-lg text-xs font-bold uppercase whitespace-nowrap bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-600 dark:text-white/70 flex items-center gap-2"
-          >
-            {isDownloading ? (
-              <Loader2 className="animate-spin w-4 h-4" />
-            ) : (
-              <Download size={14} />
-            )}{" "}
-            {t("report_balance", "Balance Statement")}
-          </button>
+          </div>
         </div>
-        <form onSubmit={handleGenerate} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                {t("from_date", "From Date")}{" "}
-                <span className="text-red-500">*</span>
+
+        {/* Filter Inputs Grid (Minimal, Clean 4-Column Layout) */}
+        <form onSubmit={handleGenerate} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* From Date */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t("from_date", "From Date")} <span className="text-rose-500">*</span>
               </label>
               <GlobalDatePicker
                 value={fromDate}
@@ -259,15 +288,16 @@ export default function ReportsPage() {
                 }}
               />
               {errors.fromDate && (
-                <span className="text-xs text-red-500 font-medium">
+                <span className="text-[11px] text-rose-500 font-medium">
                   {errors.fromDate}
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-white/70">
-                {t("to_date", "To Date")}{" "}
-                <span className="text-red-500">*</span>
+
+            {/* To Date */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t("to_date", "To Date")} <span className="text-rose-500">*</span>
               </label>
               <GlobalDatePicker
                 value={toDate}
@@ -277,74 +307,93 @@ export default function ReportsPage() {
                 }}
               />
               {errors.toDate && (
-                <span className="text-xs text-red-500 font-medium">
+                <span className="text-[11px] text-rose-500 font-medium">
                   {errors.toDate}
                 </span>
               )}
             </div>
-          </div>
-          {activeTab === "transaction" && (
-            <div className="border-t border-dashed border-slate-200 dark:border-white/10 pt-4 max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-4">
-                {t("global_filter_by", "Filter By")}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            {/* Transaction Type (Only for transaction report) */}
+            {activeTab === "transaction" ? (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {t("transaction_type", "Transaction Type")}
+                </label>
                 <GlobalSelect
-                  label={t("transaction_type", "Transaction Type")}
                   value={txType}
                   onChange={setTxType}
-                  labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
                   options={[
-                    { value: "selected", label: "All Types" },
+                    { value: "selected", label: "All types" },
+                    { value: "CASHOUT", label: "Pay by Cash Out" },
+                    { value: "PAYTOBANK", label: "Transfer to Bank" },
+                    { value: "PAYBILL", label: "Pay Bills" },
                     { value: "SCANTOPAY", label: "Scan to Pay" },
                     { value: "PAYQRCODE", label: "Pay by QR Code" },
-                    { value: "PAYTOBANK", label: "Transfer To Bank" },
-                    { value: "PAYTOEMAIL", label: "Pay By Email" },
+                    { value: "PAYTOEMAIL", label: "Pay by Email" },
                     { value: "PAYTOPHONE", label: "Pay to Mobile" },
                     { value: "TOPUP", label: "Mobile Recharge" },
-                    { value: "SCANCOLLET", label: "Scan To Collect" },
+                    { value: "SCANCOLLET", label: "Scan to Collect" },
                     { value: "REQBYQR", label: "Request by QR" },
                     { value: "PROFBYQR", label: "Profile QR" },
-                    { value: "PAYBILL", label: "Pay Bills" },
-                  ]}
-                />
-                <GlobalSelect
-                  label={t("transaction_status", "Transaction Status")}
-                  value={status}
-                  onChange={setStatus}
-                  labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-                  options={[
-                    { value: "selected", label: "All Statuses" },
-                    { value: "P", label: "Processed" },
-                    { value: "R", label: "Rejected" },
                   ]}
                 />
               </div>
-            </div>
-          )}
-          <div className="pt-2 max-w-2xl text-right">
+            ) : (
+              <div className="hidden lg:block" />
+            )}
+
+            {/* Status (Only for transaction report) */}
+            {activeTab === "transaction" ? (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {t("transaction_status", "Status")}
+                </label>
+                <GlobalSelect
+                  value={status}
+                  onChange={setStatus}
+                  options={[
+                    { value: "selected", label: "All Statuses" },
+                    { value: "P", label: "Processed" },
+                    { value: "R", label: "Failed" },
+                  ]}
+                />
+              </div>
+            ) : (
+              <div className="hidden lg:block" />
+            )}
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center justify-end pt-3 border-t border-slate-100 dark:border-slate-800/60">
             <GlobalButton
               type="submit"
               variant="primary"
-              className="w-full sm:w-auto h-11 px-8 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+              className="h-9 px-6 text-xs font-semibold"
               disabled={isFetching || isDownloading}
             >
-              {(isFetching || isDownloading) && (
-                <Loader2 className="w-4 h-4 animate-spin" />
+              {(isFetching || (isDownloading && downloadingType === activeTab)) && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
               )}
-              {t("global_generate", "Generate Report")}
+              {activeTab === "transaction"
+                ? t("generate_report", "Generate Report")
+                : `${t("download", "Download")} ${t("ms_report", "Report")}`}
             </GlobalButton>
           </div>
         </form>
-        {activeTab === "transaction" && isFetching && !results && (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#2563eb]" />
-            <p className="text-sm font-medium text-slate-500 dark:text-white/50">
-              {t("fetching_transactions", "Fetching transactions...")}
-            </p>
-          </div>
-        )}
-        {activeTab === "transaction" && results && (
+      </div>
+
+      {/* ── Results Container ───────────────────────────────── */}
+      {activeTab === "transaction" && isFetching && !results && (
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 py-16 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#2563eb]" />
+          <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
+            {t("fetching_transactions", "Fetching transactions...")}
+          </p>
+        </div>
+      )}
+
+      {activeTab === "transaction" && results && (
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <ResultTable
             data={results}
             reportTitle={reportTitle}
@@ -353,8 +402,8 @@ export default function ReportsPage() {
             toDate={toDate}
             onReset={handleReset}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
