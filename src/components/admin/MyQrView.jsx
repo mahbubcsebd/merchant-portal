@@ -4,10 +4,22 @@ import { APP_ICON_BASE64 } from "@/assets/appIconTransBase64";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import GlobalSelect from "@/components/globals/GlobalSelect";
+import {
+  Download,
+  Copy,
+  Check,
+  ShieldCheck,
+  Store,
+  Sparkles,
+  QrCode,
+  Info,
+  CheckCircle2,
+  Zap,
+} from "lucide-react";
 
 export default function MyQrView() {
   const { t } = useLanguage();
-  const { profile } = useDashboardContext();
+  const { profile, accounts } = useDashboardContext();
   const p = profile || {};
   const qrList = p.qrcode || [];
 
@@ -18,6 +30,7 @@ export default function MyQrView() {
   }));
 
   const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Initialize selected currency
   useEffect(() => {
@@ -61,7 +74,7 @@ export default function MyQrView() {
       },
       dotsOptions: {
         type: "extra-rounded",
-        color: "#000000",
+        color: "#0f172a",
       },
       backgroundOptions: {
         color: "#ffffff",
@@ -76,58 +89,249 @@ export default function MyQrView() {
   const handleDownloadQR = () => {
     if (qrCodeInstance.current) {
       qrCodeInstance.current.download({
-        name: `store-qr-${selectedCurrency || "wallet"}`,
+        name: `mpay-store-qr-${selectedCurrency || "wallet"}`,
         extension: "png",
       });
     }
   };
 
-  const btnText = t(
-    "buttonsDownloadQR",
-    t("download_qr", "QR DOWNLOADEN"),
-  ).toUpperCase();
+  const handleCopyCode = () => {
+    if (!qrValue) return;
+    navigator.clipboard.writeText(qrValue);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const merchantName = p.custName || p.FIRSTNAME || "Huawei Corp";
+  const merchantUsername = p.userName ? `@${p.userName}` : "@merchant";
+  const activeCurrencyDisplay =
+    selectedCurrency ||
+    accounts?.[0]?.CURSHRTNAME ||
+    accounts?.[0]?.CURCODE ||
+    "XCG";
 
   return (
-    <div className="w-full min-h-[480px] flex flex-col items-center justify-center p-8 bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
-      {/* Merchant Details */}
-      <div className="text-center mb-5">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-          {p.custName || p.FIRSTNAME || "Merchant Store"}
-        </h3>
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-          {p.userName ? `@${p.userName}` : ""}
-        </p>
-      </div>
+    <div className="w-full flex flex-col xl:flex-row gap-5 items-start animate-in fade-in duration-300">
+      {/* ── Left Column: Premium Physical Merchant QR Card ────── */}
+      <div className="w-full xl:w-[480px] shrink-0">
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+          {/* Card Top Brand Banner */}
+          <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <QrCode size={120} />
+            </div>
 
-      {/* Currency Select */}
-      {qrOptions.length > 1 && (
-        <div className="w-full max-w-[260px] mb-6">
-          <GlobalSelect
-            value={selectedCurrency}
-            onChange={(val) => setSelectedCurrency(val)}
-            options={qrOptions}
-            placeholder={t("selectCurrency", "Select Currency")}
-          />
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
+                  <Store size={22} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="text-base sm:text-lg font-bold truncate text-white">
+                      {merchantName}
+                    </h3>
+                    <ShieldCheck
+                      size={16}
+                      className="text-emerald-300 shrink-0"
+                    />
+                  </div>
+                  <p className="text-xs text-blue-100/80 font-medium truncate mt-0.5">
+                    {merchantUsername}
+                  </p>
+                </div>
+              </div>
+
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/15 backdrop-blur-md border border-white/20 text-white shrink-0">
+                {activeCurrencyDisplay}
+              </span>
+            </div>
+          </div>
+
+          {/* QR Stand Body */}
+          <div className="p-6 flex flex-col items-center">
+            {/* Currency selector if multiple */}
+            {qrOptions.length > 1 && (
+              <div className="w-full max-w-[280px] mb-5">
+                <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 text-center mb-1.5">
+                  {t("select_qr_currency", "Select QR Wallet Currency")}
+                </label>
+                <GlobalSelect
+                  value={selectedCurrency}
+                  onChange={(val) => setSelectedCurrency(val)}
+                  options={qrOptions}
+                  placeholder={t("selectCurrency", "Select Currency")}
+                />
+              </div>
+            )}
+
+            {/* QR Frame */}
+            <div className="relative group p-4 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-slate-100 flex items-center justify-center w-[252px] h-[252px] transition-all">
+              <div
+                ref={qrRef}
+                className="w-[220px] h-[220px] flex items-center justify-center"
+              />
+            </div>
+
+            {/* Instruction caption */}
+            <div className="flex items-center gap-1.5 mt-4 text-center">
+              <Zap size={13} className="text-amber-500 shrink-0" />
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {t("scan_to_pay_text", "Scan to pay instantly with mPay")}
+              </p>
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 text-center">
+              {t("compatible_all_wallets", "Compatible with customer wallets & cameras")}
+            </p>
+
+            {/* Action Buttons */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={handleDownloadQR}
+                disabled={!qrValue}
+                className="flex items-center justify-center gap-2 h-10 px-4 bg-[#2563eb] hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs rounded-xl shadow-sm shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Download size={14} />
+                <span>{t("download_qr", "Download QR")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                disabled={!qrValue}
+                className="flex items-center justify-center gap-2 h-10 px-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                {copied ? (
+                  <>
+                    <Check size={14} className="text-emerald-500" />
+                    <span className="text-emerald-600 dark:text-emerald-400">
+                      {t("copied", "Copied!")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} className="text-slate-400" />
+                    <span>{t("copy_payload", "Copy Code")}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-
-      {/* QR Code White Box */}
-      <div className="relative mb-6 p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center w-[250px] h-[250px]">
-        <div
-          ref={qrRef}
-          className="w-[220px] h-[220px] flex items-center justify-center"
-        />
       </div>
 
-      {/* Download Button */}
-      <button
-        type="button"
-        className="px-6 py-2.5 bg-[#1b55ad] hover:bg-[#184994] text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
-        onClick={handleDownloadQR}
-        disabled={!qrValue}
-      >
-        {btnText}
-      </button>
+      {/* ── Right Column: Info, Specs & Merchant Tips ───────── */}
+      <div className="flex-1 w-full space-y-4">
+        {/* Card 1: Live Payment Terminal Info */}
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80 mb-4">
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                {t("terminal_details", "Payment Terminal Details")}
+              </h4>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">
+              <CheckCircle2 size={12} />
+              <span>{t("active_status", "Active & Ready")}</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
+                {t("merchant_name", "Merchant Name")}
+              </span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block truncate">
+                {merchantName}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
+                {t("merchant_handle", "Merchant Identifier")}
+              </span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block truncate">
+                {merchantUsername}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
+                {t("settlement_currency", "Settlement Currency")}
+              </span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block">
+                {activeCurrencyDisplay}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
+                {t("settlement_speed", "Credit Speed")}
+              </span>
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                {t("instant_realtime", "Instant (Real-time)")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: How Store QR Works */}
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t("how_qr_works", "How to Use in Your Store")}
+            </h4>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                step: "01",
+                title: t("step_print_title", "Download or Print"),
+                desc: t(
+                  "step_print_desc",
+                  "Download the high-resolution PNG image and place it on your checkout counter, acrylic stand, or bill receipt.",
+                ),
+              },
+              {
+                step: "02",
+                title: t("step_scan_title", "Customer Scans QR"),
+                desc: t(
+                  "step_scan_desc",
+                  "Customer opens mPay or any compatible banking app, scans your QR code, and confirms payment amount.",
+                ),
+              },
+              {
+                step: "03",
+                title: t("step_receive_title", "Instant Credit & Alerts"),
+                desc: t(
+                  "step_receive_desc",
+                  "Funds credit to your merchant balance immediately. Both cashier and customer receive instant notifications.",
+                ),
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800/70 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
+                  {item.step}
+                </div>
+                <div className="min-w-0">
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {item.title}
+                  </h5>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
