@@ -1,6 +1,5 @@
 import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { useDashboardContext } from "@/pages/dashboard/context";
 import {
   QrCode,
   Wallet,
@@ -8,9 +7,7 @@ import {
   Bell,
   Languages,
   KeyRound,
-  ShieldCheck,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 
 import MyQrView from "@/components/admin/MyQrView";
@@ -22,7 +19,6 @@ import ChangePinView from "@/components/admin/ChangePinView";
 
 export default function AdminPage() {
   const { t } = useLanguage();
-  const { profile } = useDashboardContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "my_qr";
 
@@ -133,44 +129,22 @@ export default function AdminPage() {
     }
   };
 
-  const merchantName =
-    profile?.custName || profile?.FIRSTNAME || "Huawei Corp";
-
   return (
     <div className="w-full space-y-5 pb-8 animate-in fade-in duration-300">
-      {/* ── Page Header ────────────────────────────────────────── */}
+      {/* ── Page Header: Active Tab Title & Description dynamically placed at top ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              {t("adm_title", t("lmAdministration", "Administration"))}
+              {currentTab.label}
             </h2>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-              <Sparkles size={11} />
-              <span>{t("merchant_portal", "Merchant Portal")}</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+              {currentTab.category}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {t(
-              "admin_subtitle",
-              "Manage store QR codes, payment limits, settlement accounts, and security preferences",
-            )}
+            {currentTab.description}
           </p>
-        </div>
-
-        {/* Merchant identity pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm shrink-0 self-start sm:self-auto">
-          <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <ShieldCheck size={14} />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-              {merchantName}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-              {t("verified_merchant", "Verified Merchant")}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -252,24 +226,8 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Right Active Content Area */}
+        {/* Right Active Content Area (Direct Component Render without duplicate context header) */}
         <div className="lg:col-span-8 xl:col-span-9 w-full min-w-0">
-          {/* Active Section Context Header */}
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                {currentTab.label}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {currentTab.description}
-              </p>
-            </div>
-            <span className="hidden sm:inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {currentTab.category}
-            </span>
-          </div>
-
-          {/* Tab View */}
           {renderContent()}
         </div>
       </div>

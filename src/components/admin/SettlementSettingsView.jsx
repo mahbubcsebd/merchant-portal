@@ -17,14 +17,8 @@ import {
   Plus,
   Landmark,
   Building2,
-  CheckCircle2,
-  CreditCard,
   Copy,
   Check,
-  ShieldCheck,
-  Sparkles,
-  ArrowRight,
-  Clock,
 } from "lucide-react";
 
 export default function SettlementSettingsView() {
@@ -473,171 +467,26 @@ export default function SettlementSettingsView() {
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-300">
-      {/* ── Row 1: 3 Colorful KPI Overview Cards (Exact /dashboard style) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        {/* 1. Connected Banks Card (Blue) */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                <Landmark size={16} />
-              </div>
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                {t("linked_banks", "Linked Banks")}
-              </span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-              {t("verified", "Verified")}
-            </span>
+      {/* ── Top Bar: Add Bank Account ── */}
+      <div className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <Building2 size={20} />
           </div>
-
-          <div className="relative z-10 mt-2">
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t("linked_bank_accounts", "Linked Bank Accounts")}
+            </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               {banks.length} {banks.length === 1 ? t("account", "Account") : t("accounts", "Accounts")}
-            </h3>
-            <p className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-1.5">
-              {t("direct_payout_enabled", "Direct clearing enabled")}
             </p>
           </div>
-
-          {/* Soft SVG Wave */}
-          <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-20 dark:opacity-10 overflow-hidden">
-            <svg viewBox="0 0 140 45" preserveAspectRatio="none" fill="none" className="w-full h-full">
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12 L 140 45 L 0 45 Z"
-                fill="url(#blue-grad-settle)"
-              />
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12"
-                stroke="#2563eb"
-                strokeWidth="1.2"
-                fill="none"
-              />
-              <defs>
-                <linearGradient id="blue-grad-settle" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
-        {/* 2. Payout Routing Card (Indigo) */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <CreditCard size={16} />
-              </div>
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                {t("routing_system", "Payout Routing")}
-              </span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              ACH / RTGS
-            </span>
-          </div>
-
-          <div className="relative z-10 mt-2">
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {t("multi_currency_routing", "Multi-Currency")}
-            </h3>
-            <p className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-1.5">
-              {t("instant_routing_desc", "JMD, XCG & USD bank clearing")}
-            </p>
-          </div>
-
-          {/* Soft SVG Wave */}
-          <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-20 dark:opacity-10 overflow-hidden">
-            <svg viewBox="0 0 140 45" preserveAspectRatio="none" fill="none" className="w-full h-full">
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12 L 140 45 L 0 45 Z"
-                fill="url(#indigo-grad-settle)"
-              />
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12"
-                stroke="#6366f1"
-                strokeWidth="1.2"
-                fill="none"
-              />
-              <defs>
-                <linearGradient id="indigo-grad-settle" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
-        {/* 3. Settlement Schedule Card (Emerald) */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <CheckCircle2 size={16} />
-              </div>
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                {t("schedule", "Settlement Schedule")}
-              </span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-              {t("automated", "Automated")}
-            </span>
-          </div>
-
-          <div className="relative z-10 mt-2">
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {t("daily_eod", "Daily EOD")}
-            </h3>
-            <p className="text-[11px] font-normal text-slate-400 dark:text-slate-500 mt-1.5">
-              {t("auto_settlement_active", "End-of-day funds transfer to bank")}
-            </p>
-          </div>
-
-          {/* Soft SVG Wave */}
-          <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-20 dark:opacity-10 overflow-hidden">
-            <svg viewBox="0 0 140 45" preserveAspectRatio="none" fill="none" className="w-full h-full">
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12 L 140 45 L 0 45 Z"
-                fill="url(#green-grad-settle)"
-              />
-              <path
-                d="M0 45 C 40 45, 60 28, 90 28 C 115 28, 125 15, 140 12"
-                stroke="#10b981"
-                strokeWidth="1.2"
-                fill="none"
-              />
-              <defs>
-                <linearGradient id="green-grad-settle" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Row 2: Management Bar with Add Bank Button ────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div>
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-            {t("sl_title", "Settlement Bank Accounts")}
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {t(
-              "settlement_header_desc",
-              "Manage linked beneficiary bank accounts for merchant wallet fund transfers",
-            )}
-          </p>
         </div>
 
         <button
           type="button"
           onClick={() => handleAddClick()}
-          className="flex items-center justify-center gap-2 h-10 px-4 bg-[#2563eb] hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs rounded-xl shadow-sm shadow-blue-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0"
+          className="flex items-center justify-center gap-2 h-10 px-4 bg-[#2563eb] hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs rounded-xl shadow-sm shadow-blue-500/20 transition-all cursor-pointer shrink-0"
         >
           <Plus size={16} />
           <span>
@@ -646,19 +495,19 @@ export default function SettlementSettingsView() {
         </button>
       </div>
 
-      {/* ── Row 3: Bank Account Cards Grid ────────────────────── */}
+      {/* ── Bank Account Cards (Clean, only authentic info) ── */}
       {banks.length === 0 ? (
         <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-12 text-center flex flex-col items-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
             <Landmark size={28} />
           </div>
           <h4 className="text-base font-bold text-slate-800 dark:text-white">
-            {t("no_bank_accounts_title", "No Settlement Accounts Configured")}
+            {t("no_bank_accounts_title", "No Bank Accounts Found")}
           </h4>
           <p className="text-xs text-slate-400 dark:text-slate-500 max-w-md mt-1 mb-6 leading-relaxed">
             {t(
               "no_bank_accounts_desc",
-              "Connect your commercial business bank account to enable automated daily end-of-day settlements and zero-fee payouts.",
+              "You have not added any settlement bank accounts yet. Click below to add an account.",
             )}
           </p>
           <button
@@ -671,119 +520,89 @@ export default function SettlementSettingsView() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-          {banks.map((bank, idx) => {
-            const currencyLabel = getCurrencyLabel(bank.currency);
-            const accountTypeLabel = getAccountTypeLabel(bank.accountType);
-
-            return (
-              <div
-                key={idx}
-                className="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                {/* Top: Bank Avatar, Name & Status Badge */}
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm shadow-blue-500/20">
-                        <Landmark size={20} />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {bank.name}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                            {accountTypeLabel}
-                          </span>
-                          <span className="text-slate-300 dark:text-slate-700">
-                            •
-                          </span>
-                          <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                            {currencyLabel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full shrink-0">
-                      <CheckCircle2 size={11} />
-                      <span>{t("active_payout", "Active")}</span>
-                    </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {banks.map((bank, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              <div>
+                {/* Bank Name */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Landmark size={20} />
                   </div>
-
-                  {/* Card Number & EMV Chip Banner */}
-                  <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 my-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {/* Stylized Golden EMV Card Chip */}
-                      <div className="w-8 h-6 rounded-md bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 shadow-inner flex items-center justify-center shrink-0 border border-amber-500/40 opacity-90">
-                        <div className="w-6 h-4 border border-amber-700/30 rounded-xs" />
-                      </div>
-
-                      <span className="text-xs sm:text-sm font-mono font-bold tracking-widest text-slate-800 dark:text-slate-200">
-                        {bank.account}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        copyAccountNumber(bank.rawAccount || bank.account, idx)
-                      }
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
-                      title={t("copy_account", "Copy Account Number")}
-                    >
-                      {copiedId === idx ? (
-                        <Check size={14} className="text-emerald-500" />
-                      ) : (
-                        <Copy size={14} />
-                      )}
-                    </button>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {bank.name}
+                    </h4>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      {t("mba_bank", "Bank Name")}
+                    </span>
                   </div>
                 </div>
 
-                {/* Bottom Row: Tags + Action Buttons */}
-                <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                      {currencyLabel}
+                {/* Account Number Box */}
+                <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 my-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block uppercase font-medium">
+                      {t("mba_accountNo", "Account Number")}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      {accountTypeLabel}
+                    <span className="text-sm font-mono font-bold tracking-wider text-slate-800 dark:text-slate-200 mt-0.5 block">
+                      {bank.account}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleViewClick(bank)}
-                      className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
-                      title={t("view", "View Details")}
-                    >
-                      <Eye size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEditClick(bank)}
-                      className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
-                      title={t("edit", "Edit Account")}
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(bank)}
-                      disabled={deleteMutation.isPending}
-                      className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all cursor-pointer disabled:opacity-50"
-                      title={t("delete", "Delete Account")}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyAccountNumber(bank.rawAccount || bank.account, idx)
+                    }
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
+                    title={t("copy_account", "Copy Account Number")}
+                  >
+                    {copiedId === idx ? (
+                      <Check size={14} className="text-emerald-500" />
+                    ) : (
+                      <Copy size={14} />
+                    )}
+                  </button>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Action Buttons (Original actions: View, Edit, Delete) */}
+              <div className="flex items-center justify-end gap-1 pt-3 mt-2 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => handleViewClick(bank)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
+                  title={t("view", "View")}
+                >
+                  <Eye size={15} />
+                  <span>{t("view", "View")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleEditClick(bank)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
+                  title={t("edit", "Edit")}
+                >
+                  <Pencil size={15} />
+                  <span>{t("edit", "Edit")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(bank)}
+                  disabled={deleteMutation.isPending}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all cursor-pointer disabled:opacity-50"
+                  title={t("delete", "Delete")}
+                >
+                  <Trash2 size={15} />
+                  <span>{t("delete", "Delete")}</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

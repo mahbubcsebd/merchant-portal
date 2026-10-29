@@ -10,10 +10,7 @@ import {
   Check,
   ShieldCheck,
   Store,
-  Sparkles,
   QrCode,
-  Info,
-  CheckCircle2,
   Zap,
 } from "lucide-react";
 
@@ -111,9 +108,9 @@ export default function MyQrView() {
     "XCG";
 
   return (
-    <div className="w-full flex flex-col xl:flex-row gap-5 items-start animate-in fade-in duration-300">
-      {/* ── Left Column: Premium Physical Merchant QR Card ────── */}
-      <div className="w-full xl:w-[480px] shrink-0">
+    <div className="w-full flex justify-start py-1 animate-in fade-in duration-300">
+      {/* ── Left-Aligned Focused Merchant QR Card ── */}
+      <div className="w-full max-w-[480px]">
         <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
           {/* Card Top Brand Banner */}
           <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white overflow-hidden">
@@ -182,7 +179,10 @@ export default function MyQrView() {
               </p>
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 text-center">
-              {t("compatible_all_wallets", "Compatible with customer wallets & cameras")}
+              {t(
+                "compatible_all_wallets",
+                "Compatible with customer wallets & cameras",
+              )}
             </p>
 
             {/* Action Buttons */}
@@ -218,117 +218,6 @@ export default function MyQrView() {
                 )}
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Right Column: Info, Specs & Merchant Tips ───────── */}
-      <div className="flex-1 w-full space-y-4">
-        {/* Card 1: Live Payment Terminal Info */}
-        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80 mb-4">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                {t("terminal_details", "Payment Terminal Details")}
-              </h4>
-            </div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">
-              <CheckCircle2 size={12} />
-              <span>{t("active_status", "Active & Ready")}</span>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
-              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
-                {t("merchant_name", "Merchant Name")}
-              </span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block truncate">
-                {merchantName}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
-              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
-                {t("merchant_handle", "Merchant Identifier")}
-              </span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block truncate">
-                {merchantUsername}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
-              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
-                {t("settlement_currency", "Settlement Currency")}
-              </span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white mt-1 block">
-                {activeCurrencyDisplay}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/50">
-              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block">
-                {t("settlement_speed", "Credit Speed")}
-              </span>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
-                {t("instant_realtime", "Instant (Real-time)")}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: How Store QR Works */}
-        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-2 mb-3">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              {t("how_qr_works", "How to Use in Your Store")}
-            </h4>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {
-                step: "01",
-                title: t("step_print_title", "Download or Print"),
-                desc: t(
-                  "step_print_desc",
-                  "Download the high-resolution PNG image and place it on your checkout counter, acrylic stand, or bill receipt.",
-                ),
-              },
-              {
-                step: "02",
-                title: t("step_scan_title", "Customer Scans QR"),
-                desc: t(
-                  "step_scan_desc",
-                  "Customer opens mPay or any compatible banking app, scans your QR code, and confirms payment amount.",
-                ),
-              },
-              {
-                step: "03",
-                title: t("step_receive_title", "Instant Credit & Alerts"),
-                desc: t(
-                  "step_receive_desc",
-                  "Funds credit to your merchant balance immediately. Both cashier and customer receive instant notifications.",
-                ),
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800/70 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all"
-              >
-                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
-                  {item.step}
-                </div>
-                <div className="min-w-0">
-                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {item.title}
-                  </h5>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
