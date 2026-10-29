@@ -1,6 +1,21 @@
-import { MapPin, Pencil, User, Share2, Download } from "lucide-react";
+import {
+  MapPin,
+  Pencil,
+  User,
+  Share2,
+  Download,
+  Building2,
+  AtSign,
+  Phone,
+  Mail,
+  Camera,
+  ShieldCheck,
+  QrCode,
+  Copy,
+  Check,
+} from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import QRCodeStyling from "qr-code-styling";
 import { APP_ICON_BASE64 } from "@/assets/appIconTransBase64";
 import { useRef, useState, useEffect, useMemo } from "react";
@@ -21,48 +36,6 @@ import {
   enforceAlphanumericSpace,
 } from "@/lib/utils/inputFormatters";
 import { useFormValidation } from "@/hooks/useFormValidation";
-
-function Card({ title, children, className = "" }) {
-  return (
-    <div
-      className={`rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 ${className}`}
-    >
-      {title && (
-        <h3 className="text-base sm:text-lg font-semibold text-[#2563eb] dark:text-white mb-4 sm:mb-6">
-          {title}
-        </h3>
-      )}
-      {children}
-    </div>
-  );
-}
-
-function InputField({
-  label,
-  placeholder,
-  icon: Icon,
-  required,
-  registration,
-  error,
-  isReadOnly,
-  maxLength,
-  onInput,
-}) {
-  return (
-    <GlobalInput
-      label={label}
-      required={required}
-      placeholder={placeholder}
-      leftIcon={Icon ? <Icon size={14} /> : null}
-      labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-      error={error}
-      isReadOnly={isReadOnly}
-      maxLength={maxLength}
-      onInput={onInput}
-      {...registration}
-    />
-  );
-}
 
 export default function BusinessProfilePage() {
   const { profile, accounts } = useDashboardContext();
@@ -90,6 +63,14 @@ export default function BusinessProfilePage() {
   const fileInputRef = useRef(null);
   const [profileImage, setProfileImage] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  const handleCopy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   // Initialize selected account ID when accounts load
   useEffect(() => {
@@ -98,29 +79,21 @@ export default function BusinessProfilePage() {
     }
   }, [accounts, selectedAccountId]);
 
-
-  // Fallback to empty if profile is somehow missing
   const p = profile || {};
   const profileImageQuery = useProfileImage(profile);
-  const displayImage = profileImageQuery.data;
 
   useEffect(() => {
     if (profileImageQuery.data) {
       setProfileImage(profileImageQuery.data);
     }
   }, [profileImageQuery.data]);
+
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors: rhfErrors },
-    getValues,
   } = useForm({
     values: {
-      custName: p.custName || "",
-      userName: p.userName || "",
-      mobilePhone: p.mobilePhone || p.PHONE || "",
-      email: p.email || p.EMAIL || "",
       addrStreetNo: p.addrStreetNo || "",
       addrStreetName: p.addrStreetName || "",
       city: p.city || "",
@@ -193,7 +166,6 @@ export default function BusinessProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
       openConfirmDialog({
         title: "Invalid File",
@@ -205,7 +177,6 @@ export default function BusinessProfilePage() {
       return;
     }
 
-    // Validate file size (e.g. max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       openConfirmDialog({
         title: "File Too Large",
@@ -229,7 +200,6 @@ export default function BusinessProfilePage() {
   const updateMutation = useMutation({
     mutationFn: (values) => updateProfile(values),
     onSuccess: (data, variables) => {
-      // Update the cache with the new values
       queryClient.setQueryData(["userProfile"], (old) => {
         if (!old) return old;
         return {
@@ -240,7 +210,6 @@ export default function BusinessProfilePage() {
           },
         };
       });
-      // Invalidate to ensure sync
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
       openConfirmDialog({
@@ -310,9 +279,9 @@ export default function BusinessProfilePage() {
     if (!isValid) return;
 
     const payload = {
-      custName: data.custName,
-      mobilePhone: data.mobilePhone,
-      email: data.email,
+      custName: p.custName || "",
+      mobilePhone: p.mobilePhone || p.PHONE || "",
+      email: p.email || p.EMAIL || "",
       country: data.country,
       resCountry: p.resCountry || data.country,
       state: data.state,
@@ -346,8 +315,8 @@ export default function BusinessProfilePage() {
     qrRef.current.innerHTML = "";
     const qrCode = new QRCodeStyling({
       type: "svg",
-      width: 176,
-      height: 176,
+      width: 200,
+      height: 200,
       data: qrValue,
       margin: 0,
       qrOptions: {
@@ -358,12 +327,12 @@ export default function BusinessProfilePage() {
       imageOptions: {
         saveAsBlob: false,
         hideBackgroundDots: true,
-        imageSize: 0.35,
-        margin: 0,
+        imageSize: 0.32,
+        margin: 2,
       },
       dotsOptions: {
         type: "extra-rounded",
-        color: "#000000",
+        color: "#0f172a",
       },
       backgroundOptions: {
         color: "#ffffff",
@@ -384,59 +353,108 @@ export default function BusinessProfilePage() {
     }
   };
 
+  const businessMetaFields = [
+    {
+      key: "storeName",
+      label: t("store_name", "Store Name"),
+      value: p.custName || "—",
+      icon: Building2,
+      copyable: true,
+    },
+    {
+      key: "userId",
+      label: t("businessUserID", "Business User ID"),
+      value: p.userName || "—",
+      icon: AtSign,
+      copyable: true,
+    },
+    {
+      key: "phone",
+      label: t("businessPhone", "Business Phone Number"),
+      value: p.mobilePhone || p.PHONE || "—",
+      icon: Phone,
+      copyable: true,
+    },
+    {
+      key: "email",
+      label: t("businessEmail", "Business Email Address"),
+      value: p.email || p.EMAIL || "—",
+      icon: Mail,
+      copyable: true,
+    },
+  ];
+
   return (
-    <div className="w-full max-w-[1400px] mx-auto">
+    <div className="w-full max-w-[1400px] mx-auto space-y-5 pb-8">
       {/* ── Page Header ─────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            {t("settings", "Settings")}
-          </p>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             {t("business_profile", "Business Profile")}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {t("business_profile_subtitle", "Manage your merchant brand identity, verified business info, and address details")}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-        {/* Left Column (Forms) */}
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="xl:col-span-8 flex flex-col gap-6"
-          noValidate
-        >
-          {/* Business Profile */}
-          <Card title={t("business_profile", "Business Profile")}>
-            <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-              {/* Logo Upload Section */}
-              <div className="flex flex-col items-center gap-3 shrink-0">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#2563eb] p-1">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[#2563eb] dark:text-white">
-                      <User
-                        className="w-10 h-10 sm:w-12 sm:h-12"
-                        strokeWidth={1.5}
-                      />
-                    </div>
-                  )}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
+        {/* ── Left Column: Business Info & Editable Address ── */}
+        <div className="xl:col-span-8 flex flex-col gap-5">
+          {/* Business Profile Card */}
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Building2 size={16} />
                 </div>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40">
-                  {t("uploadLogo", "Upload Company Logo")}
-                </span>
-                <GlobalButton
-                  variant="primary"
-                  className="px-5 py-1.5 h-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {t("business_profile", "Business Profile")}
+                </h3>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-200/60 dark:border-emerald-500/20">
+                <ShieldCheck size={13} />
+                <span>{t("verified", "Verified")}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              {/* Logo / Avatar with inline upload action */}
+              <div className="flex flex-col items-center gap-2.5 shrink-0 self-center md:self-start">
+                <div className="relative group w-24 h-24 sm:w-28 sm:h-28 rounded-2xl p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-sm">
+                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 overflow-hidden flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400">
+                        <User className="w-10 h-10" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    aria-label="Upload logo"
+                    className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-blue-600 text-white shadow-md flex items-center justify-center hover:bg-blue-700 transition-transform active:scale-95"
+                  >
+                    <Camera size={14} />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  isLoading={uploadMutation.isPending}
+                  disabled={uploadMutation.isPending}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 mt-1"
                 >
-                  {t("fileUploadButton", "Upload")}
-                </GlobalButton>
+                  {uploadMutation.isPending ? t("uploading", "Uploading...") : t("change_logo", "Change Logo")}
+                </button>
+
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -446,82 +464,120 @@ export default function BusinessProfilePage() {
                 />
               </div>
 
-              {/* Form Fields */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <InputField
-                  label={t("store_name", "Store Name")}
-                  isReadOnly={true}
-                  registration={register("custName")}
-                  error={rhfErrors.custName?.message}
-                />
-                <InputField
-                  label={t("businessUserID", "Business User ID")}
-                  isReadOnly={true}
-                  registration={register("userName")}
-                  error={rhfErrors.userName?.message}
-                />
-                <InputField
-                  label={t("businessPhone", "Business Phone Number")}
-                  isReadOnly={true}
-                  registration={register("mobilePhone")}
-                  error={rhfErrors.mobilePhone?.message}
-                />
-                <InputField
-                  label={t("businessEmail", "Business Email Address")}
-                  isReadOnly={true}
-                  registration={register("email")}
-                  error={rhfErrors.email?.message}
-                />
+              {/* Data showcase */}
+              <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {businessMetaFields.map((field) => {
+                  const IconComp = field.icon;
+                  const isCopied = copiedKey === field.key;
+                  return (
+                    <div
+                      key={field.key}
+                      className="group relative p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+                          <IconComp size={13} />
+                          <span className="text-[11px] font-medium tracking-wide">
+                            {field.label}
+                          </span>
+                        </div>
+                        {field.copyable && field.value !== "—" && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(field.value, field.key)}
+                            aria-label={`Copy ${field.label}`}
+                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 opacity-60 group-hover:opacity-100 transition-opacity p-0.5"
+                          >
+                            {isCopied ? (
+                              <Check size={12} className="text-emerald-500" />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate select-all">
+                        {field.value}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Address Details */}
-          <Card title={t("address_details", "Address Details")}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
-              <InputField
+          {/* Editable Address Form */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+            noValidate
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <MapPin size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {t("address_details", "Address Details")}
+                </h3>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 mb-5">
+              <GlobalInput
                 label={t("street_no", "Street No")}
-                icon={MapPin}
                 required={true}
-                registration={register("addrStreetNo", {
-                  onChange: () => clearError("addrStreetNo"),
-                })}
+                placeholder="e.g. 12"
+                leftIcon={<MapPin size={14} />}
+                labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                 error={validationErrors.addrStreetNo}
                 maxLength={10}
                 onInput={enforceNumeric}
-              />
-              <InputField
-                label={t("street_name", "Street Name")}
-                icon={MapPin}
-                required={true}
-                registration={register("addrStreetName", {
-                  onChange: () => clearError("addrStreetName"),
+                {...register("addrStreetNo", {
+                  onChange: () => clearError("addrStreetNo"),
                 })}
+              />
+
+              <GlobalInput
+                label={t("street_name", "Street Name")}
+                required={true}
+                placeholder="e.g. Main Street"
+                leftIcon={<MapPin size={14} />}
+                labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                 error={validationErrors.addrStreetName}
                 maxLength={30}
                 onInput={enforceAlphanumericSpace}
-              />
-              <InputField
-                label={t("city", "City")}
-                icon={MapPin}
-                required={true}
-                registration={register("city", {
-                  onChange: () => clearError("city"),
+                {...register("addrStreetName", {
+                  onChange: () => clearError("addrStreetName"),
                 })}
+              />
+
+              <GlobalInput
+                label={t("city", "City")}
+                required={true}
+                placeholder="e.g. Kingston"
+                leftIcon={<MapPin size={14} />}
+                labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                 error={validationErrors.city}
                 maxLength={30}
                 onInput={enforceAlphanumericSpace}
-              />
-              <InputField
-                label={t("state", "State")}
-                icon={Pencil}
-                required={true}
-                registration={register("state", {
-                  onChange: () => clearError("state"),
+                {...register("city", {
+                  onChange: () => clearError("city"),
                 })}
+              />
+
+              <GlobalInput
+                label={t("state", "State")}
+                required={true}
+                placeholder="e.g. Saint Andrew"
+                leftIcon={<Pencil size={14} />}
+                labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                 error={validationErrors.state}
                 maxLength={30}
                 onInput={enforceAlphanumericSpace}
+                {...register("state", {
+                  onChange: () => clearError("state"),
+                })}
               />
 
               <Controller
@@ -536,105 +592,135 @@ export default function BusinessProfilePage() {
                       field.onChange(val);
                       clearError("country");
                     }}
-                    labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
+                    labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                     options={countryOptions}
                     error={validationErrors.country}
                   />
                 )}
               />
 
-              <InputField
+              <GlobalInput
                 label={t("ucZipCode", "Zip Code")}
-                icon={Pencil}
                 required={true}
-                registration={register("zipCode", {
-                  onChange: () => clearError("zipCode"),
-                })}
+                placeholder="e.g. 10001"
+                leftIcon={<Pencil size={14} />}
+                labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                 error={validationErrors.zipCode}
                 maxLength={7}
                 onInput={enforceNumeric}
+                {...register("zipCode", {
+                  onChange: () => clearError("zipCode"),
+                })}
               />
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-dashed border-slate-200 dark:border-white/10">
+            <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800/60">
               <GlobalButton
                 type="submit"
                 variant="primary"
                 disabled={updateMutation.isPending}
-                className="w-full sm:w-auto px-8 text-xs font-bold uppercase tracking-wider h-10"
+                className="w-full sm:w-auto px-6 h-10 text-xs font-bold tracking-wider"
               >
                 {updateMutation.isPending
-                  ? t("submitting", "Submitting...")
-                  : t("buttonSubmit", t("submit", "Submit"))}
+                  ? t("submitting", "Saving...")
+                  : t("save_changes", "Save Changes")}
               </GlobalButton>
             </div>
-          </Card>
-        </form>
+          </form>
+        </div>
 
-        {/* Right Column (QR Code) */}
+        {/* ── Right Column: Business QR Code Card (Matches Left Column Height) ── */}
         <div className="xl:col-span-4 flex flex-col">
-          <Card
-            title={t(
-              "business_qr_code",
-              t("businessQrCode", "Business QR Code"),
-            )}
-            className="flex-1 flex flex-col h-full"
-          >
-            <div className="flex flex-col items-center flex-1">
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                {p.custName || "Business Name"}
-              </h4>
-              <p className="text-sm text-slate-500 dark:text-white/40 mb-6">
-                @{p.userName || "username"}
-              </p>
-
-              <GlobalSelect
-                label={t("ott_account", "Account")}
-                value={selectedAccountId}
-                onChange={setSelectedAccountId}
-                labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-                containerClassName="w-full mb-6"
-                options={
-                  accounts?.map((acc) => ({
-                    value: acc.ACCOUNTNUMBER,
-                    label: `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(parseFloat(acc.AVBALANCE || 0))} ${acc.CURSHRTNAME || acc.CURCODE}`,
-                  })) || []
-                }
-              />
-
-              <div className="w-44 h-44 sm:w-48 sm:h-48 bg-white rounded-xl p-2 mb-6 flex items-center justify-center border-2 border-slate-200 dark:border-white/10">
-                <div ref={qrRef} className="flex items-center justify-center" />
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col h-full justify-between">
+            {/* Header */}
+            <div>
+              <div className="flex items-center pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <QrCode size={16} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    {t("business_qr_code", "Business QR Code")}
+                  </h3>
+                </div>
               </div>
 
-              <div className="w-full flex flex-row gap-3 mt-auto pt-6 border-t border-dashed border-slate-200 dark:border-white/10">
-                <GlobalButton
-                  variant="secondary"
-                  leftIcon={<Share2 size={16} />}
-                  className="flex-1 text-xs font-bold uppercase tracking-wider h-10"
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator
-                        .share({
-                          title: p.custName,
-                          text: `Pay ${p.custName} using this code: ${qrValue}`,
-                        })
-                        .catch(console.error);
-                    }
-                  }}
-                >
-                  {t("buttonsShareQR", "Share")}
-                </GlobalButton>
-                <GlobalButton
-                  onClick={handleDownloadQR}
-                  variant="primary"
-                  leftIcon={<Download size={16} />}
-                  className="flex-1 text-xs font-bold uppercase tracking-wider h-10"
-                >
-                  {t("buttonsDownloadQR", "Download")}
-                </GlobalButton>
+              {/* Merchant Identity Header */}
+              <div className="text-center mb-5">
+                <h4 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                  {p.custName || "Merchant Store"}
+                </h4>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                  @{p.userName || "store"}
+                </p>
+              </div>
+
+              {/* Account Selector Dropdown */}
+              <div className="mb-6">
+                <GlobalSelect
+                  label={t("ott_account", "Account")}
+                  value={selectedAccountId}
+                  onChange={setSelectedAccountId}
+                  labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  options={
+                    accounts?.map((acc) => {
+                      const code = acc.CURSHRTNAME || acc.CURCODE || "XCG";
+                      const bal = new Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                      }).format(parseFloat(acc.AVBALANCE || 0));
+                      return {
+                        value: acc.ACCOUNTNUMBER,
+                        label: `${code} (${bal})`,
+                      };
+                    }) || []
+                  }
+                />
+              </div>
+
+              {/* QR Code Container */}
+              <div className="flex flex-col items-center">
+                <div className="relative p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 shadow-inner flex items-center justify-center">
+                  <div
+                    ref={qrRef}
+                    className="rounded-xl overflow-hidden bg-white p-2.5 shadow-sm flex items-center justify-center"
+                  />
+                </div>
+
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mt-3 font-normal max-w-[240px]">
+                  {t("scan_to_pay_hint", "Customers can scan this QR code directly with mPay")}
+                </p>
               </div>
             </div>
-          </Card>
+
+            {/* Actions: Matching standard GlobalButton styling and radius */}
+            <div className="grid grid-cols-2 gap-3 pt-5 mt-6 border-t border-slate-100 dark:border-slate-800/60">
+              <GlobalButton
+                variant="outline"
+                leftIcon={<Share2 size={14} />}
+                className="w-full text-xs font-semibold h-10"
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator
+                      .share({
+                        title: p.custName,
+                        text: `Pay ${p.custName} using this code: ${qrValue}`,
+                      })
+                      .catch(console.error);
+                  }
+                }}
+              >
+                {t("share", "Share")}
+              </GlobalButton>
+              <GlobalButton
+                onClick={handleDownloadQR}
+                variant="primary"
+                leftIcon={<Download size={14} />}
+                className="w-full text-xs font-semibold h-10"
+              >
+                {t("download", "Download")}
+              </GlobalButton>
+            </div>
+          </div>
         </div>
       </div>
     </div>
