@@ -5,6 +5,7 @@ import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalPagination from "@/components/globals/GlobalPagination";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import {
   transactionHistory,
   getSubsidiaries,
@@ -21,13 +22,48 @@ import {
 } from "@/lib/utils/formatters";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 
+const STATUS_TABS = [
+  { id: "all", label: "All", translationKey: "all" },
+  { id: "P", label: "Processed", translationKey: "processed" },
+  { id: "R", label: "Failed", translationKey: "global_failed" },
+];
+
+const ALL_TRANSACTION_TYPES = [
+  { id: "all", label: "All types", translationKey: "all_types" },
+  {
+    id: "CASHOUT",
+    label: "Pay by Cash Out",
+    translationKey: "pay_by_cash_out",
+  },
+  {
+    id: "PAYTOBANK",
+    label: "Transfer to Bank",
+    translationKey: "transfer_to_bank",
+  },
+  { id: "PAYBILL", label: "Pay Bills", translationKey: "pay_bills" },
+  { id: "SCANTOPAY", label: "Scan to Pay", translationKey: "scan_to_pay" },
+  { id: "PAYQRCODE", label: "Pay by QR Code", translationKey: "pay_by_qr_code" },
+  { id: "PAYTOEMAIL", label: "Pay by Email", translationKey: "pay_by_email" },
+  { id: "PAYTOPHONE", label: "Pay to Mobile", translationKey: "pay_to_mobile" },
+  { id: "TOPUP", label: "Mobile Recharge", translationKey: "mobile_recharge" },
+  {
+    id: "SCANCOLLET",
+    label: "Scan to Collect",
+    translationKey: "scan_to_collect",
+  },
+  { id: "REQBYQR", label: "Request by QR", translationKey: "req_by_qr" },
+  { id: "PROFBYQR", label: "Profile QR", translationKey: "prof_by_qr" },
+];
+
 export default function LiveTransactionsPage() {
   const { t } = useLanguage();
   const { profile, accounts, currency } = useDashboardContext();
   const { openDetailDialog } = useDialog();
   const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
 
-  const [status, setStatus] = useState("selected");
+  const [status, setStatus] = useState("all");
+  const [txnType, setTxnType] = useState("all");
   const [branch, setBranch] = useState("selected");
   const [cashier, setCashier] = useState("selected");
   const [terminal, setTerminal] = useState("selected");
@@ -117,6 +153,46 @@ export default function LiveTransactionsPage() {
 
   const rawTransactions = txData?.transactionHistories || [];
 
+  const typeTabs = useMemo(() => {
+    const list = [...ALL_TRANSACTION_TYPES];
+    const existingIds = new Set(list.map((item) => item.id.toUpperCase()));
+
+    // 1. From welcomeData metadata if present
+    const metaTypes =
+      welcomeData?.metaData?.TXNTYPE ||
+      welcomeData?.metaData?.TRANSACTIONTYPE ||
+      welcomeData?.metaData?.TXNTYPELIST;
+    if (Array.isArray(metaTypes)) {
+      metaTypes.forEach((mt) => {
+        const id = String(mt.id || mt.code || "").toUpperCase();
+        if (id && !existingIds.has(id)) {
+          existingIds.add(id);
+          list.push({
+            id: mt.id || mt.code,
+            label: mt.title || mt.name || mt.label || id,
+          });
+        }
+      });
+    }
+
+    // 2. Dynamically include any unique types from rawTransactions
+    if (Array.isArray(rawTransactions)) {
+      rawTransactions.forEach((tx) => {
+        const name = tx.txnName || "";
+        const code = (tx.txnType || tx.txnCode || name).toUpperCase().trim();
+        if (code && !existingIds.has(code) && code !== "ALL") {
+          existingIds.add(code);
+          list.push({
+            id: tx.txnType || tx.txnCode || name,
+            label: name || code,
+          });
+        }
+      });
+    }
+
+    return list;
+  }, [welcomeData, rawTransactions]);
+
   const totalRecords = useMemo(() => {
     const raw =
       txData?.totalRecords ??
@@ -134,18 +210,108 @@ export default function LiveTransactionsPage() {
   }, [txData]);
 
   const transactions = useMemo(() => {
-    if (!appliedFilters.txnStatus || appliedFilters.txnStatus === "selected") {
-      return rawTransactions;
+    let list = rawTransactions;
+
+    if (
+      appliedFilters.txnStatus &&
+      appliedFilters.txnStatus !== "all" &&
+      appliedFilters.txnStatus !== "selected"
+    ) {
+      const targetStatus = appliedFilters.txnStatus.toUpperCase();
+      list = list.filter((tx) => {
+        const code = getTransactionStatusCode(tx);
+        if (targetStatus === "R" || targetStatus === "F") {
+          return code === "R";
+        }
+        return code === targetStatus;
+      });
     }
-    const targetStatus = appliedFilters.txnStatus.toUpperCase();
-    return rawTransactions.filter((tx) => {
-      const code = getTransactionStatusCode(tx);
-      if (targetStatus === "R" || targetStatus === "F") {
-        return code === "R";
-      }
-      return code === targetStatus;
-    });
-  }, [rawTransactions, appliedFilters.txnStatus]);
+
+    if (
+      appliedFilters.txnType &&
+      appliedFilters.txnType !== "all" &&
+      appliedFilters.txnType !== "selected"
+    ) {
+      const targetType = appliedFilters.txnType.toUpperCase().trim();
+      list = list.filter((tx) => {
+        const typeName = (tx.txnName || "").toUpperCase().trim();
+        const typeCode = (
+          tx.txnType ||
+          tx.txnCode ||
+          tx.transactionType ||
+          ""
+        ).toUpperCase().trim();
+
+        if (targetType === "CASHOUT" || targetType === "PAYTOCASHOUT") {
+          return (
+            typeCode.includes("CASHOUT") ||
+            typeName.includes("CASH OUT") ||
+            typeName.includes("CASHOUT")
+          );
+        }
+        if (targetType === "PAYTOBANK") {
+          return (
+            typeCode.includes("BANK") ||
+            typeName.includes("BANK") ||
+            typeName.includes("TRANSFER TO BANK")
+          );
+        }
+        if (targetType === "PAYBILL") {
+          return (
+            typeCode.includes("BILL") ||
+            typeName.includes("BILL") ||
+            typeName.includes("PAY BILL")
+          );
+        }
+        if (targetType === "SCANTOPAY") {
+          return (
+            typeCode.includes("SCANTOPAY") ||
+            typeName.includes("SCAN TO PAY")
+          );
+        }
+        if (targetType === "PAYQRCODE") {
+          return (
+            typeCode.includes("PAYQRCODE") ||
+            typeName.includes("PAY BY QR")
+          );
+        }
+        if (targetType === "PAYTOEMAIL") {
+          return (
+            typeCode.includes("PAYTOEMAIL") ||
+            typeName.includes("EMAIL")
+          );
+        }
+        if (targetType === "PAYTOPHONE") {
+          return (
+            typeCode.includes("PAYTOPHONE") ||
+            typeName.includes("MOBILE") ||
+            typeName.includes("PHONE")
+          );
+        }
+        if (targetType === "TOPUP") {
+          return (
+            typeCode.includes("TOPUP") ||
+            typeName.includes("RECHARGE")
+          );
+        }
+        if (targetType === "SCANCOLLET" || targetType === "SCANTOCOLLECT") {
+          return (
+            typeCode.includes("SCANCOLLET") ||
+            typeCode.includes("SCANTOCOLLECT") ||
+            typeName.includes("SCAN TO COLLECT")
+          );
+        }
+        return (
+          typeCode === targetType ||
+          typeName === targetType ||
+          typeName.includes(targetType) ||
+          targetType.includes(typeCode)
+        );
+      });
+    }
+
+    return list;
+  }, [rawTransactions, appliedFilters.txnStatus, appliedFilters.txnType]);
 
   const handlePageChange = (newPage) => {
     setAppliedFilters((prev) => ({
@@ -164,13 +330,46 @@ export default function LiveTransactionsPage() {
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    setAppliedFilters((prev) => {
+      const payload = {
+        ...prev,
+        pageNum: 1,
+      };
+      if (newStatus !== "all") {
+        payload.txnStatus = newStatus;
+      } else {
+        delete payload.txnStatus;
+      }
+      return payload;
+    });
+  };
+
+  const handleTypeChange = (newType) => {
+    setTxnType(newType);
+    setAppliedFilters((prev) => {
+      const payload = {
+        ...prev,
+        pageNum: 1,
+      };
+      if (newType !== "all") {
+        payload.txnType = newType;
+      } else {
+        delete payload.txnType;
+      }
+      return payload;
+    });
+  };
+
   const handleApplyFilter = () => {
     const payload = {
       pageNum: 1,
       pageSize: appliedFilters.pageSize || 10,
       accountId: currentAccountId,
     };
-    if (status !== "selected") payload.txnStatus = status;
+    if (status !== "all" && status !== "selected") payload.txnStatus = status;
+    if (txnType !== "all" && txnType !== "selected") payload.txnType = txnType;
     if (branch !== "selected") payload.custSubID = branch;
     if (cashier !== "selected") payload.cashierID = cashier;
     if (terminal !== "selected") payload.termID = terminal;
@@ -178,13 +377,14 @@ export default function LiveTransactionsPage() {
   };
 
   const handleResetFilters = () => {
-    setStatus("selected");
+    setStatus("all");
+    setTxnType("all");
     setBranch("selected");
     setCashier("selected");
     setTerminal("selected");
     setAppliedFilters({
       pageNum: 1,
-      pageSize: 10,
+      pageSize: appliedFilters.pageSize || 10,
       accountId: currentAccountId,
     });
   };
@@ -242,38 +442,8 @@ export default function LiveTransactionsPage() {
       </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
-        {/* Filters Header */}
-        <div className="flex items-center justify-between mb-6">
-          {/* <h3 className="text-base sm:text-lg font-semibold text-[#2563eb] dark:text-white flex items-center gap-2">
-            {t("liveTransactions", "Live Transactions")}
-            {isFetching && (
-              <Loader2 className="w-4 h-4 animate-spin text-[#2563eb]" />
-            )}
-          </h3> */}
-          <div></div>
-          <button
-            onClick={handleResetFilters}
-            className="text-xs sm:text-sm font-semibold text-[#2563eb] hover:underline"
-          >
-            {t("resetFilter", "Reset Filter")}
-          </button>
-        </div>
-
-        {/* Filters Grid */}
-        <div className="flex flex-col xl:flex-row gap-4 mb-8 items-stretch xl:items-end">
-          <GlobalSelect
-            label={t("global_status", "Status")}
-            value={status}
-            onChange={setStatus}
-            containerClassName="flex-1 min-w-[180px]"
-            labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={[
-              { value: "selected", label: t("all_statuses", "All Statuses") },
-              { value: "P", label: t("rmSuccess", "Success") },
-              { value: "R", label: t("global_failed", "Failed") },
-              { value: "C", label: t("global_pending", "Pending") },
-            ]}
-          />
+        {/* Dropdowns Grid (Branch, Cashier, Terminal ID & Filter button) */}
+        <div className="flex flex-col xl:flex-row gap-4 mb-5 items-stretch xl:items-end">
           <GlobalSelect
             label={t("myQr_subsidiary", "Branch")}
             value={branch}
@@ -298,13 +468,79 @@ export default function LiveTransactionsPage() {
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={terminalOptions}
           />
-          <GlobalButton
-            onClick={handleApplyFilter}
-            variant="primary"
-            className="w-full xl:w-auto shrink-0 h-10 px-8 text-xs font-bold uppercase tracking-wider"
-          >
-            {t("global_filter", "Filter")}
-          </GlobalButton>
+          <div className="flex items-center gap-2 shrink-0">
+            <GlobalButton
+              onClick={handleApplyFilter}
+              variant="primary"
+              className="flex-1 xl:flex-none h-10 px-8 text-xs font-bold uppercase tracking-wider"
+            >
+              {t("global_filter", "Filter")}
+            </GlobalButton>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="h-10 px-4 text-xs font-semibold text-slate-500 hover:text-[#2563eb] dark:text-white/60 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+            >
+              {t("resetFilter", "Reset Filter")}
+            </button>
+          </div>
+        </div>
+
+        {/* Segmented Tab Filters (Status & Transaction Type) — Positioned on the right side of the table */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2.5 mb-6 pt-3 border-t border-slate-100 dark:border-white/5 max-w-full">
+          {/* Status Tabs (Compact) */}
+          <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.03] p-0.5 shadow-xs shrink-0">
+            {STATUS_TABS.map((tab, idx) => {
+              const isActive = status === tab.id;
+              const isNextActive = STATUS_TABS[idx + 1]?.id === status;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleStatusChange(tab.id)}
+                  className={cn(
+                    "h-7.5 px-3 flex items-center justify-center text-xs font-semibold transition-all rounded-md cursor-pointer whitespace-nowrap shrink-0",
+                    isActive
+                      ? "bg-[#2563eb] text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/5",
+                    !isActive &&
+                      !isNextActive &&
+                      idx < STATUS_TABS.length - 1 &&
+                      "border-r border-slate-200/70 dark:border-white/10",
+                  )}
+                >
+                  {t(tab.translationKey, tab.label)}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Transaction Type Tabs (Compact, Dynamic & max-w-[400px]) */}
+          <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.03] p-0.5 shadow-xs max-w-[400px] overflow-x-auto scrollbar-none shrink-0">
+            {typeTabs.map((tab, idx) => {
+              const isActive = txnType === tab.id;
+              const isNextActive = typeTabs[idx + 1]?.id === txnType;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTypeChange(tab.id)}
+                  className={cn(
+                    "h-7.5 px-3 flex items-center justify-center text-xs font-semibold transition-all rounded-md cursor-pointer whitespace-nowrap shrink-0",
+                    isActive
+                      ? "bg-[#2563eb] text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/5",
+                    !isActive &&
+                      !isNextActive &&
+                      idx < typeTabs.length - 1 &&
+                      "border-r border-slate-200/70 dark:border-white/10",
+                  )}
+                >
+                  {tab.translationKey ? t(tab.translationKey, tab.label) : tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Data Table — Desktop View (Hidden on mobile) */}
