@@ -132,7 +132,7 @@ export default function AdminPage() {
   return (
     <div className="w-full space-y-5 pb-8 animate-in fade-in duration-300">
       {/* ── Page Header: Active Tab Title & Description dynamically placed at top ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
