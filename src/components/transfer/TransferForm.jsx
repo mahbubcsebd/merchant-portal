@@ -380,7 +380,7 @@ export default function TransferForm({ setView }) {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pb-10">
+    <div className="w-full pb-10">
       <div className="max-w-lg mx-auto rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm p-4 sm:p-8 relative">
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-3 sm:gap-0 text-center sm:text-left">
           <button

@@ -176,7 +176,7 @@ export default function ManageBillTemplatesPage() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pb-10">
+    <div className="w-full pb-10">
       <div className="mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
           {t("manage.templates", "Manage Bill Templates")}

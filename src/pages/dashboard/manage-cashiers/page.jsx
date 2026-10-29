@@ -383,7 +383,7 @@ export default function ManageCashiersPage() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pb-10">
+    <div className="w-full pb-10">
       {/* ── Page Header ─────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>

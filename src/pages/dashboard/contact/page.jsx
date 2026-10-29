@@ -58,7 +58,7 @@ export default function ContactPage() {
   ]
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto pb-10 flex flex-col items-center pt-8">
+    <div className="w-full pb-10 flex flex-col items-center pt-8">
       
       <div className="max-w-4xl w-full p-8 md:p-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-xl animate-in zoom-in-95 duration-500 flex flex-col">
         

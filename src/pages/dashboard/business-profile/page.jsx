@@ -385,7 +385,7 @@ export default function BusinessProfilePage() {
   ];
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto space-y-5 pb-8">
+    <div className="w-full space-y-5 pb-8">
       {/* ── Page Header ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
