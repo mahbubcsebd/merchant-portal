@@ -44,7 +44,7 @@ export default function Home() {
               className="inline-block hover:opacity-90 transition-opacity"
             >
               <img
-                src="./images/logo.svg"
+                src="/images/logo.svg"
                 alt="mPay Network"
                 width={120}
                 height={47}

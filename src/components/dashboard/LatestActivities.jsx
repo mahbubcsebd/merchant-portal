@@ -4,24 +4,24 @@ import { useDashboardContext } from "@/pages/dashboard/context";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 
 const ICON_MAP = {
-  PAYTOPHONE: "./images/activity/payPhoneNo.svg",
-  SCANTOPAY: "./images/activity/qr-code-scan2pay.svg",
-  PAYQRCODE: "./images/activity/qr-code-payByCode.svg",
-  PAYTOBANK: "./images/activity/pay2Bank.svg",
-  PAYTOEMAIL: "./images/activity/payPhoneNo.svg",
-  PAYBILL: "./images/activity/payBills.svg",
-  TOPUP: "./images/activity/mobile-recharge-icon.svg",
-  SPEXPENSE: "./images/activity/split_expanse.svg",
-  FORGOTPASSWORD: "./images/activity/payPhoneNo.svg",
-  USERACTIVATED: "./images/activity/user_outline.png",
-  PROFBYQR: "./images/activity/qr-code-payByCode.svg",
-  REQBYQR: "./images/activity/qr-code-payByCode.svg",
-  SCANCOLLET: "./images/activity/icon_scanToCollect.svg",
-  SCANTOCOLLECT: "./images/activity/icon_scanToCollect.svg",
-  SCANGALERY: "./images/activity/gallery.svg",
-  REMINDER: "./images/activity/notification.png",
-  ALERT: "./images/activity/notification.png",
-  PROMOTION: "./images/activity/notification.png",
+  PAYTOPHONE: "/images/activity/payPhoneNo.svg",
+  SCANTOPAY: "/images/activity/qr-code-scan2pay.svg",
+  PAYQRCODE: "/images/activity/qr-code-payByCode.svg",
+  PAYTOBANK: "/images/activity/pay2Bank.svg",
+  PAYTOEMAIL: "/images/activity/payPhoneNo.svg",
+  PAYBILL: "/images/activity/payBills.svg",
+  TOPUP: "/images/activity/mobile-recharge-icon.svg",
+  SPEXPENSE: "/images/activity/split_expanse.svg",
+  FORGOTPASSWORD: "/images/activity/payPhoneNo.svg",
+  USERACTIVATED: "/images/activity/user_outline.png",
+  PROFBYQR: "/images/activity/qr-code-payByCode.svg",
+  REQBYQR: "/images/activity/qr-code-payByCode.svg",
+  SCANCOLLET: "/images/activity/icon_scanToCollect.svg",
+  SCANTOCOLLECT: "/images/activity/icon_scanToCollect.svg",
+  SCANGALERY: "/images/activity/gallery.svg",
+  REMINDER: "/images/activity/notification.png",
+  ALERT: "/images/activity/notification.png",
+  PROMOTION: "/images/activity/notification.png",
 };
 
 function getActivityIcon(activity) {
@@ -33,36 +33,36 @@ function getActivityIcon(activity) {
   // Fallback heuristic based on notificationTypeName
   const name = (activity.notificationTypeName || "").toUpperCase();
   if (name.includes("SCAN TO COLLECT") || name.includes("SCANCOLLET")) {
-    return "./images/activity/icon_scanToCollect.svg";
+    return "/images/activity/icon_scanToCollect.svg";
   }
   if (name.includes("SCAN TO PAY") || name.includes("SCANTOPAY")) {
-    return "./images/activity/qr-code-scan2pay.svg";
+    return "/images/activity/qr-code-scan2pay.svg";
   }
   if (
     name.includes("PROFILE QR") ||
     name.includes("REQUEST QR") ||
     name.includes("QR")
   ) {
-    return "./images/activity/qr-code-payByCode.svg";
+    return "/images/activity/qr-code-payByCode.svg";
   }
   if (
     name.includes("MOBILE") ||
     name.includes("PHONE") ||
     name.includes("EMAIL")
   ) {
-    return "./images/activity/payPhoneNo.svg";
+    return "/images/activity/payPhoneNo.svg";
   }
   if (name.includes("BANK")) {
-    return "./images/activity/pay2Bank.svg";
+    return "/images/activity/pay2Bank.svg";
   }
   if (name.includes("BILL")) {
-    return "./images/activity/payBills.svg";
+    return "/images/activity/payBills.svg";
   }
   if (name.includes("TOPUP") || name.includes("RECHARGE")) {
-    return "./images/activity/mobile-recharge-icon.svg";
+    return "/images/activity/mobile-recharge-icon.svg";
   }
 
-  return "./images/activity/qr-code-payByCode.svg";
+  return "/images/activity/qr-code-payByCode.svg";
 }
 
 function ActivityIconItem({ activity }) {

@@ -140,7 +140,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
             <Link to="/dashboard" onClick={onClose} className="cursor-pointer">
               <img
-                src="./images/logo.svg"
+                src="/images/logo.svg"
                 alt="mPay Network"
                 width={110}
                 height={42}
@@ -169,7 +169,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
             <Link to="/dashboard" className="cursor-pointer">
               <img
-                src="./images/logo.svg"
+                src="/images/logo.svg"
                 alt="mPay Network"
                 width={110}
                 height={42}
