@@ -133,7 +133,7 @@ export default function DashboardLayout() {
     queryKey: ["transactions", activeAccountId],
     queryFn: () =>
       transactionHistory({
-        pageSize: 10,
+        pageSize: 200,
         pageNum: 1,
         accountId: activeAccountId,
       }),
