@@ -25,6 +25,7 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { logout } from "@/lib/api/endpoints";
+import logoImg from "/images/logo.svg";
 
 export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const { t } = useLanguage();
@@ -140,7 +141,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
             <Link to="/dashboard" onClick={onClose} className="cursor-pointer">
               <img
-                src="/images/logo.svg"
+                src={logoImg}
                 alt="mPay Network"
                 width={110}
                 height={42}
@@ -169,7 +170,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5">
             <Link to="/dashboard" className="cursor-pointer">
               <img
-                src="/images/logo.svg"
+                src={logoImg}
                 alt="mPay Network"
                 width={110}
                 height={42}

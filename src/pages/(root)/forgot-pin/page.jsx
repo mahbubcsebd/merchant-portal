@@ -1,6 +1,7 @@
 import { ForgotPinForm } from "@/components/ForgotPinForm";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { Link } from "react-router-dom";
+import logoImg from "/images/logo.svg";
 
 export default function ForgotPinPage() {
   const { t } = useLanguage();
@@ -39,7 +40,7 @@ export default function ForgotPinPage() {
               className="inline-block hover:opacity-90 transition-opacity"
             >
               <img
-                src="/images/logo.svg"
+                src={logoImg}
                 alt="mPay Network"
                 width={120}
                 height={47}
@@ -126,7 +127,7 @@ export default function ForgotPinPage() {
               className="inline-block hover:opacity-90 transition-opacity"
             >
               <img
-                src="/images/logo.svg"
+                src={logoImg}
                 alt="mPay Network"
                 width={110}
                 height={43}
