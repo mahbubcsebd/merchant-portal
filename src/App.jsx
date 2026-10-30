@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { HashRouter, Routes, Route, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { welcomeApi } from "@/lib/api/endpoints";
 import { globalDefaultParams } from "@/lib/api/api";
@@ -38,14 +38,13 @@ function BootLoader({ children }) {
     queryFn: async () => {
       const response = await welcomeApi();
       if (response && response.status === "success") {
-        // Automatically inject institutionID into all future API requests
+  
         if (response.institutionID) {
           globalDefaultParams.institutionID = response.institutionID.toString();
         }
       }
       return response;
     },
-    // We only need to fetch this once when the app loads
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
@@ -68,9 +67,7 @@ function BootLoader({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter
-      basename={import.meta.env.DEV ? "/" : "/walletmc/merchantportal-v2/"}
-    >
+    <HashRouter>
       <Routes>
         {/* Instant Legal & Public pages without BootLoader blocking */}
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
@@ -122,6 +119,6 @@ export default function App() {
           </Route>
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

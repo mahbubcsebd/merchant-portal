@@ -17,6 +17,7 @@ import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalPagination from "@/components/globals/GlobalPagination";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { getCurrencyLabel } from "@/lib/utils/TransferUtils";
 
 export const isPendingScheduledTxn = (itemOrStatus) => {
   const status =
@@ -29,6 +30,7 @@ export const isPendingScheduledTxn = (itemOrStatus) => {
 
 export default function ScheduledTransfersList({
   transfers = [],
+  welcomeData,
   isLoading,
   isError,
   setParentView,
@@ -280,7 +282,7 @@ export default function ScheduledTransfersList({
                             {tItem.amount || tItem.TXNAMOUNT}
                           </span>
                           <span className="text-xs font-semibold text-slate-500 dark:text-white/50 ml-1">
-                            {tItem.currency || tItem.BENFACCUR}
+                            {getCurrencyLabel(welcomeData, tItem.currency || tItem.BENFACCUR || tItem.TXNCURRENCY || tItem.CURRENCY)}
                           </span>
                         </td>
 
@@ -405,7 +407,7 @@ export default function ScheduledTransfersList({
                         <p className="font-extrabold text-sm text-slate-900 dark:text-white">
                           {tItem.amount || tItem.TXNAMOUNT}{" "}
                           <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
-                            {tItem.currency || tItem.BENFACCUR}
+                            {getCurrencyLabel(welcomeData, tItem.currency || tItem.BENFACCUR || tItem.TXNCURRENCY || tItem.CURRENCY)}
                           </span>
                         </p>
                       </div>

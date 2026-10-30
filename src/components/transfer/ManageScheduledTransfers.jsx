@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDialog } from "@/components/globals/DialogProvider";
 import ScheduledTransfersList, { isPendingScheduledTxn } from "./scheduled/ScheduledTransfersList";
 import ScheduledTransferFormFields from "./scheduled/ScheduledTransferFormFields";
@@ -10,6 +10,7 @@ import { useScheduledTransfers } from "@/hooks/useScheduledTransfers";
 import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import { format, parse } from "date-fns";
 import { useDashboardContext } from "@/pages/dashboard/context";
+import { welcomeApi } from "@/lib/api/endpoints";
 
 export default function ManageScheduledTransfers({ setView: setParentView }) {
   const { accounts } = useDashboardContext();
@@ -24,7 +25,13 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
     closeDialog,
   } = useDialog();
   const queryClient = useQueryClient();
-  const welcomeData = queryClient.getQueryData(["welcome"]);
+
+  const { data: welcomeData } = useQuery({
+    queryKey: ["welcome"],
+    queryFn: welcomeApi,
+    staleTime: Infinity,
+    initialData: () => queryClient.getQueryData(["welcome"]),
+  });
 
   const { transfersQuery, updateTransferMutation, deleteTransferMutation } =
     useScheduledTransfers();
@@ -256,12 +263,13 @@ export default function ManageScheduledTransfers({ setView: setParentView }) {
       transfers={
         transfersQuery.data?.map((t) => ({
           ...t,
-          currency: getCurrencyLabel(welcomeData, t.BENFACCUR),
-          bank: getBankName(welcomeData, t.BENFBNKID),
+          currency: getCurrencyLabel(welcomeData, t.BENFACCUR || t.TXNCURRENCY || t.CURRENCY),
+          bank: getBankName(welcomeData, t.BENFBNKID || t.BANKID),
           howOften: getFrequencyLabel(t.FREQUENCY),
           until: t.ENDDATE === "0" ? "" : translateDate(t.ENDDATE),
         })) || []
       }
+      welcomeData={welcomeData}
       isLoading={transfersQuery.isLoading}
       isError={transfersQuery.isError}
       setParentView={setParentView}
