@@ -300,38 +300,38 @@ export default function ScheduledTransfersList({
                         </td>
 
                         {/* Action buttons */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-1">
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => handleView(tItem)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-[#2563eb] hover:bg-blue-50 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 transition-colors"
+                              className="w-8 h-8 rounded-lg border border-slate-200/70 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/30 bg-white dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 dark:text-white/60 dark:hover:text-blue-400 flex items-center justify-center transition-all shadow-2xs"
                               title={t("view", "View")}
                             >
-                              <Eye size={17} />
+                              <Eye size={15} />
                             </button>
                             {isPending && (
                               <button
                                 onClick={() => handleEdit(tItem)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400 transition-colors"
+                                className="w-8 h-8 rounded-lg border border-slate-200/70 dark:border-white/10 hover:border-amber-200 dark:hover:border-amber-500/30 bg-white dark:bg-white/5 hover:bg-amber-50 dark:hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-white/60 dark:hover:text-amber-400 flex items-center justify-center transition-all shadow-2xs"
                                 title={t("edit", "Edit")}
                               >
-                                <Pencil size={17} />
+                                <Pencil size={15} />
                               </button>
                             )}
                             <button
                               onClick={() => handleHistory(tItem)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-[#2563eb] hover:bg-blue-50 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 transition-colors"
+                              className="w-8 h-8 rounded-lg border border-slate-200/70 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/30 bg-white dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 dark:text-white/60 dark:hover:text-blue-400 flex items-center justify-center transition-all shadow-2xs"
                               title={t("history", "History")}
                             >
-                              <Clock size={17} />
+                              <Clock size={15} />
                             </button>
                             {isPending && (
                               <button
                                 onClick={() => handleDelete(tItem)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 transition-colors"
+                                className="w-8 h-8 rounded-lg border border-slate-200/70 dark:border-white/10 hover:border-red-200 dark:hover:border-red-500/30 bg-white dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-500 hover:text-red-600 dark:text-white/60 dark:hover:text-red-400 flex items-center justify-center transition-all shadow-2xs"
                                 title={t("delete", "Delete")}
                               >
-                                <Trash2 size={17} />
+                                <Trash2 size={15} />
                               </button>
                             )}
                           </div>

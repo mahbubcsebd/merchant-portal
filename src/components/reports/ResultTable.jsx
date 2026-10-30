@@ -72,10 +72,10 @@ export default function ResultTable({
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-sm">
-        <table className="w-full text-left text-xs">
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
+        <table className="w-full text-left text-sm whitespace-nowrap">
           <thead>
-            <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+            <tr className="bg-slate-50/80 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10">
               {[
                 t("date", "Date"),
                 t("confirmation_no", "Confirmation No."),
@@ -87,19 +87,19 @@ export default function ResultTable({
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-3 font-semibold text-[11px] uppercase tracking-wider whitespace-nowrap"
+                  className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider whitespace-nowrap"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-transparent">
             {data.length === 0 ? (
               <tr>
                 <td
                   colSpan="7"
-                  className="px-5 py-12 text-center text-slate-400 dark:text-slate-500"
+                  className="px-6 py-12 text-center text-slate-400 dark:text-slate-500"
                 >
                   {t("no_transactions_found", "No transactions available")}
                 </td>
@@ -108,27 +108,28 @@ export default function ResultTable({
               data.map((row, i) => (
                 <tr
                   key={row.confirmationNumber || i}
-                  className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
+                  className={`${i % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group`}
                 >
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
+                  <td className="px-6 py-4 text-slate-600 dark:text-white/70 whitespace-nowrap">
                     {formatReportDate(row.when, row.creationDate)}
                   </td>
-                  <td className="px-4 py-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                  <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-white/70">
                     {row.confirmationNumber}
                   </td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <td className="px-6 py-4 text-slate-700 dark:text-white/80 font-medium">
                     {row.to || "—"}
                   </td>
-                  <td className="px-4 py-3 text-slate-900 dark:text-white font-semibold">
+                  <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
                     {row.benficiaryName || "—"}
                   </td>
-                  <td className="px-4 py-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                    {formatAmount(row.amount)} {row.currencyCode}
+                  <td className="px-6 py-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                    {formatAmount(row.amount)}{" "}
+                    <span className="text-xs font-semibold text-slate-500 dark:text-white/50">{row.currencyCode}</span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                  <td className="px-6 py-4 text-slate-600 dark:text-white/70">
                     {row.txnName || "—"}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4">
                     {getStatusBadge(row)}
                   </td>
                 </tr>

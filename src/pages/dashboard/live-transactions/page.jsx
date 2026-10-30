@@ -550,36 +550,36 @@ export default function LiveTransactionsPage() {
         >
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+              <tr className="bg-slate-50/80 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("rmDateTimer", "Date")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("bp_ref1", "Reference No")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("global_amount", "Amount")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("transaction_type", "Transaction Type")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("userID", "User ID")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider">
                   {t("teStatus", "Status")}
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-900 dark:text-white text-center">
+                <th className="px-6 py-4 font-bold text-slate-700 dark:text-white/80 text-xs uppercase tracking-wider text-right">
                   {t("buttonsView", "View")}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-white/10">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {transactions.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
-                    className="px-5 py-8 text-center text-slate-500 dark:text-white/50"
+                    className="px-6 py-8 text-center text-slate-500 dark:text-white/50"
                   >
                     {isFetching
                       ? t("loading_transactions", "Loading transactions...")
@@ -590,37 +590,40 @@ export default function LiveTransactionsPage() {
                 transactions.map((tx, idx) => (
                   <tr
                     key={idx}
-                    className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors`}
+                    className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group`}
                   >
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    <td className="px-6 py-4 text-slate-600 dark:text-white/70">
                       {formatDate(tx.creationDate)}
                     </td>
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    <td className="px-6 py-4 text-slate-600 dark:text-white/70 font-mono text-xs">
                       {tx.confirmationNumber}
                     </td>
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
-                      {formatAmount(tx.amount)} {tx.currencyCode}
+                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                      {formatAmount(tx.amount)} <span className="text-xs font-semibold text-slate-500 dark:text-white/50">{tx.currencyCode}</span>
                     </td>
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    <td className="px-6 py-4 text-slate-700 dark:text-white/80">
                       {tx.txnName}
                     </td>
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    <td className="px-6 py-4 text-slate-600 dark:text-white/70">
                       {tx.cashierID || "----"}
                     </td>
-                    <td className="px-5 py-4 text-slate-600 dark:text-white/70">
+                    <td className="px-6 py-4">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(tx)}`}
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${getStatusBadgeClass(tx)}`}
                       >
                         {formatStatus(tx, t)}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-center">
-                      <button
-                        onClick={() => handleViewTxDetails(tx)}
-                        className="text-slate-400 hover:text-[#2563eb] dark:hover:text-blue-400 transition-colors"
-                      >
-                        <Eye size={18} />
-                      </button>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end">
+                        <button
+                          onClick={() => handleViewTxDetails(tx)}
+                          className="w-8 h-8 rounded-lg border border-slate-200/70 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/30 bg-white dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 dark:text-white/60 dark:hover:text-blue-400 flex items-center justify-center transition-all shadow-2xs"
+                          title={t("view", "View")}
+                        >
+                          <Eye size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
