@@ -138,9 +138,9 @@ export default function AdminPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               {currentTab.label}
             </h2>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+            {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
               {currentTab.category}
-            </span>
+            </span> */}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {currentTab.description}

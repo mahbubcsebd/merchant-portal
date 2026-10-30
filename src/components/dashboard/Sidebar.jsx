@@ -35,62 +35,86 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const { data: profileImage } = useProfileImage(profile);
   const { openConfirmDialog } = useDialog();
 
-  const MENU_ITEMS = [
+  const MENU_GROUPS = [
     {
-      label: t("dashboard", "Dashboard"),
-      href: "/dashboard",
-      icon: LayoutDashboard,
+      groupLabel: t("menu_overview", "OVERVIEW"),
+      items: [
+        {
+          label: t("dashboard", "Dashboard"),
+          href: "/dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          label: t("business_profile", "Business Profile"),
+          href: "/dashboard/business-profile",
+          icon: Briefcase,
+        },
+        {
+          label: t("live_transactions", "Live Transactions"),
+          href: "/dashboard/live-transactions",
+          icon: RefreshCcw,
+        },
+      ],
     },
     {
-      label: t("business_profile", "Business Profile"),
-      href: "/dashboard/business-profile",
-      icon: Briefcase,
+      groupLabel: t("menu_operations", "OPERATIONS"),
+      items: [
+        {
+          label: t("manage_cashiers", "Manage Cashiers"),
+          href: "/dashboard/manage-cashiers",
+          icon: Users,
+        },
+        {
+          label: t("branches", "Branches"),
+          href: "/dashboard/branches",
+          icon: Store,
+        },
+        {
+          label: t("reports", "Reports"),
+          href: "/dashboard/reports",
+          icon: FileText,
+        },
+      ],
     },
     {
-      label: t("live_transactions", "Live Transactions"),
-      href: "/dashboard/live-transactions",
-      icon: RefreshCcw,
+      groupLabel: t("menu_transfers", "TRANSFERS"),
+      items: [
+        {
+          label: t("pay_bills", "Pay Bills"),
+          href: "/dashboard/pay-bills",
+          icon: CreditCard,
+        },
+        {
+          label: t("transfer_to_bank", "Transfer To Bank"),
+          href: "/dashboard/transfer",
+          icon: Landmark,
+        },
+      ],
     },
     {
-      label: t("manage_cashiers", "Manage Cashiers"),
-      href: "/dashboard/manage-cashiers",
-      icon: Users,
-    },
-    {
-      label: t("branches", "Branches"),
-      href: "/dashboard/branches",
-      icon: Store,
-    },
-    {
-      label: t("reports", "Reports"),
-      href: "/dashboard/reports",
-      icon: FileText,
-    },
-    {
-      label: t("pay_bills", "Pay Bills"),
-      href: "/dashboard/pay-bills",
-      icon: CreditCard,
-    },
-    {
-      label: t("transfer_to_bank", "Transfer To Bank"),
-      href: "/dashboard/transfer",
-      icon: Landmark,
-    },
-    {
-      label: t("admin", "Administration"),
-      href: "/dashboard/admin",
-      icon: Settings,
+      groupLabel: t("menu_settings", "SETTINGS"),
+      items: [
+        {
+          label: t("admin", "Administration"),
+          href: "/dashboard/admin",
+          icon: Settings,
+        },
+        {
+          label: t("help", "Help"),
+          href: "/dashboard/help",
+          icon: HelpCircle,
+        },
+        {
+          label: t("contact_us", "Contact Us"),
+          href: "/dashboard/contact",
+          icon: Phone,
+        },
+      ],
     },
   ];
 
   const BOTTOM_MENU_ITEMS = [
     { label: t("leftMenuLogout", "Logout"), href: "/", icon: LogOut },
-    { label: t("help", "Help"), href: "/dashboard/help", icon: HelpCircle },
-    {
-      label: t("contact_us", "Contact Us"),
-      href: "/dashboard/contact",
-      icon: Phone,
-    },
   ];
 
   const handleLogout = (e) => {
@@ -226,44 +250,59 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
       {/* Main Nav (ONLY Menu items scroll here) */}
       <div
         className={cn(
-          "relative z-10 flex-1 overflow-y-auto no-scrollbar py-3 space-y-0.5 transition-all duration-300",
+          "relative z-10 flex-1 overflow-y-auto no-scrollbar py-3 space-y-4 transition-all duration-300",
           isCollapsed ? "px-2" : "px-3",
         )}
       >
-        {MENU_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center rounded-lg text-sm font-medium transition-all duration-150",
-                isCollapsed
-                  ? "justify-center w-10 h-10 mx-auto"
-                  : "gap-3 px-4 py-2.5",
-                isActive
-                  ? "bg-[#2563eb] text-white shadow-[0_0_16px_rgba(37,99,235,0.35)]"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white",
-              )}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <item.icon
-                size={17}
-                className={cn(
-                  "shrink-0",
-                  isActive
-                    ? "text-white"
-                    : "text-slate-500 dark:text-slate-400",
-                )}
-              />
-              {!isCollapsed && (
-                <span className="truncate animate-in fade-in duration-200">
-                  {item.label}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        {MENU_GROUPS.map((group, groupIdx) => (
+          <div key={group.groupLabel || groupIdx} className="space-y-1">
+            {!isCollapsed ? (
+              <div className="px-4 pt-2 pb-1 text-[11px] font-bold tracking-wider text-slate-400 dark:text-white/40 uppercase select-none">
+                {group.groupLabel}
+              </div>
+            ) : (
+              groupIdx > 0 && (
+                <div className="my-2 mx-auto w-6 border-t border-slate-200 dark:border-white/10" />
+              )
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center rounded-lg text-sm font-medium transition-all duration-150",
+                      isCollapsed
+                        ? "justify-center w-10 h-10 mx-auto"
+                        : "gap-3 px-4 py-2.5",
+                      isActive
+                        ? "bg-[#2563eb] text-white shadow-[0_0_16px_rgba(37,99,235,0.35)]"
+                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-900 dark:hover:text-white",
+                    )}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <item.icon
+                      size={17}
+                      className={cn(
+                        "shrink-0",
+                        isActive
+                          ? "text-white"
+                          : "text-slate-500 dark:text-slate-400",
+                      )}
+                    />
+                    {!isCollapsed && (
+                      <span className="truncate animate-in fade-in duration-200">
+                        {item.label}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Bottom Nav */}

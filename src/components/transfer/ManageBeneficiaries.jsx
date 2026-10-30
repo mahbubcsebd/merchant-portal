@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useBeneficiaries } from "@/hooks/useBeneficiaries";
@@ -511,7 +512,7 @@ export default function ManageBeneficiaries({
                     return (
                       <tr
                         key={b.beneficiaryId || b.payeeBankAccount || idx}
-                        className="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors group"
+                        className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group`}
                       >
                         {/* Beneficiary Name + Nickname + Avatar */}
                         <td className="px-6 py-4">
