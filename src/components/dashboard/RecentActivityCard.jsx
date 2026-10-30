@@ -208,7 +208,6 @@ export function RecentActivityCard() {
           title,
           description: msg,
           date,
-          status: isPending ? "Pending" : "Completed",
           meta,
         };
       });
@@ -242,7 +241,6 @@ export function RecentActivityCard() {
       ) : (
         <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
           {activities.map((act) => {
-            const isCompleted = act.status === "Completed";
             return (
               <div key={act.id} className="py-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -256,7 +254,7 @@ export function RecentActivityCard() {
                       {act.title}
                     </h4>
                     {act.description && (
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[220px] sm:max-w-xs md:max-w-sm">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[240px] sm:max-w-xs md:max-w-md">
                         {act.description}
                       </p>
                     )}
@@ -266,18 +264,6 @@ export function RecentActivityCard() {
                       </span>
                     )}
                   </div>
-                </div>
-
-                <div className="shrink-0">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                      isCompleted
-                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                        : "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-                    }`}
-                  >
-                    {act.status}
-                  </span>
                 </div>
               </div>
             );
