@@ -108,9 +108,9 @@ export function RecentTransactionsCard() {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-between overflow-x-auto">
+    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-start overflow-x-auto h-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3">
+      <div className="flex items-center justify-between pb-3 shrink-0">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             {t("recent_transactions", "Recent transactions")}
@@ -127,22 +127,23 @@ export function RecentTransactionsCard() {
         </Link>
       </div>
 
-      {/* Table */}
-      <div className="w-full min-w-[380px]">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 text-[11px] font-medium text-slate-400 dark:text-slate-500 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-          <div className="col-span-5">{t("transaction", "Transaction")}</div>
-          <div className="col-span-3">{t("date_and_time", "Date & Time")}</div>
-          <div className="col-span-2">{t("status", "Status")}</div>
-          <div className="col-span-2 text-right">{t("amount", "Amount")}</div>
+      {/* Content */}
+      {formattedList.length === 0 ? (
+        <div className="flex-1 min-h-[160px] flex flex-col items-center justify-center text-center text-xs text-slate-400 dark:text-slate-500">
+          <p>{t("no_transactions_found", "No recent transactions found")}</p>
         </div>
-
-        {/* Table Body */}
-        {formattedList.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-            {t("no_transactions_found", "No recent transactions found")}
+      ) : (
+        /* Table */
+        <div className="w-full min-w-[380px]">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 text-[11px] font-medium text-slate-400 dark:text-slate-500 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="col-span-5">{t("transaction", "Transaction")}</div>
+            <div className="col-span-3">{t("date_and_time", "Date & Time")}</div>
+            <div className="col-span-2">{t("status", "Status")}</div>
+            <div className="col-span-2 text-right">{t("amount", "Amount")}</div>
           </div>
-        ) : (
+
+          {/* Table Body */}
           <div className="divide-y divide-slate-50 dark:divide-slate-800/40">
             {formattedList.map((tx) => (
               <div
@@ -198,8 +199,8 @@ export function RecentTransactionsCard() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

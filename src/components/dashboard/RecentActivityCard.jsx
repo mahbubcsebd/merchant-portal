@@ -214,9 +214,9 @@ export function RecentActivityCard() {
   }, [notifications, t]);
 
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-start h-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3">
+      <div className="flex items-center justify-between pb-3 shrink-0">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             {t("recent_activity", "Recent activity")}
@@ -235,7 +235,7 @@ export function RecentActivityCard() {
 
       {/* Activity List */}
       {activities.length === 0 ? (
-        <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+        <div className="flex-1 min-h-[160px] flex flex-col items-center justify-center text-center text-xs text-slate-400 dark:text-slate-500">
           {t("no_recent_activity", "No recent activity found")}
         </div>
       ) : (

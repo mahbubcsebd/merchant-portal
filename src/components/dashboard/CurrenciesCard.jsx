@@ -39,7 +39,7 @@ export function CurrenciesCard() {
   }, [accounts, activeAccountId]);
 
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-start">
       {/* Header */}
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">

@@ -96,10 +96,10 @@ export default function DashboardPage() {
         <CurrenciesCard />
       </div>
 
-      {/* ── Row 3: Recent Activity & Recent Transactions ─────── */}
+      {/* ── Row 3: Recent Transactions & Recent Activity ─────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-stretch">
-        <RecentActivityCard />
         <RecentTransactionsCard />
+        <RecentActivityCard />
       </div>
 
       {/* ── Row 4: Transaction Activity Chart ───────────────── */}
