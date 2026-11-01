@@ -96,7 +96,7 @@ export default function DashboardLayout() {
     retry: false,
   });
 
-  const { data: accountsResponse } = useQuery({
+  const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
     enabled: isSessionValid,
@@ -106,15 +106,20 @@ export default function DashboardLayout() {
   const profile = profileResponse?.data || null;
   const accounts = accountsResponse?.data || [];
 
-  const defaultAccountId =
-    accounts.length > 0 ? accounts[0].ACCOUNTNUMBER : null;
+  const defaultAccountId = useMemo(() => {
+    if (!accounts || accounts.length === 0) return null;
+    const primary = accounts.find((a) => a.ACCOUNTTYPE === "PRIMARY");
+    const first = primary || accounts[0];
+    return first.ACCOUNTNUMBER || first.ACCOUNTNO || null;
+  }, [accounts]);
+
   const activeAccountId = currency || defaultAccountId;
 
   useEffect(() => {
-    if (!currency && defaultAccountId) {
+    if (defaultAccountId && (!currency || !accounts.some((a) => (a.ACCOUNTNUMBER || a.ACCOUNTNO) === currency))) {
       setCurrency(defaultAccountId);
     }
-  }, [defaultAccountId, currency]);
+  }, [defaultAccountId, currency, accounts]);
 
   const { data: dashboardInfoResponse } = useQuery({
     queryKey: ["dashboardInfo", activeAccountId, period],
@@ -140,7 +145,7 @@ export default function DashboardLayout() {
     enabled: isSessionValid && !!activeAccountId,
   });
 
-  if (isLoadingSession || (isSessionValid && isLoadingProfile)) {
+  if (isLoadingSession || (isSessionValid && (isLoadingProfile || isLoadingAccounts))) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
         <div className="flex flex-col items-center">

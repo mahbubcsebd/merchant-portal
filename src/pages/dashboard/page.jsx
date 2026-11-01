@@ -9,14 +9,20 @@ import { TransactionActivityChart } from "@/components/dashboard/TransactionActi
 import { PeriodDropdown, CurrencyDropdown } from "@/components/dashboard/Dropdowns";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { useDialog } from "@/components/globals/DialogProvider";
 
 export default function DashboardPage() {
   const { period, setPeriod, currency, setCurrency, transactions } = useDashboardContext();
   const { t } = useLanguage();
+  const { openGlobalPopup } = useDialog();
 
   const handleExport = () => {
     if (!transactions || transactions.length === 0) {
-      alert("No transaction data to export.");
+      openGlobalPopup({
+        type: "error",
+        title: t("error", "Error"),
+        description: t("no_transaction_data_to_export", "No transaction data to export."),
+      });
       return;
     }
 

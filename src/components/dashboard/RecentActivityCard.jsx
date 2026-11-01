@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   CreditCard,
   QrCode,
@@ -12,9 +11,11 @@ import {
   Bell,
   Smartphone,
   ExternalLink,
+  X,
 } from "lucide-react";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // Local image icon mappings from public/images/activity/
 const SVG_ICON_MAP = {
@@ -173,8 +174,9 @@ function ActivityIconItem({ meta, altText }) {
 export function RecentActivityCard() {
   const { notifications } = useDashboardContext();
   const { t } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const activities = React.useMemo(() => {
+  const allActivities = React.useMemo(() => {
     if (!notifications || notifications.length === 0) {
       return [];
     }
@@ -185,7 +187,6 @@ export function RecentActivityCard() {
         const msg = notif.notificationMsg || notif.message || notif.notificationText || "";
         return Boolean(title.trim() || msg.trim());
       })
-      .slice(0, 4)
       .map((notif, index) => {
         const title =
           notif.notificationTypeName ||
@@ -197,9 +198,6 @@ export function RecentActivityCard() {
           notif.notificationText ||
           "";
         const date = notif.timeAgo || notif.creationDate || notif.date || "";
-        const isPending =
-          title.toLowerCase().includes("pending") ||
-          msg.toLowerCase().includes("pending");
 
         const meta = resolveActivityMeta(notif);
 
@@ -213,63 +211,146 @@ export function RecentActivityCard() {
       });
   }, [notifications, t]);
 
+  const previewActivities = allActivities.slice(0, 4);
+
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-start h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-            {t("recent_activity", "Recent activity")}
-          </h3>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
-            ({activities.length})
-          </span>
+    <>
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-start h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t("recent_activity", "Recent activity")}
+            </h3>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              ({allActivities.length})
+            </span>
+          </div>
+          {allActivities.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {t("view_all", "View all")}
+            </button>
+          )}
         </div>
-        <Link
-          to="/dashboard/reports"
-          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          {t("view_all", "View all")}
-        </Link>
+
+        {/* Activity List Preview */}
+        {previewActivities.length === 0 ? (
+          <div className="flex-1 min-h-[160px] flex flex-col items-center justify-center text-center text-xs text-slate-400 dark:text-slate-500">
+            {t("no_recent_activity", "No recent activity found")}
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+            {previewActivities.map((act) => {
+              return (
+                <div key={act.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${act.meta.bg}`}
+                    >
+                      <ActivityIconItem meta={act.meta} altText={act.title} />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {act.title}
+                      </h4>
+                      {act.description && (
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[240px] sm:max-w-xs md:max-w-md">
+                          {act.description}
+                        </p>
+                      )}
+                      {act.date && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+                          {act.date}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Activity List */}
-      {activities.length === 0 ? (
-        <div className="flex-1 min-h-[160px] flex flex-col items-center justify-center text-center text-xs text-slate-400 dark:text-slate-500">
-          {t("no_recent_activity", "No recent activity found")}
-        </div>
-      ) : (
-        <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-          {activities.map((act) => {
-            return (
-              <div key={act.id} className="py-2.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+      {/* View All Activities Dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent
+          className="max-w-xl w-full bg-white dark:bg-[#0a0f1c] border border-slate-200 dark:border-white/10 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden"
+          showCloseButton={false}
+        >
+          {/* Header */}
+          <div className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 px-6 py-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-slate-900 dark:text-white text-base font-bold">
+                {t("all_recent_activity", "Recent Activity")}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {t("all_activity_desc", "Overview of recent notifications and system updates")} ({allActivities.length})
+              </p>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-slate-400 hover:text-slate-600 dark:text-white/50 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* List */}
+          <div className="p-6 max-h-[60vh] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+            {allActivities.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                {t("no_recent_activity", "No recent activity found")}
+              </div>
+            ) : (
+              allActivities.map((act) => (
+                <div
+                  key={act.id}
+                  className="py-3.5 flex items-start gap-3.5 first:pt-0 last:pb-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] px-2 transition-colors"
+                >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${act.meta.bg}`}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${act.meta.bg}`}
                   >
                     <ActivityIconItem meta={act.meta} altText={act.title} />
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      {act.title}
-                    </h4>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                        {act.title}
+                      </h4>
+                      {act.date && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium">
+                          {act.date}
+                        </span>
+                      )}
+                    </div>
                     {act.description && (
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[240px] sm:max-w-xs md:max-w-md">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                         {act.description}
                       </p>
                     )}
-                    {act.date && (
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
-                        {act.date}
-                      </span>
-                    )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/10 px-6 py-3.5 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
+            >
+              {t("close", "Close")}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
