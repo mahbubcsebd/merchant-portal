@@ -87,7 +87,7 @@ export default function Home() {
               lg:text-sm
               xl:text-base
               2xl:text-lg
-              text-slate-400 leading-relaxed max-w-[320px] xl:max-w-[360px]"
+              text-slate-400 leading-relaxed max-w-[420px] xl:max-w-[460px]"
             >
               {t(
                 "mp_hero_desc",
@@ -96,7 +96,7 @@ export default function Home() {
             </p>
 
             {/* Stats */}
-            <div className="flex gap-8 xl:gap-10 pt-2">
+            {/* <div className="flex gap-8 xl:gap-10 pt-2">
               {[
                 {
                   value: "50K+",
@@ -114,7 +114,7 @@ export default function Home() {
                   </p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Copyright */}

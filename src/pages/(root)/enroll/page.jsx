@@ -67,7 +67,7 @@ export default function EnrollPage() {
               )}
             </h1>
 
-            <p className="text-sm sm:text-base lg:text-sm xl:text-base text-slate-400 leading-relaxed max-w-[320px] xl:max-w-[360px]">
+            <p className="text-sm sm:text-base lg:text-sm xl:text-base text-slate-400 leading-relaxed max-w-[420px] xl:max-w-[460px]">
               {t(
                 "enroll_hero_subtitle",
                 "Set up your merchant account in minutes and start accepting payments from day one.",
@@ -75,7 +75,7 @@ export default function EnrollPage() {
             </p>
 
             {/* Stats */}
-            <div className="flex gap-8 xl:gap-10 pt-2">
+            {/* <div className="flex gap-8 xl:gap-10 pt-2">
               {[
                 {
                   value: t("setup_time_val", "5 min"),
@@ -96,7 +96,7 @@ export default function EnrollPage() {
                   </p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Copyright */}

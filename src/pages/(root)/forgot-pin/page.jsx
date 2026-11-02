@@ -65,7 +65,7 @@ export default function ForgotPinPage() {
               )}
             </h1>
 
-            <p className="text-sm sm:text-base lg:text-sm xl:text-base text-slate-400 leading-relaxed max-w-[320px] xl:max-w-[360px]">
+            <p className="text-sm sm:text-base lg:text-sm xl:text-base text-slate-400 leading-relaxed max-w-[420px] xl:max-w-[460px]">
               {t(
                 "mp_hero_desc",
                 "An all-in-one dashboard that gives you total control — track payments, manage settlements, and grow your business.",
@@ -73,7 +73,7 @@ export default function ForgotPinPage() {
             </p>
 
             {/* Stats */}
-            <div className="flex gap-8 xl:gap-10 pt-2">
+            {/* <div className="flex gap-8 xl:gap-10 pt-2">
               {[
                 {
                   value: "50K+",
@@ -91,7 +91,7 @@ export default function ForgotPinPage() {
                   </p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Copyright */}
