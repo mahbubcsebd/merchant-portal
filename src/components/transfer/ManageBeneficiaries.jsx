@@ -395,7 +395,7 @@ export default function ManageBeneficiaries({
       </div>
 
       {/* ── Summary & Search Bar Card ── */}
-      <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-sm p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-[#2563eb] dark:text-blue-400 shrink-0">
             <Building2 size={20} />
@@ -426,7 +426,7 @@ export default function ManageBeneficiaries({
       </div>
 
       {/* ── Main Content Area ── */}
-      <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         {beneficiariesQuery.isLoading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-white/40">
             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />

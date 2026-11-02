@@ -236,7 +236,7 @@ export default function PaymentLimitsView() {
 
   if (isLoading && limitsList.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center p-16 bg-white dark:bg-white/[0.03] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+      <div className="w-full flex items-center justify-center p-16 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] animate-in fade-in duration-300">
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2563eb] border-t-transparent" />
           <p className="mt-3.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -265,7 +265,7 @@ export default function PaymentLimitsView() {
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-300">
       {/* ── Filter Bar: Consistent Segmented Tabs & Currency Selector ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         {/* Segmented Tab Filter (Same design as Reports / Live Transactions) */}
         <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.03] p-0.5 shadow-2xs shrink-0 overflow-x-auto no-scrollbar">
           {periodTabs.map((tab, idx) => {
@@ -308,7 +308,7 @@ export default function PaymentLimitsView() {
 
       {/* ── Limit Cards Grid (2-Column Responsive Layout) ── */}
       {displayedCards.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-12 text-center flex flex-col items-center shadow-sm">
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-12 text-center flex flex-col items-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <Layers size={32} className="text-slate-300 dark:text-slate-600 mb-3" />
           <h4 className="text-sm font-bold text-slate-800 dark:text-white">
             {t("no_limits_for_filter", "No limits found for selected filter")}
@@ -346,7 +346,7 @@ export default function PaymentLimitsView() {
               return (
                 <div
                   key={card.id}
-                  className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group"
+                  className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col justify-between hover:shadow-md transition-all group"
                 >
                   {/* Top Row: Real Activity Icon, Title, Period Pill & Single Clean Radial Gauge */}
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -433,7 +433,7 @@ export default function PaymentLimitsView() {
 
           {/* ── Pagination Controls ── */}
           {displayedCards.length > pageSize && (
-            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 shadow-sm">
+            <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <GlobalPagination
                 currentPage={currentPage}
                 pageSize={pageSize}

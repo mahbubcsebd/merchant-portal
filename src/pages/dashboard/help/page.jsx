@@ -257,7 +257,7 @@ export default function HelpPage() {
       </div>
 
       {/* ── Search & Filter Bar ──────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-sm p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         {/* Search Input using Standard GlobalInput */}
         <div className="w-full md:w-96 relative">
           <GlobalInput
@@ -325,7 +325,7 @@ export default function HelpPage() {
             {filteredGuides.map((guide) => (
               <div
                 key={guide.id}
-                className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#131c31] p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center gap-3 mb-3">
@@ -356,7 +356,7 @@ export default function HelpPage() {
       )}
 
       {/* ── FAQ Section ─────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#131c31] shadow-sm p-6 sm:p-8">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 sm:p-8">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -426,7 +426,7 @@ export default function HelpPage() {
       </div>
 
       {/* ── Contact Support Callout Card ────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#131c31] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-4 text-center sm:text-left">
           <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-[#2563eb] dark:text-blue-400 flex items-center justify-center shrink-0">
             <Headphones size={22} />

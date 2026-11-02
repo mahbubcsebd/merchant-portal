@@ -121,7 +121,7 @@ export default function MyQrView() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
         {/* ── Left Column: Storefront QR Card ── */}
         <div className="xl:col-span-7 flex flex-col">
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 sm:p-6 shadow-sm flex flex-col h-full justify-between">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col h-full justify-between">
             <div>
               {/* Header: Clean matching standard cards */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10 mb-5">
@@ -219,8 +219,8 @@ export default function MyQrView() {
 
         {/* ── Right Column: Information, Guidelines & Integration Details ── */}
         <div className="xl:col-span-5 flex flex-col gap-5">
-          {/* Active Configuration Summary Card (Consistent rounded-xl corner matching system) */}
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 sm:p-6 shadow-sm">
+          {/* Active Configuration Summary Card (Consistent rounded-2xl corner matching system) */}
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-[#2563eb] dark:text-blue-400 flex items-center justify-center">
@@ -284,7 +284,7 @@ export default function MyQrView() {
           </div>
 
           {/* Quick Best Practices & Tips Card */}
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 sm:p-6 shadow-sm flex-1 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex-1 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-white/10 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-[#2563eb] dark:text-blue-400 flex items-center justify-center">

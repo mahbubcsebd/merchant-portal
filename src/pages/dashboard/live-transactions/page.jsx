@@ -441,7 +441,7 @@ export default function LiveTransactionsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-6 min-h-[500px]">
         {/* Dropdowns Grid (Branch, Cashier, Terminal ID & Filter button) */}
         <div className="flex flex-col xl:flex-row gap-4 mb-5 items-stretch xl:items-end">
           <GlobalSelect

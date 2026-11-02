@@ -237,7 +237,7 @@ export default function PayBillsPage() {
       </div>
 
       {/* Main card */}
-      <div className="max-w-lg mx-auto rounded-xl border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm p-4 sm:p-8">
+      <div className="max-w-lg mx-auto rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-8">
         <div className="flex justify-start mb-4">
           <Link
             to="/dashboard/pay-bills/templates"

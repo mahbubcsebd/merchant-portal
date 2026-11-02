@@ -99,7 +99,7 @@ export default function ManageNotificationsView() {
 
   if (isLoading) {
     return (
-      <div className="w-full flex items-center justify-center p-16 bg-white dark:bg-white/[0.03] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm animate-in fade-in duration-300">
+      <div className="w-full flex items-center justify-center p-16 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] animate-in fade-in duration-300">
         <div className="flex flex-col items-center">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2563eb] border-t-transparent" />
           <p className="mt-3.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -149,7 +149,7 @@ export default function ManageNotificationsView() {
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-300">
       {/* ── Top Header Card (Matching Linked Bank Accounts & Language Settings) ── */}
-      <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] shadow-sm">
+      <div className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-[#2563eb] dark:text-blue-400 flex items-center justify-center shrink-0">
             <Bell size={18} />
@@ -169,7 +169,7 @@ export default function ManageNotificationsView() {
       </div>
 
       {/* ── Notification Channel List Card ── */}
-      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 sm:p-6 shadow-sm space-y-3">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-3">
         {channels.map((ch) => {
           const ChannelIcon = ch.icon;
           const isPending = updateMutation.isPending && pendingChannel === ch.id;

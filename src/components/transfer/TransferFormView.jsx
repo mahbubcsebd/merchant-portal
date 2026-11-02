@@ -25,7 +25,7 @@ export default function TransferFormView({ setView }) {
 
   return (
     <div className="w-full max-w-2xl mx-auto animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-8 w-full relative">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-8 w-full relative">
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-3 sm:gap-0 text-center sm:text-left">
           <button
             onClick={() => setView("manage_scheduled")}

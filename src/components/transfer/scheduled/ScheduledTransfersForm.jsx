@@ -15,7 +15,7 @@ export default function ScheduledTransfersForm({
 
   return (
     <div className="w-full animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-[#131c31] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-8 w-full max-w-2xl mx-auto">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-8 w-full max-w-2xl mx-auto">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
           {t("edit_scheduled_transfer", "Edit Scheduled Transfer")}
         </h2>

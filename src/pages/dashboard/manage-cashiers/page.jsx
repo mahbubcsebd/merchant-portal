@@ -396,7 +396,7 @@ export default function ManageCashiersPage() {
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none p-4 sm:p-6 min-h-[500px]">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-6 min-h-[500px]">
         {/* Top Controls */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <GlobalInput
