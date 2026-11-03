@@ -1,11 +1,13 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-const SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || 'testkey1234';
+import { APP_CONFIG } from '@/config/appConfig';
+
+const SECRET_KEY = APP_CONFIG.SECRET_KEY || 'testkey1234';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.DEV
     ? '/api'
-    : 'https://core1.moadbusglobal.com/walletmc',
+    : APP_CONFIG.API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
