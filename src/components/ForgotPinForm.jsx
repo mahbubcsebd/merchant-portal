@@ -8,7 +8,7 @@ import { format } from "date-fns"
 import { buttonVariants } from "@/components/ui/button"
 import GlobalButton from "@/components/globals/GlobalButton"
 import GlobalInput from "@/components/globals/GlobalInput"
-import { Calendar } from "@/components/ui/calendar"
+import { DobCalendar } from "@/components/globals/DobCalendar"
 import {
   Popover,
   PopoverContent,
@@ -26,7 +26,7 @@ const getFormSchema = (t) =>
       .min(1, { message: t("email_required", "Email Address is required.") })
       .email({ message: t("invalid_email", "Please enter a valid Email Address.") })
       .max(80, { message: t("email_max_error", "Email Address cannot exceed 80 characters.") }),
-    dob: z.date({ required_error: t("dob_required", "Date of Birth is required.") }),
+    dob: z.date({ error: t("dob_required", "Please Enter Date of Birth") }),
   })
 
 export function ForgotPinForm() {
@@ -57,7 +57,7 @@ export function ForgotPinForm() {
     setIsSubmitting(true)
     setApiError("")
     try {
-      const formattedDob = format(values.dob, "dd/MM/yyyy")
+      const formattedDob = format(values.dob, "MM/dd/yyyy")
       const payload = {
         email: values.email,
         dateOfBirth: formattedDob,
@@ -142,11 +142,10 @@ export function ForgotPinForm() {
                   !dobValue ? "text-slate-400 font-normal" : "text-slate-900 dark:text-white"
                 )}
               >
-                {dobValue ? format(dobValue, "dd/MM/yyyy") : <span>dd/mm/yyyy</span>}
+                {dobValue ? format(dobValue, "MM/dd/yyyy") : <span>mm/dd/yyyy</span>}
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
+                <DobCalendar
                   selected={dobValue}
                   onSelect={(date) => {
                     if (date) {
@@ -155,13 +154,6 @@ export function ForgotPinForm() {
                       setDobOpen(false);
                     }
                   }}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  captionLayout="dropdown"
-                  fromYear={1930}
-                  toYear={new Date().getFullYear()}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>
