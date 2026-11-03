@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import { forwardRef, useState } from 'react';
+import { formatAmountInput } from '@/lib/utils/inputFormatters';
 
 const GlobalInput = forwardRef(
   (
@@ -28,7 +29,40 @@ const GlobalInput = forwardRef(
   ) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
-    const inputType = isPassword && showPassword ? 'text' : type;
+    const isAmountField =
+      type === 'amount' ||
+      props.isAmount ||
+      props.name === 'amount' ||
+      props.name === 'TXNAMOUNT' ||
+      (typeof label === 'string' && /amount/i.test(label));
+
+    const inputType = isPassword && showPassword ? 'text' : isAmountField && type === 'number' ? 'text' : type;
+    const inputMode = props.inputMode || (isAmountField ? 'decimal' : undefined);
+
+    const handleInput = (e) => {
+      if (isAmountField) {
+        const cursor = e.target.selectionStart;
+        const original = e.target.value;
+        const formatted = formatAmountInput(original);
+        if (original !== formatted) {
+          e.target.value = formatted;
+          if (cursor != null && cursor <= formatted.length) {
+            e.target.setSelectionRange(cursor, cursor);
+          }
+        }
+      }
+      props.onInput?.(e);
+    };
+
+    const handleChange = (e) => {
+      if (isAmountField) {
+        const formatted = formatAmountInput(e.target.value);
+        if (e.target.value !== formatted) {
+          e.target.value = formatted;
+        }
+      }
+      props.onChange?.(e);
+    };
 
     const baseInputClass = cn(
       'w-full h-10 text-sm font-medium',
@@ -99,6 +133,7 @@ const GlobalInput = forwardRef(
             <input
               ref={ref}
               type={inputType}
+              inputMode={inputMode}
               disabled={disabled}
               required={required}
               maxLength={maxLength}
@@ -106,6 +141,8 @@ const GlobalInput = forwardRef(
               readOnly={isReadOnly}
               className={cn(baseInputClass, inputClassName)}
               {...props}
+              onInput={handleInput}
+              onChange={handleChange}
             />
           )}
 

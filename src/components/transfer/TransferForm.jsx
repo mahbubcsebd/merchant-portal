@@ -11,7 +11,7 @@ import { useDialog } from "@/components/globals/DialogProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { enforceNumericSpace, enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
+import { enforceAlphanumericSpace } from "@/lib/utils/inputFormatters";
 import { getBankRoutingByBankId } from "@/lib/api/endpoints";
 import { getBankName, getCurrencyLabel } from "@/lib/utils/TransferUtils";
 import TransferBeneficiaryDetails from "./TransferBeneficiaryDetails";
@@ -435,7 +435,7 @@ export default function TransferForm({ setView }) {
               required
               type="text"
               maxLength={17}
-              onInput={enforceNumericSpace}
+              placeholder="0.00"
               value={formData.amount}
               onChange={handleChange}
               containerClassName="flex-1"

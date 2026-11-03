@@ -41,11 +41,12 @@ export default function ScheduledTransfersForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <GlobalInput
               label={t("amount", "Amount")}
+              name="amount"
               value={formData.TXNAMOUNT || formData.amount || ""}
               onChange={(e) =>
                 setFormData({ ...formData, TXNAMOUNT: e.target.value })
               }
-              type="number"
+              type="text"
               placeholder="0.00"
               required
             />

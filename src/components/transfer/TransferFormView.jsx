@@ -69,8 +69,10 @@ export default function TransferFormView({ setView }) {
           <div className="flex flex-col sm:flex-row gap-5">
             <GlobalInput
               label={t("amount", "Amount")}
+              name="amount"
               required
-              type="number"
+              type="text"
+              placeholder="0.00"
               value={formData.amount}
               onChange={(e) =>
                 setFormData({ ...formData, amount: e.target.value })
