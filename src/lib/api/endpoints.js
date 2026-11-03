@@ -324,3 +324,31 @@ export async function payToBank(payload = {}) {
 export async function scheduledTxnHistory(payload = {}) {
   return post("/scheduledTxnHistory", payload);
 }
+
+// -------------------------------------------------------
+// Merchant Operations APIs
+// -------------------------------------------------------
+export async function getOperationStore(payload = {}) {
+  return post("/getOperationStore", payload);
+}
+
+export async function openStore(payload = {}) {
+  return post("/openStore", payload);
+}
+
+export async function closeStore(payload = {}) {
+  return post("/closeStore", payload);
+}
+
+export async function closePreviousOperationStore(payload = {}) {
+  return post("/closePreviousOperationStore", payload);
+}
+
+export async function closeCashBin(payload = {}) {
+  return post("/closeCashBin", payload);
+}
+
+export async function getDetailOperationCashier(payload = {}) {
+  return post("/getDetailOperationCashier", payload);
+}
+

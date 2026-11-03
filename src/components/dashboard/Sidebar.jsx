@@ -10,6 +10,7 @@ import {
   PanelLeft,
   PanelLeftClose,
   Phone,
+  PieChart,
   RefreshCcw,
   Settings,
   Store,
@@ -59,6 +60,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
     {
       groupLabel: t("menu_operations", "OPERATIONS"),
       items: [
+        {
+          label: t("merchant_operations", "Merchant Operations"),
+          href: "/dashboard/merchant-operations",
+          icon: PieChart,
+        },
         {
           label: t("manage_cashiers", "Manage Cashiers"),
           href: "/dashboard/manage-cashiers",
