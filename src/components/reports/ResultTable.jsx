@@ -56,7 +56,10 @@ export default function ResultTable({
             {reportTitle || t("report_results", "Report Results")}
           </h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {data.length} {data.length === 1 ? t("record_found", "record found") : t("records_found", "records found")}
+            {data.length}{" "}
+            {data.length === 1
+              ? t("record_found", "record found")
+              : t("records_found", "records found")}
           </p>
         </div>
 
@@ -80,7 +83,7 @@ export default function ResultTable({
                 t("date", "Date"),
                 t("confirmation_no", "Confirmation No."),
                 t("to_account", "To Account"),
-                t("beneficiary_name", "Beneficiary Name"),
+                t("add_ben_firstLast", "First & Last Name"),
                 t("amount", "Amount"),
                 t("transaction_type", "Transaction Type"),
                 t("global_status", "Status"),
@@ -124,14 +127,14 @@ export default function ResultTable({
                   </td>
                   <td className="px-6 py-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                     {formatAmount(row.amount)}{" "}
-                    <span className="text-xs font-semibold text-slate-500 dark:text-white/50">{row.currencyCode}</span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                      {row.currencyCode}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-white/70">
                     {row.txnName || "—"}
                   </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(row)}
-                  </td>
+                  <td className="px-6 py-4">{getStatusBadge(row)}</td>
                 </tr>
               ))
             )}

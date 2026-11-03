@@ -40,10 +40,13 @@ export default function SuccessDialog({
                 key={idx}
                 className="flex justify-between items-start text-sm"
               >
-                <span className="text-slate-500 dark:text-white/50 pr-4">
-                  {key.replace(/([A-Z])/g, " $1").replace(/\s*\*\s*$/, '').trim()}
+                <span className="text-slate-500 dark:text-white/50 pr-4  w-1/3">
+                  {key
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/\s*\*\s*$/, "")
+                    .trim()}
                 </span>
-                <span className="font-medium text-slate-900 dark:text-white text-right break-words">
+                <span className="font-medium text-slate-900 dark:text-white text-right break-words w-2/3">
                   {String(value)}
                 </span>
               </div>
