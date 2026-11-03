@@ -26,17 +26,36 @@ export default function FormDialogShell({
 
     Array.from(form.elements).forEach((el) => {
       if (el.name && (el.required || el.dataset?.required === "true") && !el.value) {
-        // Find the closest label text if possible, else fallback to name
-        let labelText = el.name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        const labelEl = form.querySelector(`label[for="${el.id}"]`);
-        if (labelEl) {
-          labelText = labelEl.innerText.replace('*', '').trim();
+        // Find the label text: check dataset label first, then label element, then fallback to name
+        let labelText = el.dataset?.label;
+        if (!labelText) {
+          const labelEl =
+            (el.id ? form.querySelector(`label[for="${el.id}"]`) : null) ||
+            el.closest("div")?.querySelector("label") ||
+            el.closest(".space-y-4, .space-y-3, .space-y-2, .space-y-1, .grid")?.querySelector(`label`);
+          if (labelEl) {
+            labelText = labelEl.innerText.replace("*", "").trim();
+          }
         }
-        
-        errors[el.name] = `${labelText} is required.`;
+        if (!labelText) {
+          labelText = el.name
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase());
+        }
+
+        const isSelect =
+          el.tagName === "SELECT" ||
+          el.dataset?.select === "true" ||
+          el.name?.toLowerCase().endsWith("id");
+
+        const actionText = isSelect
+          ? t("pleaseSelect", "Please select")
+          : t("pleaseEnter", "Please enter");
+
+        errors[el.name] = `${actionText} ${labelText}`;
         if (!firstErrorField) firstErrorField = el;
       } else if (el.name && el.type === "email" && el.value && !/^\S+@\S+\.\S+$/.test(el.value)) {
-        errors[el.name] = "Please enter a valid email address.";
+        errors[el.name] = t("invalid_email", "Please enter a valid email address.");
         if (!firstErrorField) firstErrorField = el;
       }
     });

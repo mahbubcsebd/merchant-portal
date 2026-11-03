@@ -126,6 +126,7 @@ const GlobalInput = forwardRef(
               placeholder={placeholder}
               readOnly={isReadOnly}
               maxLength={maxLength}
+              data-label={typeof label === "string" ? label.replace(/[\s*]+$/, "") : undefined}
               className={cn(baseTextareaClass, inputClassName)}
               {...props}
             />
@@ -138,6 +139,7 @@ const GlobalInput = forwardRef(
               required={required}
               maxLength={maxLength}
               placeholder={placeholder}
+              data-label={typeof label === "string" ? label.replace(/[\s*]+$/, "") : undefined}
               readOnly={isReadOnly}
               className={cn(baseInputClass, inputClassName)}
               {...props}

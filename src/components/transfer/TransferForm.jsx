@@ -382,13 +382,13 @@ export default function TransferForm({ setView }) {
   return (
     <div className="w-full pb-10">
       <div className="max-w-lg mx-auto rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-8 relative">
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-3 sm:gap-0 text-center sm:text-left">
-          <button
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center mb-6 gap-3 sm:gap-0 text-center sm:text-left">
+          {/* <button
             onClick={() => setView("manage_scheduled")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
           >
             {t("manage_scheduled_transfer2", "Manage Scheduled Transfers")}
-          </button>
+          </button> */}
           <button
             onClick={() => setView("manage_beneficiaries")}
             className="text-xs font-bold text-[#2563eb] hover:underline uppercase tracking-wider"
@@ -477,7 +477,7 @@ export default function TransferForm({ setView }) {
             labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
             options={[
               { value: "Immediate", label: t("schedule_now", "Immediate") },
-              { value: "Scheduled", label: "Scheduled" },
+              // { value: "Scheduled", label: "Scheduled" },
             ]}
             error={errors.when}
           />

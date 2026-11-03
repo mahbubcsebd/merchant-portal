@@ -70,7 +70,14 @@ const GlobalSelect = forwardRef(
         {/* Hidden Inputs for Form Data */}
         {props.name && (
           <>
-            <input type="hidden" name={props.name} value={value || ""} data-required={required ? "true" : undefined} />
+            <input
+              type="hidden"
+              name={props.name}
+              value={value || ""}
+              data-required={required ? "true" : undefined}
+              data-select="true"
+              data-label={typeof label === "string" ? label.replace(/[\s*]+$/, "") : undefined}
+            />
             {selectedOption && (
               <input type="hidden" name={`${props.name}Label`} value={selectedOption.label} />
             )}

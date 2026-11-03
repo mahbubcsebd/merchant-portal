@@ -316,7 +316,7 @@ export default function ManageBeneficiaries({
     };
 
     openPreconfirmDialog({
-      title: t("delete_beneficiary_title", "Delete Beneficiary?"),
+      title: t("delete_beneficiary_title", "Delete Beneficiary"),
       message: `Are you sure you want to delete ${beneficiary.payeeName}? This action cannot be undone.`,
       details,
       confirmText: t("buttonsDelete", t("delete", "Delete")),
