@@ -168,6 +168,7 @@ export default function Home() {
               )}{" "}
               <Link
                 to="/terms-and-conditions"
+                state={{ from: "/" }}
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
                 {t(

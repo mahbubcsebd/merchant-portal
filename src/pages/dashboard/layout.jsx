@@ -1,6 +1,6 @@
 import { DashboardLayout as DashboardLayoutComponent } from "@/components/dashboard/DashboardLayout";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
   getUserProfile,
@@ -15,9 +15,13 @@ import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { DashboardContext } from "./context";
+import ChangePinView from "@/components/admin/ChangePinView";
+
+const FORCE_CHANGE_PIN_FLAG = 1;
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const { openConfirmDialog } = useDialog();
   const [period, setPeriod] = useState("last3months");
@@ -96,6 +100,15 @@ export default function DashboardLayout() {
     retry: false,
   });
 
+  // Temporary PIN (e.g. after Forgot PIN) => backend sets forceChangePassword=1
+  const { data: userProfileResponse, isLoading: isLoadingForceFlag } = useQuery({
+    queryKey: ["userProfileForceFlag"],
+    queryFn: () => getUserProfile(),
+    enabled: isSessionValid,
+    retry: false,
+    staleTime: 0,
+  });
+
   const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
@@ -145,7 +158,11 @@ export default function DashboardLayout() {
     enabled: isSessionValid && !!activeAccountId,
   });
 
-  if (isLoadingSession || (isSessionValid && (isLoadingProfile || isLoadingAccounts))) {
+  if (
+    isLoadingSession ||
+    (isSessionValid &&
+      (isLoadingProfile || isLoadingAccounts || isLoadingForceFlag))
+  ) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
         <div className="flex flex-col items-center">
@@ -165,6 +182,37 @@ export default function DashboardLayout() {
     (!isLoadingProfile && !profile)
   ) {
     return <Navigate to="/" replace />;
+  }
+
+  const isForceChangePin =
+    Number(
+      userProfileResponse?.data?.forceChangePassword ??
+        profile?.forceChangePassword,
+    ) === FORCE_CHANGE_PIN_FLAG;
+
+  if (isForceChangePin) {
+    return (
+      <div className="min-h-screen w-full flex items-start justify-center bg-slate-50 dark:bg-[#0f1829] px-4 py-10">
+        <div className="w-full max-w-5xl">
+          <h1 className="mb-1 text-2xl font-bold text-slate-900 dark:text-white">
+            {t("create_pin", "Create PIN")}
+          </h1>
+          <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
+            {t(
+              "create_pin_required",
+              "Your PIN was reset. Set a new PIN to continue.",
+            )}
+          </p>
+          <ChangePinView
+            onSuccess={() =>
+              queryClient.invalidateQueries({
+                queryKey: ["userProfileForceFlag"],
+              })
+            }
+          />
+        </div>
+      </div>
+    );
   }
 
   const dashboardInfo = dashboardInfoResponse || null;
