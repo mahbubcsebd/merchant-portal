@@ -37,6 +37,10 @@ import {
   enforceNumeric,
 } from "@/lib/utils/inputFormatters";
 
+const DRAFT_KEY = "enroll_form_draft";
+// Set only when the user opens Terms and Conditions, so the draft is restored
+// on return and discarded in every other case (e.g. coming back from Login).
+const RESTORE_DRAFT_KEY = "enroll_restore_draft";
 const STORE_NAME_MIN_LENGTH = 5;
 const PHONE_MIN_LENGTH = 7;
 const PHONE_MAX_LENGTH = 11;
@@ -163,8 +167,12 @@ export function EnrollForm() {
 
   const defaultValues = useMemo(() => {
     try {
-      const saved = sessionStorage.getItem("enroll_form_draft");
-      if (saved) return JSON.parse(saved);
+      if (sessionStorage.getItem(RESTORE_DRAFT_KEY)) {
+        const saved = sessionStorage.getItem(DRAFT_KEY);
+        if (saved) return JSON.parse(saved);
+      } else {
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
     } catch (e) {}
     return {
       storeName: "",
@@ -175,6 +183,12 @@ export function EnrollForm() {
       removing_customer_check: false,
       appConsent: "Y",
     };
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(RESTORE_DRAFT_KEY);
+    } catch (e) {}
   }, []);
 
   const {
@@ -195,7 +209,7 @@ export function EnrollForm() {
     const subscription = watch((values) => {
       setApiError("");
       try {
-        sessionStorage.setItem("enroll_form_draft", JSON.stringify(values));
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(values));
       } catch (e) {}
     });
     return () => subscription.unsubscribe();
@@ -332,7 +346,7 @@ export function EnrollForm() {
       if (res?.status === "success" || res?.statusCode === 0) {
         // Clear stored draft upon success
         try {
-          sessionStorage.removeItem("enroll_form_draft");
+          sessionStorage.removeItem(DRAFT_KEY);
         } catch (e) {}
 
         setSuccessMessage(
@@ -615,12 +629,14 @@ export function EnrollForm() {
                   <Link
                     to="/terms-and-conditions"
                     state={{ from: "/enroll" }}
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(RESTORE_DRAFT_KEY, "1");
+                      } catch (e) {}
+                    }}
                     className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer inline"
                   >
-                    {t(
-                      "term_cond",
-                      t("term_cond", "Terms and Conditions"),
-                    )}
+                    {t("term_cond", "Terms and Conditions")}
                   </Link>{" "}
                   <span className="text-[#e65625]">*</span>
                 </span>
