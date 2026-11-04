@@ -118,7 +118,7 @@ export default function ManageBeneficiaries({
           {
             name: "payeeName",
             value: values.payeeName,
-            label: "Beneficiary Name",
+            label: "First & Last Name",
             required: true,
           },
           {
@@ -156,7 +156,7 @@ export default function ManageBeneficiaries({
         }
 
         const preconfirmDetails = {
-          [t("add_ben_firstLast", "Beneficiary Name")]: values.payeeName,
+          [t("add_ben_firstLast", "First & Last Name")]: values.payeeName,
           [t("add_ben_nickname", "Nickname")]: values.payeeNickName,
           [t("add_ben_accNo", "Account Number")]: values.payeeBankAccount,
           [t("add_ben_bank", "Bank")]: getBankName(
@@ -272,11 +272,11 @@ export default function ManageBeneficiaries({
       title: t("view_beneficiary", "View Beneficiary"),
       details: [
         {
-          label: t("beneficiary_name", "Beneficiary Name"),
+          label: t("add_ben_firstLast", "First & Last Name"),
           value: b.payeeName,
         },
         {
-          label: t("beneficiary_nickname", "Nickname"),
+          label: t("add_ben_nickname", "Nickname"),
           value: b.payeeNickName || "—",
         },
         {
@@ -301,7 +301,7 @@ export default function ManageBeneficiaries({
 
   const handleDelete = (beneficiary) => {
     const details = {
-      [t("add_ben_firstLast", "Beneficiary Name")]: beneficiary.payeeName,
+      [t("add_ben_firstLast", "First & Last Name")]: beneficiary.payeeName,
       [t("add_ben_nickname", "Nickname")]: beneficiary.payeeNickName,
       [t("add_ben_accNo", "Account Number")]: beneficiary.payeeBankAccount,
       [t("add_ben_bank", "Bank")]: getBankName(
@@ -316,7 +316,7 @@ export default function ManageBeneficiaries({
     };
 
     openPreconfirmDialog({
-      title: t("delete_beneficiary_title", "Delete Beneficiary?"),
+      title: t("delete_beneficiary_title", "Delete Beneficiary"),
       message: `Are you sure you want to delete ${beneficiary.payeeName}? This action cannot be undone.`,
       details,
       confirmText: t("buttonsDelete", t("delete", "Delete")),

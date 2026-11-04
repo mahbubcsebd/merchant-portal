@@ -48,10 +48,12 @@ export default function ViewDetailDialog({
               key={idx}
               className={`flex justify-between items-center py-3 ${idx < validDetails.length - 1 ? "border-b border-slate-100 dark:border-white/5" : ""}`}
             >
-              <span className="text-sm text-slate-500 dark:text-white/50">
-                {typeof detail.label === "string" ? detail.label.replace(/[\s*]+$/, "") : detail.label}
+              <span className="text-sm text-slate-500 dark:text-white/50 w-1/3">
+                {typeof detail.label === "string"
+                  ? detail.label.replace(/[\s*]+$/, "")
+                  : detail.label}
               </span>
-              <span className="text-sm font-semibold text-slate-900 dark:text-white">
+              <span className="text-sm font-semibold text-slate-900 dark:text-white w-2/3 break-words">
                 {detail.value}
               </span>
             </div>

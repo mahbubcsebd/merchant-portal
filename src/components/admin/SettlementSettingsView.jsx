@@ -114,14 +114,17 @@ export default function SettlementSettingsView() {
   const validateBankAccount = (values) => {
     const newErrors = {};
     if (!values.bankName) {
-      newErrors.bankName = t("err_bank_name_required", "Bank Name is required");
+      newErrors.bankName = `${t("pleaseSelect", "Please select")} ${t(
+        "transfers.bankName",
+        t("mba_bank", t("bank_name", "Bank Name")),
+      )}`;
     }
 
     if (!values.accountNumber) {
-      newErrors.accountNumber = t(
-        "err_account_number_required",
-        "Account Number is required",
-      );
+      newErrors.accountNumber = `${t("pleaseEnter", "Please enter")} ${t(
+        "mba_accountNo",
+        t("account_number", "Account Number"),
+      )}`;
     } else {
       if (/^0/.test(values.accountNumber)) {
         newErrors.accountNumber = t(
@@ -137,13 +140,16 @@ export default function SettlementSettingsView() {
     }
 
     if (!values.currency) {
-      newErrors.currency = t("err_currency_required", "Currency is required");
+      newErrors.currency = `${t("pleaseSelect", "Please select")} ${t(
+        "mba_currency",
+        t("currency", "Currency"),
+      )}`;
     }
     if (!values.accountType) {
-      newErrors.accountType = t(
-        "err_account_type_required",
-        "Account Type is required",
-      );
+      newErrors.accountType = `${t("pleaseSelect", "Please select")} ${t(
+        "mba_accountType",
+        t("account_type", "Account Type"),
+      )}`;
     }
 
     return {

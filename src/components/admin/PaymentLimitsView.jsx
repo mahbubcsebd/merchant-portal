@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   Layers,
   ArrowUpRight,
+  QrCode,
 } from "lucide-react";
 
 // Mapping of transaction types/keywords to real SVG/PNG activity icons in public/images/activity/
@@ -59,6 +60,24 @@ function resolveActivityIcon(txnId = "", txnName = "") {
   }
 
   return ACTIVITY_ICON_MAP.DEFAULT;
+}
+
+// Activity icon item matching Dashboard implementation with stateful error fallback
+function LimitActivityIcon({ iconSrc, title }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError || !iconSrc) {
+    return <QrCode size={18} className="text-[#2563eb] dark:text-blue-400" />;
+  }
+
+  return (
+    <img
+      src={iconSrc}
+      alt={title}
+      className="w-full h-full object-contain"
+      onError={() => setHasError(true)}
+    />
+  );
 }
 
 // ── Compact Radial Progress Gauge ──
@@ -353,14 +372,9 @@ export default function PaymentLimitsView() {
                     <div className="flex items-center gap-2.5 min-w-0">
                       {/* Real Activity Icon from public/images/activity */}
                       <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center shrink-0 p-1.5">
-                        <img
-                          src={card.iconSrc}
-                          alt={card.title}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "/images/activity/qr-code-payByCode.svg";
-                          }}
+                        <LimitActivityIcon
+                          iconSrc={card.iconSrc}
+                          title={card.title}
                         />
                       </div>
 

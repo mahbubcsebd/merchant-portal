@@ -59,6 +59,54 @@ export default function ReportsPage() {
 
   const results = txData?.transactionHistories;
 
+  const [dateRangeError, setDateRangeError] = useState("");
+
+  const handleFromDateChange = (date) => {
+    setFromDate(date);
+    clearError("fromDate");
+    if (date && toDate) {
+      const from = new Date(date).setHours(0, 0, 0, 0);
+      const to = new Date(toDate).setHours(0, 0, 0, 0);
+      if (from > to) {
+        const errorMsg = t(
+          "err_date_range",
+          "From Date cannot be greater than To Date.",
+        );
+        setDateRangeError(errorMsg);
+        openGlobalPopup({
+          title: t("error", "Error"),
+          description: errorMsg,
+          type: "error",
+        });
+        return;
+      }
+    }
+    setDateRangeError("");
+  };
+
+  const handleToDateChange = (date) => {
+    setToDate(date);
+    clearError("toDate");
+    if (fromDate && date) {
+      const from = new Date(fromDate).setHours(0, 0, 0, 0);
+      const to = new Date(date).setHours(0, 0, 0, 0);
+      if (from > to) {
+        const errorMsg = t(
+          "err_date_range",
+          "From Date cannot be greater than To Date.",
+        );
+        setDateRangeError(errorMsg);
+        openGlobalPopup({
+          title: t("error", "Error"),
+          description: errorMsg,
+          type: "error",
+        });
+        return;
+      }
+    }
+    setDateRangeError("");
+  };
+
   const handleReset = () => {
     setFromDate(null);
     setToDate(null);
@@ -66,6 +114,7 @@ export default function ReportsPage() {
     setStatus("selected");
     setAppliedFilters(null);
     setReportTitle("");
+    setDateRangeError("");
     clearAllErrors();
   };
 
@@ -93,6 +142,25 @@ export default function ReportsPage() {
     if (!validationResult.isValid) {
       return;
     }
+
+    if (fromDate && toDate) {
+      const from = new Date(fromDate).setHours(0, 0, 0, 0);
+      const to = new Date(toDate).setHours(0, 0, 0, 0);
+      if (from > to) {
+        const errorMsg = t(
+          "err_date_range",
+          "From Date cannot be greater than To Date.",
+        );
+        setDateRangeError(errorMsg);
+        openGlobalPopup({
+          title: t("error", "Error"),
+          description: errorMsg,
+          type: "error",
+        });
+        return;
+      }
+    }
+    setDateRangeError("");
 
     const fromDateStr = format(fromDate, "MM/dd/yyyy");
     const toDateStr = format(toDate, "MM/dd/yyyy");
@@ -205,7 +273,10 @@ export default function ReportsPage() {
             {t("generateSalesReport", "Reports")}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {t("reports_subtitle", "Export settlement logs, refund records, and transaction activity")}
+            {t(
+              "reports_subtitle",
+              "Export settlement logs, refund records, and transaction activity",
+            )}
           </p>
         </div>
       </div>
@@ -227,7 +298,7 @@ export default function ReportsPage() {
                     handleReset();
                   }}
                   className={cn(
-                    "h-8 px-3.5 flex items-center justify-center text-xs font-semibold transition-all rounded-md cursor-pointer whitespace-nowrap shrink-0",
+                    "h-8 px-3.5 flex items-center justify-center text-xs font-semibold transition-all rounded-md cursor-pointer whitespace-nowrap shrink-0 capitalize",
                     isActive
                       ? "bg-[#2563eb] text-white shadow-xs font-bold"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800",
@@ -244,7 +315,11 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {(fromDate || toDate || txType !== "selected" || status !== "selected" || appliedFilters) && (
+            {(fromDate ||
+              toDate ||
+              txType !== "selected" ||
+              status !== "selected" ||
+              appliedFilters) && (
               <button
                 type="button"
                 onClick={handleReset}
@@ -265,7 +340,10 @@ export default function ReportsPage() {
               {isDownloading && downloadingType === "balance" ? (
                 <Loader2 className="animate-spin w-3.5 h-3.5 text-[#2563eb]" />
               ) : (
-                <Download size={13} className="text-slate-500 dark:text-slate-400" />
+                <Download
+                  size={13}
+                  className="text-slate-500 dark:text-slate-400"
+                />
               )}
               <span>{t("report_balance", "Balance Statement")}</span>
             </button>
@@ -278,14 +356,13 @@ export default function ReportsPage() {
             {/* From Date */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {t("from_date", "From Date")} <span className="text-rose-500">*</span>
+                {t("from_date", "From Date")}{" "}
+                <span className="text-rose-500">*</span>
               </label>
               <GlobalDatePicker
                 value={fromDate}
-                onChange={(d) => {
-                  setFromDate(d);
-                  clearError("fromDate");
-                }}
+                onChange={handleFromDateChange}
+                maxDate={toDate || undefined}
               />
               {errors.fromDate && (
                 <span className="text-[11px] text-rose-500 font-medium">
@@ -297,18 +374,22 @@ export default function ReportsPage() {
             {/* To Date */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {t("to_date", "To Date")} <span className="text-rose-500">*</span>
+                {t("to_date", "To Date")}{" "}
+                <span className="text-rose-500">*</span>
               </label>
               <GlobalDatePicker
                 value={toDate}
-                onChange={(d) => {
-                  setToDate(d);
-                  clearError("toDate");
-                }}
+                onChange={handleToDateChange}
+                minDate={fromDate || undefined}
               />
               {errors.toDate && (
                 <span className="text-[11px] text-rose-500 font-medium">
                   {errors.toDate}
+                </span>
+              )}
+              {dateRangeError && (
+                <span className="text-[11px] text-rose-500 font-medium">
+                  {dateRangeError}
                 </span>
               )}
             </div>
@@ -324,7 +405,8 @@ export default function ReportsPage() {
                   onChange={setTxType}
                   options={[
                     { value: "selected", label: "All types" },
-                    { value: "CASHOUT", label: "Pay by Cash Out" },
+                    { value: "CASHIN", label: "Cash In" },
+                    { value: "CASHOUT", label: "Cash Out" },
                     { value: "PAYTOBANK", label: "Transfer to Bank" },
                     { value: "PAYBILL", label: "Pay Bills" },
                     { value: "SCANTOPAY", label: "Scan to Pay" },
@@ -371,7 +453,8 @@ export default function ReportsPage() {
               className="h-9 px-6 text-xs font-semibold"
               disabled={isFetching || isDownloading}
             >
-              {(isFetching || (isDownloading && downloadingType === activeTab)) && (
+              {(isFetching ||
+                (isDownloading && downloadingType === activeTab)) && (
                 <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
               )}
               {activeTab === "transaction"

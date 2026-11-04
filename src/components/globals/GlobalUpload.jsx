@@ -1,38 +1,77 @@
 
-import { Image as ImageIcon, X, Upload } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { Image as ImageIcon, X, Upload, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
+import { getDocumentContent } from "@/lib/api/endpoints";
 
 export default function GlobalUpload({
   label,
   value,
+  previewUrl,
   onChange,
   disabled = false,
-  accept = 'image/*',
+  accept = "image/*",
   maxSize = 5242880, // 5MB
-  className = '',
-  containerClassName = '',
-  labelClassName = '',
+  className = "",
+  containerClassName = "",
+  labelClassName = "",
+  onFileSelect,
+  isLoading = false,
 }) {
   const [preview, setPreview] = useState(null);
+  const [fetchingDoc, setFetchingDoc] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Set initial preview if value is a string (e.g. URL) or File object
+  // Set initial preview if previewUrl is passed, or value is a data URL / File object, or fetch via getDocumentContent if value is an image ID
   useEffect(() => {
+    if (previewUrl) {
+      setPreview(previewUrl);
+      return;
+    }
+
     if (!value) {
       setPreview(null);
       return;
     }
 
-    if (typeof value === 'string') {
-      setPreview(value);
-    } else if (value instanceof File) {
+    if (value instanceof File) {
       const objectUrl = URL.createObjectURL(value);
       setPreview(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
     }
-  }, [value]);
+
+    if (typeof value === "string") {
+      if (value.startsWith("data:") || value.startsWith("http") || value.startsWith("blob:") || value.startsWith("/")) {
+        setPreview(value);
+      } else {
+        // value is an image ID like IMGIDNUM
+        let isMounted = true;
+        setFetchingDoc(true);
+        getDocumentContent({ imgId: value })
+          .then((res) => {
+            if (isMounted) {
+              const imgData = res?.data || "";
+              if (typeof imgData === "string" && imgData) {
+                setPreview(imgData.startsWith("data:") ? imgData : `data:image/jpeg;base64,${imgData}`);
+              } else {
+                setPreview(null);
+              }
+            }
+          })
+          .catch(() => {
+            if (isMounted) setPreview(null);
+          })
+          .finally(() => {
+            if (isMounted) setFetchingDoc(false);
+          });
+
+        return () => {
+          isMounted = false;
+        };
+      }
+    }
+  }, [value, previewUrl]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -57,9 +96,7 @@ export default function GlobalUpload({
       if (accept.includes('image') && !file.type.startsWith('image/')) {
         return;
       }
-      if (onChange) {
-        onChange(file);
-      }
+      processFile(file);
     }
   };
 
@@ -68,10 +105,23 @@ export default function GlobalUpload({
     if (disabled) return;
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (onChange) {
-        onChange(file);
-      }
+      processFile(file);
     }
+  };
+
+  const processFile = (file) => {
+    if (onFileSelect) {
+      onFileSelect(file);
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      setPreview(base64);
+      if (onChange) {
+        onChange(base64, file);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const onButtonClick = () => {
@@ -84,8 +134,12 @@ export default function GlobalUpload({
   const handleClear = (e) => {
     e.stopPropagation();
     if (disabled) return;
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     if (onChange) {
-      onChange(null);
+      onChange(null, null);
     }
   };
 
@@ -124,7 +178,14 @@ export default function GlobalUpload({
           disabled={disabled}
         />
 
-        {preview ? (
+        {isLoading || fetchingDoc ? (
+          <div className="flex flex-col items-center justify-center text-center p-4">
+            <Loader2 className="animate-spin text-[#2563eb] w-8 h-8 mb-2" />
+            <p className="text-xs font-semibold text-slate-700 dark:text-white/70">
+              Loading Image...
+            </p>
+          </div>
+        ) : preview ? (
           /* Preview State */
           <div className="absolute inset-0 w-full h-full group flex items-center justify-center bg-slate-100 dark:bg-slate-900/50">
             {/* eslint-disable-next-line @next/next/no-img-element */}

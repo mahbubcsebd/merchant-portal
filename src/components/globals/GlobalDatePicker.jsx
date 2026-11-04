@@ -15,8 +15,18 @@ export default function GlobalDatePicker({
   placeholder = "Select Date",
   className,
   disabled = false,
+  disabledDates,
+  minDate,
+  maxDate,
 }) {
   const [open, setOpen] = useState(false);
+
+  const isDateDisabled = (date) => {
+    if (minDate && date < new Date(minDate).setHours(0, 0, 0, 0)) return true;
+    if (maxDate && date > new Date(maxDate).setHours(23, 59, 59, 999)) return true;
+    if (typeof disabledDates === "function") return disabledDates(date);
+    return false;
+  };
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
@@ -43,6 +53,7 @@ export default function GlobalDatePicker({
             }
           }}
           captionLayout="dropdown"
+          disabled={isDateDisabled}
           startMonth={new Date(2000, 0)}
           endMonth={new Date(2035, 11)}
           initialFocus

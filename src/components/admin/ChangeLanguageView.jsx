@@ -31,9 +31,7 @@ export default function ChangeLanguageView() {
     {
       key: "English",
       code: "en",
-      label: "English",
-      nativeLabel: "United States · UK",
-      desc: "Global Merchant Default",
+      label: t("chl_english", t("lang_english", "English")),
       flag: (
         <svg viewBox="0 0 36 24" className="w-8 h-5.5 rounded-sm shadow-xs overflow-hidden shrink-0">
           <rect width="36" height="24" fill="#012169" />
@@ -48,9 +46,7 @@ export default function ChangeLanguageView() {
     {
       key: "Dutch",
       code: "nl",
-      label: "Nederlands",
-      nativeLabel: "Nederland · Suriname",
-      desc: "Dutch Regional Interface",
+      label: t("lang_dutch", "Dutch"),
       flag: (
         <svg viewBox="0 0 36 24" className="w-8 h-5.5 rounded-sm shadow-xs overflow-hidden shrink-0">
           <rect width="36" height="8" fill="#AE1C28" />
@@ -63,9 +59,7 @@ export default function ChangeLanguageView() {
     {
       key: "French",
       code: "fr",
-      label: "Français",
-      nativeLabel: "France · Caraïbes",
-      desc: "Interface en langue française",
+      label: t("chl_franch", t("lang_french", "French")),
       flag: (
         <svg viewBox="0 0 36 24" className="w-8 h-5.5 rounded-sm shadow-xs overflow-hidden shrink-0">
           <rect width="12" height="24" fill="#002654" />
@@ -78,9 +72,7 @@ export default function ChangeLanguageView() {
     {
       key: "Spanish",
       code: "es",
-      label: "Español",
-      nativeLabel: "España · América Latina",
-      desc: "Interfaz en idioma español",
+      label: t("chl_spanish", t("lang_spanish", "Spanish")),
       flag: (
         <svg viewBox="0 0 36 24" className="w-8 h-5.5 rounded-sm shadow-xs overflow-hidden shrink-0">
           <rect width="36" height="6" fill="#AA151B" />
@@ -204,17 +196,11 @@ export default function ChangeLanguageView() {
                 </div>
               </div>
 
-              {/* Middle: Language Label & Region */}
+              {/* Middle: Language Label */}
               <div className="my-1">
                 <h4 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   {item.label}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  {item.nativeLabel}
-                </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 truncate">
-                  {item.desc}
-                </p>
               </div>
 
               {/* Bottom: Selection Pill Status */}

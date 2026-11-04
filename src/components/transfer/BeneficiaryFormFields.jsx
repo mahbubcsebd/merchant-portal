@@ -71,7 +71,7 @@ export default function BeneficiaryFormFields({
       />
 
       <GlobalInput
-        label={t("beneficiary_name", "Beneficiary Name")}
+        label={t("add_ben_firstLast", "First & Last Name")}
         name="display_payeeName"
         value={formData.payeeName}
         onChange={(e) => handleChange("payeeName", e.target.value)}
@@ -80,11 +80,11 @@ export default function BeneficiaryFormFields({
         maxLength={50}
         onInput={enforceAlphanumericSpace}
         error={errors.payeeName}
-        placeholder={t("ph_enter_beneficiary_name", "Enter beneficiary name")}
+        placeholder={t("ph_enter_beneficiary_name", "Enter First & Last Name")}
       />
 
       <GlobalInput
-        label={t("beneficiary_nickname", "Beneficiary Nickname")}
+        label={t("add_ben_nickname", "Beneficiary Nickname")}
         name="display_payeeNickName"
         value={formData.payeeNickName}
         onChange={(e) => handleChange("payeeNickName", e.target.value)}

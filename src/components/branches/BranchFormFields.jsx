@@ -72,8 +72,15 @@ export default function BranchFormFields({
   const [status, setStatus] = useState(
     data?.subStatus != null ? String(data.subStatus).trim() : "A",
   );
-  const [profilePic, setProfilePic] = useState(data?.proImgId || null);
-  const [docPic, setDocPic] = useState(data?.businessIdImg || null);
+  const [profilePic, setProfilePic] = useState(
+    data?.proImgId || data?.PROFIMGID || null,
+  );
+  const [docPic, setDocPic] = useState(
+    data?.businessIdImg || data?.BUSINESSIDIMAGE || null,
+  );
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   return (
     <>
@@ -485,54 +492,69 @@ export default function BranchFormFields({
 
         {/* Profile Image & Doc Image */}
         <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-          <GlobalUpload
-            label={t("sub_proImgId", "Upload Profile Picture")}
-            value={profilePic}
-            onChange={async (fileBase64) => {
-              if (!fileBase64) {
-                setProfilePic(null);
-                return;
-              }
-              try {
-                const res = await uploadDocument({
-                  imgData: fileBase64,
-                  imgType: "proImgId",
-                });
-                if (res?.data?.[0]?.IMGIDNUM) {
-                  setProfilePic(res.data[0].IMGIDNUM);
-                } else {
-                  console.error("Upload failed", res);
+          <div className="flex flex-col gap-1">
+            <GlobalUpload
+              label={t("sub_proImgId", "Branch Profile Logo / Image")}
+              value={profilePic}
+              isLoading={isUploadingProfile}
+              onChange={async (fileBase64) => {
+                if (!fileBase64) {
+                  setProfilePic(null);
+                  return;
                 }
-              } catch (e) {
-                console.error("Upload error", e);
-              }
-            }}
-            disabled={isView}
-          />
-          <GlobalUpload
-            label={t("sub_businessIdImg", "Upload Business ID Picture")}
-            value={docPic}
-            onChange={async (fileBase64) => {
-              if (!fileBase64) {
-                setDocPic(null);
-                return;
-              }
-              try {
-                const res = await uploadDocument({
-                  imgData: fileBase64,
-                  imgType: "businessIdImg",
-                });
-                if (res?.data?.[0]?.IMGIDNUM) {
-                  setDocPic(res.data[0].IMGIDNUM);
-                } else {
-                  console.error("Upload failed", res);
+                setIsUploadingProfile(true);
+                setUploadError("");
+                try {
+                  const res = await uploadDocument({
+                    imgData: fileBase64,
+                    imgType: "proImgId",
+                  });
+                  if (res?.data?.[0]?.IMGIDNUM) {
+                    setProfilePic(res.data[0].IMGIDNUM);
+                  } else {
+                    console.error("Upload failed", res);
+                  }
+                } catch (e) {
+                  console.error("Upload error", e);
+                } finally {
+                  setIsUploadingProfile(false);
                 }
-              } catch (e) {
-                console.error("Upload error", e);
-              }
-            }}
-            disabled={isView}
-          />
+              }}
+              disabled={isView}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <GlobalUpload
+              label={t("sub_businessIdImg", "Branch Business ID Image")}
+              value={docPic}
+              isLoading={isUploadingDoc}
+              onChange={async (fileBase64) => {
+                if (!fileBase64) {
+                  setDocPic(null);
+                  return;
+                }
+                setIsUploadingDoc(true);
+                setUploadError("");
+                try {
+                  const res = await uploadDocument({
+                    imgData: fileBase64,
+                    imgType: "businessIdImg",
+                  });
+                  if (res?.data?.[0]?.IMGIDNUM) {
+                    setDocPic(res.data[0].IMGIDNUM);
+                  } else {
+                    console.error("Upload failed", res);
+                  }
+                } catch (e) {
+                  console.error("Upload error", e);
+                } finally {
+                  setIsUploadingDoc(false);
+                }
+              }}
+              disabled={isView}
+            />
+          </div>
         </div>
       </div>
     </>

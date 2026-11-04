@@ -61,7 +61,7 @@ export default function PayBillDialogContent({ data, onPay, onClose }) {
           <GlobalInput
             name="amount"
             label="Payment Amount"
-            type="number"
+            type="text"
             required
             placeholder="0.00"
             value={amount}
