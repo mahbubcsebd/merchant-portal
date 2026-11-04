@@ -33,10 +33,19 @@ export default function CashierFormFields({
   errors = {},
   clearError = () => {},
 }) {
-  const [mobileDial, setMobileDial] = useState(data?.phCountryCode || "");
+  const initialCountryCode =
+    data?.countryCode ||
+    data?.phCountryCode ||
+    data?.PHCOUNTRYCODE ||
+    "";
+  const [mobileDial, setMobileDial] = useState(initialCountryCode);
   const [openMobileCountryBox, setOpenMobileCountryBox] = useState(false);
-  const [merSubID, setMerSubID] = useState(data?.merSubID || "");
-  const [cashierIDType, setCashierIDType] = useState(data?.cashierIDType || "");
+  const [merSubID, setMerSubID] = useState(
+    data?.merSubID || data?.CORPCUSTSUBID || "",
+  );
+  const [cashierIDType, setCashierIDType] = useState(
+    data?.cashierIDType || data?.BUSINESSIDTYPE || "",
+  );
   const { t } = useLanguage();
 
   const queryClient = useQueryClient();
@@ -56,7 +65,7 @@ export default function CashierFormFields({
           name="merCashierID"
           label={t("cashier_user_id", "Cashier User ID")}
           required
-          defaultValue={data?.merCashierID || ""}
+          defaultValue={data?.merCashierID || data?.loginId || ""}
           disabled={isView}
           isReadOnly={!!data && !isView}
           error={errors.merCashierID}
@@ -69,7 +78,7 @@ export default function CashierFormFields({
           name="cashierFName"
           label={t("ucFirstName", "First Name")}
           required
-          defaultValue={data?.cashierFName || ""}
+          defaultValue={data?.cashierFName || data?.FIRSTNAME || ""}
           disabled={isView}
           error={errors.cashierFName}
           onChange={() => clearError("cashierFName")}
@@ -81,7 +90,7 @@ export default function CashierFormFields({
           name="cashierLName"
           label={t("ucLastName", "Last Name")}
           required
-          defaultValue={data?.cashierLName || ""}
+          defaultValue={data?.cashierLName || data?.LASTNAME || ""}
           disabled={isView}
           error={errors.cashierLName}
           onChange={() => clearError("cashierLName")}
@@ -93,7 +102,7 @@ export default function CashierFormFields({
           name="cashierEmail"
           label={t("bp_email", "Email Address")}
           required
-          defaultValue={data?.cashierEmail || ""}
+          defaultValue={data?.cashierEmail || data?.EMAILADDR || ""}
           disabled={isView}
           error={errors.cashierEmail}
           onChange={() => clearError("cashierEmail")}
@@ -192,11 +201,17 @@ export default function CashierFormFields({
                 type="tel"
                 maxLength={15}
                 placeholder={t("global_mobile_no", "Enter mobile number")}
-                defaultValue={
-                  data?.cashierMobile
-                    ? data.cashierMobile.replace(data.phCountryCode, "")
-                    : ""
-                }
+                defaultValue={(() => {
+                  const rawMobile = data?.cashierMobile || data?.MOBILEPHONE || "";
+                  const code = initialCountryCode.replace("+", "");
+                  if (rawMobile && code && rawMobile.startsWith(code)) {
+                    return rawMobile.slice(code.length);
+                  }
+                  if (rawMobile && code && rawMobile.startsWith(`+${code}`)) {
+                    return rawMobile.slice(code.length + 1);
+                  }
+                  return rawMobile;
+                })()}
                 disabled={isView}
                 onChange={() => clearError("cashierMobile")}
                 onInput={enforceNumeric}
@@ -261,7 +276,7 @@ export default function CashierFormFields({
           name="cashierIDNum"
           label={t("cashier_id_number", "Cashier ID Number")}
           required
-          defaultValue={data?.cashierIDNum || ""}
+          defaultValue={data?.cashierIDNum || data?.BUSSINESSIDNUMB || ""}
           disabled={isView}
           error={errors.cashierIDNum}
           onChange={() => clearError("cashierIDNum")}

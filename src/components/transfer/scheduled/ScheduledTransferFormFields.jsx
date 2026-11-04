@@ -95,11 +95,12 @@ export default function ScheduledTransferFormFields({ data = {}, accounts = [], 
       <GlobalInput
         label={t("teAmount", "Amount")}
         name="display_amount"
+        isAmount
+        placeholder="0.00"
         value={formData.TXNAMOUNT}
         onChange={(e) => handleChange("TXNAMOUNT", e.target.value)}
         required
         maxLength={17}
-        onInput={enforceNumericSpace}
         error={errors.TXNAMOUNT}
       />
 

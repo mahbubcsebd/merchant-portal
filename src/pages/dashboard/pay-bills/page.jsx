@@ -320,11 +320,9 @@ export default function PayBillsPage() {
             placeholder="0.00"
             value={amount}
             error={errors.amount}
-            onInput={enforceNumericSpace}
             required
             onChange={(e) => {
-              const val = e.target.value.replace(/[^0-9.]/g, "");
-              setAmount(val);
+              setAmount(e.target.value);
               clearError("amount");
             }}
             rightElement={

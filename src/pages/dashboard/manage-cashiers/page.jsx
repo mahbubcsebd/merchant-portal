@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Eye, Pencil, Trash2, Lock, Search, Power } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDialog } from "@/components/globals/DialogProvider";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalButton from "@/components/globals/GlobalButton";
+import GlobalPagination from "@/components/globals/GlobalPagination";
 import CashierFormFields from "@/components/cashiers/CashierFormFields";
 import CashierPermissionsList from "@/components/cashiers/CashierPermissionsList";
 import { useCashiers } from "@/hooks/useCashiers";
@@ -24,6 +26,8 @@ const getCashierFormFields = (values, t) => [
 ];
 
 export default function ManageCashiersPage() {
+  const queryClient = useQueryClient();
+  const welcomeData = queryClient.getQueryData(["welcome"]);
   const { openFormDialog, openConfirmDialog, openGlobalPopup, openDetailDialog } = useDialog();
   const {
     cashiersQuery,
@@ -38,25 +42,37 @@ export default function ManageCashiersPage() {
   const { t } = useLanguage();
   const { branches } = useBranches();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const cashiers = (cashiersQuery.data || []).map((c) => ({
-    id: c.cashierIDNum || c.merCashierID,
-    loginId: c.merCashierID,
-    name: `${c.cashierFName || ""} ${c.cashierLName || ""}`.trim(),
-    status: c.cashierStatus === "A" ? "Active" : "Inactive",
-    raw: c,
-  }));
+  const cashiers = useMemo(() => {
+    return (cashiersQuery.data || []).map((c) => ({
+      id: c.cashierIDNum || c.merCashierID,
+      loginId: c.merCashierID,
+      name: `${c.cashierFName || ""} ${c.cashierLName || ""}`.trim(),
+      status: c.cashierStatus === "A" ? "Active" : "Inactive",
+      raw: c,
+    }));
+  }, [cashiersQuery.data]);
 
-  const filteredCashiers = cashiers
-    .filter((c) => {
-      if (!searchTerm) return true;
-      const term = searchTerm.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(term) ||
-        c.loginId.toLowerCase().includes(term)
-      );
-    })
-    .sort((a, b) => a.loginId.localeCompare(b.loginId));
+  const filteredCashiers = useMemo(() => {
+    return cashiers
+      .filter((c) => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(term) ||
+          c.loginId.toLowerCase().includes(term)
+        );
+      })
+      .sort((a, b) => a.loginId.localeCompare(b.loginId));
+  }, [cashiers, searchTerm]);
+
+  // Paginated records
+  const paginatedCashiers = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredCashiers.slice(startIndex, startIndex + pageSize);
+  }, [filteredCashiers, currentPage, pageSize]);
 
   // --- Handlers ---
   const handleAddCashier = (initialData = null) => {
@@ -141,33 +157,48 @@ export default function ManageCashiersPage() {
   };
 
   const handleView = (cashier) => {
-    const mobile = cashier.raw.cashierMobile 
-      ? (cashier.raw.cashierMobile.startsWith(cashier.raw.countryCode) 
-          ? cashier.raw.cashierMobile 
-          : (cashier.raw.countryCode || "") + cashier.raw.cashierMobile)
-      : "N/A";
+    const raw = cashier.raw || {};
+    const countryCode =
+      raw.countryCode || raw.phCountryCode || raw.PHCOUNTRYCODE || "";
+    const rawMobile = raw.cashierMobile || raw.MOBILEPHONE || "";
+    const mobile = rawMobile;
 
-    const branch = branches.find(b => String(b.CORPCUSTSUBID) === String(cashier.raw.merSubID));
-    const branchName = branch ? branch.SUBNAME : cashier.raw.merSubID;
+    const branch = branches.find(
+      (b) =>
+        String(b.CORPCUSTSUBID) === String(raw.merSubID || raw.CORPCUSTSUBID),
+    );
+    const branchName = branch
+      ? branch.SUBNAME
+      : raw.merSubID || raw.CORPCUSTSUBID;
+
+    const idTypeVal = raw.cashierIDType || raw.BUSINESSIDTYPE;
+    const identifyTypeObj = (welcomeData?.metaData?.IDENTIFYTYPE || []).find(
+      (t) => String(t.id) === String(idTypeVal),
+    );
+    const idTypeLabel = identifyTypeObj ? identifyTypeObj.title : idTypeVal;
 
     openDetailDialog({
       title: t("view_cashier_label", "View Cashier"),
       details: [
         {
           label: t("cashier_user_id", "Cashier User ID"),
-          value: cashier.raw.merCashierID || "N/A",
+          value: raw.merCashierID || raw.loginId || "N/A",
         },
         {
           label: t("ucFirstName", "First Name"),
-          value: cashier.raw.cashierFName || "N/A",
+          value: raw.cashierFName || raw.FIRSTNAME || "N/A",
         },
         {
           label: t("ucLastName", "Last Name"),
-          value: cashier.raw.cashierLName || "N/A",
+          value: raw.cashierLName || raw.LASTNAME || "N/A",
         },
         {
           label: t("bp_email", "Email Address"),
-          value: cashier.raw.cashierEmail || "N/A",
+          value: raw.cashierEmail || raw.EMAILADDR || "N/A",
+        },
+        {
+          label: t("crCountry", "Country Code"),
+          value: countryCode ? `+${countryCode.replace("+", "")}` : "N/A",
         },
         {
           label: t("global_mobile_no", "Mobile No."),
@@ -179,11 +210,11 @@ export default function ManageCashiersPage() {
         },
         {
           label: t("cashier_id_type", "Cashier ID Type"),
-          value: cashier.raw.cashierIDType || "N/A",
+          value: idTypeLabel || "N/A",
         },
         {
           label: t("cashier_id_number", "Cashier ID Number"),
-          value: cashier.raw.cashierIDNum || "N/A",
+          value: raw.cashierIDNum || raw.BUSSINESSIDNUMB || "N/A",
         },
       ],
     });
@@ -404,7 +435,10 @@ export default function ManageCashiersPage() {
             leftIcon={<Search size={16} />}
             containerClassName="w-full sm:w-80"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
           />
 
           <GlobalButton
@@ -455,7 +489,7 @@ export default function ManageCashiersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCashiers.map((cashier, idx) => (
+                paginatedCashiers.map((cashier, idx) => (
                   <tr
                     key={`desktop-${cashier.id}-${idx}`}
                     className={`${idx % 2 === 0 ? "bg-white dark:bg-transparent" : "bg-blue-50/50 dark:bg-white/[0.02]"} hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group`}
@@ -543,7 +577,7 @@ export default function ManageCashiersPage() {
               {t("no_cashiers_found", "No cashiers found.")}
             </div>
           ) : (
-            filteredCashiers.map((cashier, idx) => (
+            paginatedCashiers.map((cashier, idx) => (
               <div
                 key={`mobile-${cashier.id}-${idx}`}
                 className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-sm dark:shadow-none"
@@ -620,6 +654,24 @@ export default function ManageCashiersPage() {
             ))
           )}
         </div>
+
+        {/* ── Pagination Controls ── */}
+        {filteredCashiers.length > 0 && (
+          <div className="pt-2 border-t border-slate-100 dark:border-white/5">
+            <GlobalPagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalRecords={filteredCashiers.length}
+              currentCount={paginatedCashiers.length}
+              onPageChange={(page) => setCurrentPage(page)}
+              onPageSizeChange={(newSize) => {
+                setPageSize(newSize);
+                setCurrentPage(1);
+              }}
+              pageSizeOptions={[5, 10, 20, 50]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

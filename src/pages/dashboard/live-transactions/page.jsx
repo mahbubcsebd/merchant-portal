@@ -31,8 +31,13 @@ const STATUS_TABS = [
 const ALL_TRANSACTION_TYPES = [
   { id: "all", label: "All types", translationKey: "all_types" },
   {
+    id: "CASHIN",
+    label: "Cash In",
+    translationKey: "pay_by_cash_out",
+  },
+  {
     id: "CASHOUT",
-    label: "Pay by Cash Out",
+    label: "Cash Out",
     translationKey: "pay_by_cash_out",
   },
   {
@@ -42,7 +47,11 @@ const ALL_TRANSACTION_TYPES = [
   },
   { id: "PAYBILL", label: "Pay Bills", translationKey: "pay_bills" },
   { id: "SCANTOPAY", label: "Scan to Pay", translationKey: "scan_to_pay" },
-  { id: "PAYQRCODE", label: "Pay by QR Code", translationKey: "pay_by_qr_code" },
+  {
+    id: "PAYQRCODE",
+    label: "Pay by QR Code",
+    translationKey: "pay_by_qr_code",
+  },
   { id: "PAYTOEMAIL", label: "Pay by Email", translationKey: "pay_by_email" },
   { id: "PAYTOPHONE", label: "Pay to Mobile", translationKey: "pay_to_mobile" },
   { id: "TOPUP", label: "Mobile Recharge", translationKey: "mobile_recharge" },
