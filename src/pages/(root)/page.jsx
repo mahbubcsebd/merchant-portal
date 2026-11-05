@@ -102,8 +102,8 @@ export default function Home() {
                   value: "50K+",
                   label: t("active_cashiers_title", "Merchants"),
                 },
-                { value: "99.9%", label: "Uptime" },
-                { value: "$2B+", label: "Processed" },
+                { value: "99.9%", label: t("uptime", "Uptime") },
+                { value: "$2B+", label: t("processed", "Processed") },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-white">
@@ -119,7 +119,8 @@ export default function Home() {
 
           {/* Copyright */}
           <p className="relative z-10 text-xs text-slate-400 font-medium">
-            © {new Date().getFullYear()} mPay Network. All rights reserved.
+            © {new Date().getFullYear()} mPay Network.{" "}
+            {t("all_rights_reserved", "All rights reserved.")}
           </p>
         </div>
 
@@ -168,6 +169,7 @@ export default function Home() {
               )}{" "}
               <Link
                 to="/terms-and-conditions"
+                state={{ from: "/" }}
                 className="text-[#2563eb] dark:text-blue-400 font-semibold hover:underline"
               >
                 {t(

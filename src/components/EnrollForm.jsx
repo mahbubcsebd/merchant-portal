@@ -19,7 +19,7 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import {
   registerMerchant,
   verifyMerchantOTP,
-  resendOTP,
+  resendMerchantOTP,
   welcomeApi,
 } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
@@ -37,15 +37,23 @@ import {
   enforceNumeric,
 } from "@/lib/utils/inputFormatters";
 
+const DRAFT_KEY = "enroll_form_draft";
+// Set only when the user opens Terms and Conditions, so the draft is restored
+// on return and discarded in every other case (e.g. coming back from Login).
+const RESTORE_DRAFT_KEY = "enroll_restore_draft";
+const STORE_NAME_MIN_LENGTH = 5;
+const PHONE_MIN_LENGTH = 7;
+const PHONE_MAX_LENGTH = 11;
+
 const getFormSchema = (t) =>
   z.object({
     storeName: z
       .string()
       .min(1, { message: t("store_name_required", "Store Name is required.") })
-      .min(2, {
+      .min(STORE_NAME_MIN_LENGTH, {
         message: t(
           "store_name_min_error",
-          "Store Name must be at least 2 characters.",
+          `Store Name length should be at least ${STORE_NAME_MIN_LENGTH} characters`,
         ),
       })
       .max(50, {
@@ -82,19 +90,22 @@ const getFormSchema = (t) =>
       .min(1, {
         message: t("phone_required", "Business Phone Number is required."),
       })
-      .min(7, {
+      .min(PHONE_MIN_LENGTH, {
         message: t(
-          "phone_min_error",
-          "Business Phone Number length should be at least 7 characters.",
+          "merchant_phone_min_error",
+          `Business Phone Number must be at least ${PHONE_MIN_LENGTH} digits.`,
         ),
       })
-      .max(12, {
-        message: t("phone_max_error", "Phone number cannot exceed 12 digits."),
+      .max(PHONE_MAX_LENGTH, {
+        message: t(
+          "merchant_phone_max_error",
+          `Business Phone Number cannot exceed ${PHONE_MAX_LENGTH} digits.`,
+        ),
       })
       .regex(/^[0-9]+$/, {
         message: t(
-          "phone_numeric_error",
-          "Phone number must contain digits only.",
+          "merchant_phone_numeric_error",
+          "Business Phone Number must contain digits only.",
         ),
       }),
     terms_and_conditions_checkbox: z.boolean().refine((v) => v === true, {
@@ -156,8 +167,12 @@ export function EnrollForm() {
 
   const defaultValues = useMemo(() => {
     try {
-      const saved = sessionStorage.getItem("enroll_form_draft");
-      if (saved) return JSON.parse(saved);
+      if (sessionStorage.getItem(RESTORE_DRAFT_KEY)) {
+        const saved = sessionStorage.getItem(DRAFT_KEY);
+        if (saved) return JSON.parse(saved);
+      } else {
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
     } catch (e) {}
     return {
       storeName: "",
@@ -170,6 +185,12 @@ export function EnrollForm() {
     };
   }, []);
 
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(RESTORE_DRAFT_KEY);
+    } catch (e) {}
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -179,20 +200,30 @@ export function EnrollForm() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
+    mode: "onTouched",
     defaultValues,
   });
 
   // Persist form values so SPA navigation to /terms-and-conditions doesn't lose inputs
   useEffect(() => {
     const subscription = watch((values) => {
+      setApiError("");
       try {
-        sessionStorage.setItem("enroll_form_draft", JSON.stringify(values));
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(values));
       } catch (e) {}
     });
     return () => subscription.unsubscribe();
   }, [watch]);
 
   const formValues = watch();
+
+  // Leaving a step must not carry its error/notice into the next one
+  function goToStep(nextStep) {
+    setApiError("");
+    setResendSuccessMsg("");
+    setOtpCode("");
+    setStep(nextStep);
+  }
 
   // Step 1 Form Submission → Move to Step 2 (Confirm Details)
   function onFormSubmit() {
@@ -225,7 +256,7 @@ export function EnrollForm() {
       const res = await registerMerchant(payload);
 
       if (res?.status === "success" || res?.statusCode === 0) {
-        setStep("otp");
+        goToStep("otp");
       } else {
         setApiError(
           res?.message ||
@@ -248,22 +279,17 @@ export function EnrollForm() {
     }
   }
 
-  // Resend OTP → Trigger /walletmc/resendOTP API
+  // Resend OTP → Trigger /walletmc/resendMerchantOTP API
   async function handleResendOTP() {
     setIsSubmitting(true);
     setApiError("");
     setResendSuccessMsg("");
     try {
-      const values = getValues();
-      const payload = {
-        custType: "C",
-        emailID: values.emailID,
-        phoneNumber: `${values.countryCode}${values.phoneNumber}`,
-      };
-
-      const res = await resendOTP(payload);
+      // Old app sends empty body; backend resolves registration from session.
+      const res = await resendMerchantOTP({ custType: "C" });
 
       if (res?.status === "success" || res?.statusCode === 0) {
+        setOtpCode("");
         setResendSuccessMsg(
           res?.message ||
             t("otp_resent_success", "The OTP has been successfully resent."),
@@ -314,7 +340,7 @@ export function EnrollForm() {
       if (res?.status === "success" || res?.statusCode === 0) {
         // Clear stored draft upon success
         try {
-          sessionStorage.removeItem("enroll_form_draft");
+          sessionStorage.removeItem(DRAFT_KEY);
         } catch (e) {}
 
         setSuccessMessage(
@@ -552,7 +578,7 @@ export function EnrollForm() {
                     id="phone"
                     type="tel"
                     placeholder="XXXXXXXXXX"
-                    maxLength={12}
+                    maxLength={PHONE_MAX_LENGTH}
                     onInput={enforceNumeric}
                     className="w-full h-full bg-transparent border-none outline-none pl-9 pr-3 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     aria-invalid={!!errors.phoneNumber}
@@ -596,12 +622,15 @@ export function EnrollForm() {
                   {t("accept", "Accept")}{" "}
                   <Link
                     to="/terms-and-conditions"
+                    state={{ from: "/enroll" }}
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(RESTORE_DRAFT_KEY, "1");
+                      } catch (e) {}
+                    }}
                     className="font-medium text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer inline"
                   >
-                    {t(
-                      "term_cond",
-                      t("terms_and_conditions", "Terms and Conditions"),
-                    )}
+                    {t("term_cond", "Terms and Conditions")}
                   </Link>{" "}
                   <span className="text-[#e65625]">*</span>
                 </span>
@@ -696,7 +725,7 @@ export function EnrollForm() {
 
           {/* Sign In Link */}
           <p className="mt-7 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
-            {t("already_have_account", "Already have an account?")}{" "}
+            {t("account_already", "Already have an account?")}{" "}
             <Link
               to="/"
               className="font-bold text-[#2563eb] dark:text-blue-400 hover:underline uppercase"
@@ -766,11 +795,11 @@ export function EnrollForm() {
             <GlobalButton
               type="button"
               variant="outline"
-              onClick={() => setStep("form")}
+              onClick={() => goToStep("form")}
               disabled={isSubmitting}
               className="flex-1 uppercase font-bold"
             >
-              {t("buttonCancel", t("back", "BACK"))}
+              {t("buttonBack", "BACK")}
             </GlobalButton>
             <GlobalButton
               type="button"
@@ -804,7 +833,10 @@ export function EnrollForm() {
             <InputOTP
               maxLength={6}
               value={otpCode}
-              onChange={(val) => setOtpCode(val)}
+              onChange={(val) => {
+                setApiError("");
+                setOtpCode(val);
+              }}
               containerClassName="justify-center"
             >
               <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -834,7 +866,7 @@ export function EnrollForm() {
             <GlobalButton
               type="button"
               variant="outline"
-              onClick={() => setStep("confirm")}
+              onClick={() => goToStep("confirm")}
               className="flex-1 max-w-[160px] uppercase font-bold"
             >
               {t("buttonCancel", "CANCEL")}
@@ -865,7 +897,7 @@ export function EnrollForm() {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-            {t("registration_successful", "Registration Successful")}
+            {t("registeration_successful", "Registration Successful")}
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[340px] leading-relaxed mb-8">

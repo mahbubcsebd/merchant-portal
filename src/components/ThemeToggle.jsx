@@ -2,9 +2,11 @@
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const { t } = useLanguage()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
@@ -29,7 +31,7 @@ export function ThemeToggle() {
         focus-visible:ring-2 focus-visible:ring-[#2563eb]/30 focus-visible:border-[#2563eb]/40
         transition-all duration-200 shrink-0
       "
-      aria-label="Toggle theme"
+      aria-label={t("toggle_theme", "Toggle theme")}
     >
       {isDark ? (
         <Sun size={16} className="text-slate-400 group-hover:text-[#2563eb] transition-colors duration-200" />

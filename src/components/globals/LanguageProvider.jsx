@@ -1,27 +1,64 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getLangPack } from '@/lib/api/endpoints';
-import { globalDefaultParams } from '@/lib/api/api';
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getLangPack } from "@/lib/api/endpoints";
+import { globalDefaultParams } from "@/lib/api/api";
+import { LOCAL_TRANSLATIONS } from "@/lib/localTranslations";
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'nl', label: 'Dutch', flag: '🇳🇱' },
-  { code: 'fr', label: 'French', flag: '🇫🇷' },
-  { code: 'es', label: 'Spanish', flag: '🇪🇸' },
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "nl", label: "Dutch", flag: "🇳🇱" },
+  { code: "fr", label: "French", flag: "🇫🇷" },
+  { code: "es", label: "Spanish", flag: "🇪🇸" },
 ];
 
 const FLAG_MAP = {
-  en: '🇺🇸',
-  nl: '🇳🇱',
-  fr: '🇫🇷',
-  es: '🇪🇸',
-  de: '🇩🇪',
-  it: '🇮🇹',
-  pt: '🇵🇹',
-  zh: '🇨🇳',
-  ja: '🇯🇵',
-  ar: '🇸🇦',
-  hi: '🇮🇳',
+  en: "🇺🇸",
+  nl: "🇳🇱",
+  fr: "🇫🇷",
+  es: "🇪🇸",
+  de: "🇩🇪",
+  it: "🇮🇹",
+  pt: "🇵🇹",
+  zh: "🇨🇳",
+  ja: "🇯🇵",
+  ar: "🇸🇦",
+  hi: "🇮🇳",
+};
+
+// Merchant portal uses Email Address and PIN rather than User ID and Password
+const MERCHANT_LABEL_OVERRIDES = {
+  en: {
+    authenticateSubTitle: "Enter your Email Address and PIN to Sign In",
+    usernameRequired: "Email Address is required.",
+    crPassword: "Enter PIN",
+    authenticatePassword: "PIN",
+    authenticateUserID: "Email Address",
+    passwordRequired: "PIN is required.",
+  },
+  nl: {
+    authenticateSubTitle: "Voer uw e-mailadres en pincode in om u aan te melden",
+    usernameRequired: "E-mailadres is verplicht.",
+    crPassword: "Voer pincode in",
+    authenticatePassword: "PIN",
+    authenticateUserID: "E-mailadres",
+    passwordRequired: "Pincode is vereist.",
+  },
+  fr: {
+    authenticateSubTitle: "Entrez votre adresse e-mail et votre code PIN pour vous connecter",
+    usernameRequired: "L'adresse e-mail est obligatoire.",
+    crPassword: "Entrez le code PIN",
+    authenticatePassword: "PIN",
+    authenticateUserID: "Adresse e-mail",
+    passwordRequired: "Le code PIN est requis.",
+  },
+  es: {
+    authenticateSubTitle: "Ingrese su dirección de correo electrónico y PIN para iniciar sesión",
+    usernameRequired: "Se requiere la dirección de correo electrónico",
+    crPassword: "Introducir PIN",
+    authenticatePassword: "PIN",
+    authenticateUserID: "Dirección de correo electrónico",
+    passwordRequired: "El PIN es obligatorio.",
+  },
 };
 
 export const getDynamicSupportedLanguages = (welcomeData) => {
@@ -32,7 +69,7 @@ export const getDynamicSupportedLanguages = (welcomeData) => {
       return {
         code,
         label: item.title,
-        flag: FLAG_MAP[code] || '🌐',
+        flag: FLAG_MAP[code] || "🌐",
       };
     });
   }
@@ -44,21 +81,21 @@ const LanguageContext = createContext(null);
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 }
 
 export function LanguageProvider({ children }) {
   const queryClient = useQueryClient();
-  const welcomeData = queryClient.getQueryData(['welcome']);
+  const welcomeData = queryClient.getQueryData(["welcome"]);
 
   const supportedLanguages = useMemo(() => {
     return getDynamicSupportedLanguages(welcomeData);
   }, [welcomeData]);
 
   const [lang, setLangState] = useState(() => {
-    return localStorage.getItem('app_language') || 'en';
+    return localStorage.getItem("app_language") || "en";
   });
 
   useEffect(() => {
@@ -76,9 +113,9 @@ export function LanguageProvider({ children }) {
   });
 
   const { data: langPackResponse, isLoading: isLangLoading } = useQuery({
-    queryKey: ['langPack', lang],
+    queryKey: ["langPack", lang],
     queryFn: () => getLangPack({ langID: lang, langId: lang }),
-    staleTime: 0, 
+    staleTime: 0,
     refetchOnWindowFocus: false,
   });
 
@@ -127,12 +164,25 @@ export function LanguageProvider({ children }) {
   };
 
   const t = (key, fallback) => {
+    const langKey = lang ? String(lang).toLowerCase() : "en";
+    const overrides = MERCHANT_LABEL_OVERRIDES[langKey] || MERCHANT_LABEL_OVERRIDES["en"];
+    if (overrides && overrides[key] !== undefined) {
+      return cleanAsterisks(overrides[key]);
+    }
+
+    // Local translations apply to non-English only, so English keeps each
+    // call site's own fallback wording.
+    const localValue =
+      langKey === "en" ? undefined : LOCAL_TRANSLATIONS[langKey]?.[key];
+
     const raw =
       translationMap[key] !== undefined
         ? translationMap[key]
-        : fallback !== undefined
-          ? fallback
-          : key;
+        : localValue !== undefined
+          ? localValue
+          : fallback !== undefined
+            ? fallback
+            : key;
     return cleanAsterisks(raw);
   };
 

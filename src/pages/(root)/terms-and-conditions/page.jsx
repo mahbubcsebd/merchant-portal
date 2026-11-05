@@ -1,5 +1,5 @@
 import { useLanguage } from "@/components/globals/LanguageProvider";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, X } from "lucide-react";
 import GlobalButton from "@/components/globals/GlobalButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -8,6 +8,9 @@ import { TERMS_AND_CONDITIONS } from "@/lib/constants/termsContent";
 export default function TermsAndConditionsPage() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Return to the page the user came from (login "/" by default).
+  const returnTo = location.state?.from === "/enroll" ? "/enroll" : "/";
 
   const langKey = language ? language.toLowerCase() : "en";
   const content = TERMS_AND_CONDITIONS[langKey] || TERMS_AND_CONDITIONS.en;
@@ -162,16 +165,13 @@ export default function TermsAndConditionsPage() {
             {content.closeBtn || t("buttonsClose", "CLOSE")}
           </GlobalButton>
 
-          <Link to="/enroll" className="w-full sm:w-auto">
+          <Link to={returnTo} className="w-full sm:w-auto">
             <GlobalButton
               type="button"
               variant="outline"
               className="w-full sm:w-auto h-11 px-6 text-xs font-bold uppercase rounded-xl"
             >
-              {t(
-                "buttonContinue",
-                t("continue_registration", "Continue to Registration"),
-              )}
+              {t("buttonContinue", "Continue")}
             </GlobalButton>
           </Link>
         </div>

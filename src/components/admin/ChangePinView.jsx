@@ -13,7 +13,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 
-export default function ChangePinView() {
+export default function ChangePinView({ onSuccess }) {
   const { t } = useLanguage();
   const { openConfirmDialog, openSuccessDialog } = useDialog();
 
@@ -49,6 +49,7 @@ export default function ChangePinView() {
           newPin: "",
           confirmPin: "",
         });
+        if (onSuccess) onSuccess();
       } else {
         openConfirmDialog({
           title: t("error", "Error"),
@@ -85,6 +86,11 @@ export default function ChangePinView() {
       newErrors.newPin = t("err_new_pin_required", "New PIN is required");
     } else if (formData.newPin.length < 6) {
       newErrors.newPin = t("err_new_pin_digits", "New PIN must be 6 digits");
+    } else if (formData.newPin === formData.oldPin) {
+      newErrors.newPin = t(
+        "err_new_pin_same_as_old",
+        "New PIN cannot be the same as the old PIN",
+      );
     }
 
     if (!formData.confirmPin) {

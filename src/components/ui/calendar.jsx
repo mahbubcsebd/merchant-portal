@@ -132,10 +132,10 @@ function Calendar({
               value={value}
               onChange={onChange}
               className={cn(
-                "h-7 rounded-md border-0 bg-transparent px-2 py-0.5 text-xs font-semibold",
+                "h-8 rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-[#0d1117] pl-2 pr-1 py-0.5 text-xs font-semibold",
                 "text-slate-900 dark:text-white",
-                "focus:outline-none focus:ring-1 focus:ring-[#2563eb]",
-                "cursor-pointer appearance-none",
+                "hover:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]",
+                "cursor-pointer",
                 "[&>option]:bg-white [&>option]:dark:bg-[#0d1117] [&>option]:text-slate-900 [&>option]:dark:text-white",
                 className
               )}

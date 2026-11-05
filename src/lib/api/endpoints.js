@@ -209,7 +209,12 @@ export async function verifyMerchantOTP(payload = {}) {
   return post("/verifyMerchantOTP", payload);
 }
 
-// Resend OTP
+// Resend Merchant OTP (Enroll flow, session-based; old app: resendMerchantOTP)
+export async function resendMerchantOTP(payload = {}) {
+  return post("/resendMerchantOTP", payload);
+}
+
+// Resend OTP (Login flow)
 export async function resendOTP(payload = {}) {
   return post("/resendOTP", payload);
 }
