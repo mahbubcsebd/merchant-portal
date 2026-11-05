@@ -101,7 +101,8 @@ export default function EnrollPage() {
 
           {/* Copyright */}
           <p className="relative z-10 text-xs text-slate-400 font-medium">
-            © {new Date().getFullYear()} mPay Network. All rights reserved.
+            © {new Date().getFullYear()} mPay Network.{" "}
+            {t("all_rights_reserved", "All rights reserved.")}
           </p>
         </div>
 

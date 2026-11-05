@@ -294,7 +294,7 @@ export function LoginForm() {
         <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-[#0f1829] border border-slate-200 dark:border-white/5 shadow-2xl rounded-2xl overflow-hidden">
           <DialogHeader className="flex flex-col items-center">
             <DialogTitle className="text-xl font-bold text-[#2563eb] dark:text-blue-400 mb-2">
-              {t('otp_confirm_title', 'Confirmation OTP')}
+              {t('otp.confirmation', 'Confirmation OTP')}
             </DialogTitle>
             <DialogDescription className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-[300px] leading-relaxed">
               {t(
