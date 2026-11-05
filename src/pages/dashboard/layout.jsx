@@ -1,5 +1,5 @@
 import { DashboardLayout as DashboardLayoutComponent } from "@/components/dashboard/DashboardLayout";
-import { Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Outlet, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
@@ -21,6 +21,7 @@ const FORCE_CHANGE_PIN_FLAG = 1;
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const { openConfirmDialog } = useDialog();
@@ -32,9 +33,46 @@ export default function DashboardLayout() {
     typeof window !== "undefined" &&
     localStorage.getItem("is_authenticated") === "true";
 
+  const [isSoftLogin, setIsSoftLogin] = useState(() => {
+    return (
+      typeof window !== "undefined" &&
+      localStorage.getItem("is_soft_login") === "true"
+    );
+  });
+
   if (!isAuthenticatedFlag) {
     return <Navigate to="/" replace />;
   }
+
+  const storedIsGroup =
+    typeof window !== "undefined" &&
+    localStorage.getItem("is_merchant_group") === "true";
+
+  const {
+    data: profileResponse,
+    isLoading: isLoadingProfile,
+    isError: isProfileError,
+  } = useQuery({
+    queryKey: ["userProfile", storedIsGroup, isSoftLogin],
+    queryFn: async () => {
+      // In Merchant Group Admin mode, getUserProfile is the authoritative endpoint
+      if (storedIsGroup && !isSoftLogin) {
+        return getUserProfile();
+      }
+      try {
+        const res = await getUserProfile();
+        if (res?.status === "success" || res?.statusCode === 0) {
+          return res;
+        }
+      } catch (err) {
+        console.warn("getUserProfile failed, trying loadUserProfile fallback:", err);
+      }
+      return loadUserProfile();
+    },
+    enabled: Boolean(isAuthenticatedFlag),
+    retry: false,
+    staleTime: 30 * 1000,
+  });
 
   const {
     data: sessionResponse,
@@ -46,27 +84,43 @@ export default function DashboardLayout() {
     staleTime: 60 * 1000, // 1 minute
     retry: false,
     refetchOnWindowFocus: false,
+    enabled: Boolean(isAuthenticatedFlag),
   });
 
   const isSessionValid =
-    sessionResponse?.status === "success" || sessionResponse?.statusCode === 0;
+    (profileResponse?.status === "success" || profileResponse?.statusCode === 0) ||
+    (!sessionResponse || sessionResponse?.status === "success" || sessionResponse?.statusCode === 0);
 
   useSessionManager(isAuthenticatedFlag && isSessionValid);
 
   useEffect(() => {
+    const isProfileExpired =
+      profileResponse &&
+      (profileResponse.status === "error" || String(profileResponse.statusCode) === "110");
+    const isSessionExpired =
+      sessionResponse &&
+      (sessionResponse.status === "error" || String(sessionResponse.statusCode) === "110");
+
     if (
       !isLoadingSession &&
-      (isSessionError || !isSessionValid) &&
+      !isLoadingProfile &&
+      (isProfileExpired || (isSessionExpired && !profileResponse?.data)) &&
       !sessionExpiredShown
     ) {
       setSessionExpiredShown(true);
       localStorage.removeItem("is_authenticated");
       localStorage.removeItem("session_active_id");
+      localStorage.removeItem("is_merchant_group");
+      localStorage.removeItem("is_soft_login");
       openConfirmDialog({
         title: t("session_expired", "Session Expired"),
         description:
+          profileResponse?.message ||
           sessionResponse?.message ||
-          t("session_expired_desc", "Your session has expired or is invalid. Please sign in again to continue."),
+          t(
+            "session_expired_desc",
+            "Your session has expired or is invalid. Please sign in again to continue.",
+          ),
         confirmText: t("authenticateSignIn", "Sign In"),
         iconType: "danger",
         hideCancel: true,
@@ -80,44 +134,67 @@ export default function DashboardLayout() {
     }
   }, [
     isLoadingSession,
-    isSessionError,
-    isSessionValid,
-    sessionExpiredShown,
+    isLoadingProfile,
+    profileResponse,
     sessionResponse,
+    sessionExpiredShown,
     openConfirmDialog,
     navigate,
     t,
   ]);
 
-  const {
-    data: profileResponse,
-    isLoading: isLoadingProfile,
-    isError: isProfileError,
-  } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: () => loadUserProfile(),
-    enabled: isSessionValid,
-    retry: false,
-  });
+  const isMerchantGroup = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("is_merchant_group") === "true" ||
+      Boolean(profileResponse?.data?.merchantGroupInfo) ||
+      Boolean(profileResponse?.isMerchantGroup) ||
+      Boolean(profileResponse?.data?.isMerchantGroup)
+    );
+  }, [profileResponse]);
 
-  // Temporary PIN (e.g. after Forgot PIN) => backend sets forceChangePassword=1
-  const { data: userProfileResponse, isLoading: isLoadingForceFlag } = useQuery({
-    queryKey: ["userProfileForceFlag"],
-    queryFn: () => getUserProfile(),
-    enabled: isSessionValid,
-    retry: false,
-    staleTime: 0,
-  });
+  // Keep localStorage aligned if profile indicates merchantGroupInfo
+  useEffect(() => {
+    if (
+      profileResponse?.data?.merchantGroupInfo ||
+      profileResponse?.isMerchantGroup ||
+      profileResponse?.data?.isMerchantGroup
+    ) {
+      localStorage.setItem("is_merchant_group", "true");
+    }
+  }, [profileResponse]);
 
   const { data: accountsResponse, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
-    enabled: isSessionValid,
+    enabled: Boolean(isAuthenticatedFlag),
     retry: false,
   });
 
-  const profile = profileResponse?.data || null;
+  const profile = useMemo(() => {
+    if (isMerchantGroup && !isSoftLogin) {
+      return (
+        profileResponse?.data?.merchantGroupInfo ||
+        profileResponse?.data ||
+        profileResponse?.records ||
+        null
+      );
+    }
+    return (
+      profileResponse?.data ||
+      profileResponse?.records ||
+      null
+    );
+  }, [isMerchantGroup, isSoftLogin, profileResponse]);
+
   const accounts = accountsResponse?.data || [];
+
+  const merchantGroupAccounts = useMemo(() => {
+    if (!accounts || accounts.length === 0) return [];
+    return accounts
+      .map((a) => a.ACCOUNTNUMBER || a.ACCOUNTNO)
+      .filter(Boolean);
+  }, [accounts]);
 
   const defaultAccountId = useMemo(() => {
     if (!accounts || accounts.length === 0) return null;
@@ -129,15 +206,37 @@ export default function DashboardLayout() {
   const activeAccountId = currency || defaultAccountId;
 
   useEffect(() => {
-    if (defaultAccountId && (!currency || !accounts.some((a) => (a.ACCOUNTNUMBER || a.ACCOUNTNO) === currency))) {
+    if (
+      defaultAccountId &&
+      (!currency ||
+        !accounts.some(
+          (a) => (a.ACCOUNTNUMBER || a.ACCOUNTNO) === currency,
+        ))
+    ) {
       setCurrency(defaultAccountId);
     }
   }, [defaultAccountId, currency, accounts]);
 
+  // In aggregated Merchant Group mode, accountId is an array of all accounts
+  const effectiveDashboardAccountId = useMemo(() => {
+    if (isMerchantGroup && !isSoftLogin && merchantGroupAccounts.length > 0) {
+      return merchantGroupAccounts;
+    }
+    return activeAccountId;
+  }, [isMerchantGroup, isSoftLogin, merchantGroupAccounts, activeAccountId]);
+
+  const isDashboardAccountReady = useMemo(() => {
+    if (Array.isArray(effectiveDashboardAccountId)) {
+      return effectiveDashboardAccountId.length > 0;
+    }
+    return Boolean(effectiveDashboardAccountId);
+  }, [effectiveDashboardAccountId]);
+
   const { data: dashboardInfoResponse } = useQuery({
-    queryKey: ["dashboardInfo", activeAccountId, period],
-    queryFn: () => getDashboardInfo({ period, accountId: activeAccountId }),
-    enabled: isSessionValid && !!activeAccountId,
+    queryKey: ["dashboardInfo", effectiveDashboardAccountId, period],
+    queryFn: () =>
+      getDashboardInfo({ period, accountId: effectiveDashboardAccountId }),
+    enabled: isSessionValid && isDashboardAccountReady,
   });
 
   const { data: notificationsResponse } = useQuery({
@@ -148,21 +247,50 @@ export default function DashboardLayout() {
   });
 
   const { data: transactionsResponse } = useQuery({
-    queryKey: ["transactions", activeAccountId],
+    queryKey: ["transactions", effectiveDashboardAccountId],
     queryFn: () =>
       transactionHistory({
         pageSize: 200,
         pageNum: 1,
-        accountId: activeAccountId,
+        accountId: effectiveDashboardAccountId,
       }),
-    enabled: isSessionValid && !!activeAccountId,
+    enabled: isSessionValid && isDashboardAccountReady,
   });
 
-  if (
-    isLoadingSession ||
-    (isSessionValid &&
-      (isLoadingProfile || isLoadingAccounts || isLoadingForceFlag))
-  ) {
+  // Role-Based URL Guards
+  useEffect(() => {
+    const currentPath = location.pathname;
+
+    if (isMerchantGroup && !isSoftLogin) {
+      const groupBlockedPaths = [
+        "/dashboard/manage-cashiers",
+        "/dashboard/branches",
+        "/dashboard/reports",
+        "/dashboard/admin",
+        "/dashboard/merchant-operations",
+        "/dashboard/pay-bills",
+        "/dashboard/transfer",
+      ];
+      if (groupBlockedPaths.some((p) => currentPath.startsWith(p))) {
+        navigate("/dashboard", { replace: true });
+      }
+    } else if (isSoftLogin) {
+      const softLoginBlockedPaths = [
+        "/dashboard/merchant-group",
+        "/dashboard/pay-bills",
+        "/dashboard/transfer",
+      ];
+      if (softLoginBlockedPaths.some((p) => currentPath.startsWith(p))) {
+        navigate("/dashboard", { replace: true });
+      }
+    } else if (!isMerchantGroup) {
+      if (currentPath.startsWith("/dashboard/merchant-group")) {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [location.pathname, isMerchantGroup, isSoftLogin, navigate]);
+
+  if (isLoadingProfile) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-[#0f1829]">
         <div className="flex flex-col items-center">
@@ -175,18 +303,13 @@ export default function DashboardLayout() {
     );
   }
 
-  if (
-    isSessionError ||
-    !isSessionValid ||
-    isProfileError ||
-    (!isLoadingProfile && !profile)
-  ) {
+  if (!isLoadingProfile && !profile) {
     return <Navigate to="/" replace />;
   }
 
   const isForceChangePin =
     Number(
-      userProfileResponse?.data?.forceChangePassword ??
+      profileResponse?.data?.forceChangePassword ??
         profile?.forceChangePassword,
     ) === FORCE_CHANGE_PIN_FLAG;
 
@@ -206,7 +329,7 @@ export default function DashboardLayout() {
           <ChangePinView
             onSuccess={() =>
               queryClient.invalidateQueries({
-                queryKey: ["userProfileForceFlag"],
+                queryKey: ["userProfile"],
               })
             }
           />
@@ -223,6 +346,7 @@ export default function DashboardLayout() {
     <DashboardContext.Provider
       value={{
         profile,
+        rawProfile: profileResponse?.data,
         accounts,
         dashboardInfo,
         notifications,
@@ -231,6 +355,10 @@ export default function DashboardLayout() {
         setPeriod,
         currency,
         setCurrency,
+        isMerchantGroup,
+        isSoftLogin,
+        setIsSoftLogin,
+        merchantGroupAccounts,
       }}
     >
       <DashboardLayoutComponent>

@@ -12,14 +12,19 @@ import {
   ImageIcon,
   Landmark,
   CheckCheck,
+  ArrowLeft,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useProfileImage } from "@/hooks/useProfileImage";
 // remove old from '@/pages/dashboard/context';
-import { useQuery } from "@tanstack/react-query";
-import { getPortalNotifications } from "@/lib/api/endpoints";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getPortalNotifications,
+  logoutMerchantForGroup,
+} from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { cn } from "@/lib/utils";
@@ -91,13 +96,63 @@ const notificationMeta = {
 
 export function Header({ title = "Dashboard", setIsMobileOpen }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { profile } = useDashboardContext();
+  const { profile, isSoftLogin, setIsSoftLogin } = useDashboardContext();
   const { data: profileImage } = useProfileImage(profile);
   const { openConfirmDialog } = useDialog();
+  const [isBackingToPortal, setIsBackingToPortal] = useState(false);
 
-  const userName = profile?.custName || profile?.FIRSTNAME || "Merchant";
+  const handleBackToPortal = async () => {
+    setIsBackingToPortal(true);
+    try {
+      const res = await logoutMerchantForGroup({});
+      if (res?.status === "success" || res?.statusCode === 0) {
+        localStorage.removeItem("is_soft_login");
+        if (setIsSoftLogin) {
+          setIsSoftLogin(false);
+        }
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+          queryClient.invalidateQueries({ queryKey: ["userProfileForceFlag"] }),
+          queryClient.invalidateQueries({ queryKey: ["accounts"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboardInfo"] }),
+          queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+        ]);
+        navigate("/dashboard");
+      } else {
+        openConfirmDialog({
+          title: t("error_title", "Error"),
+          description:
+            res?.message ||
+            t("failed_back_to_portal", "Failed to return to group portal."),
+          iconType: "danger",
+          hideCancel: true,
+        });
+      }
+    } catch (err) {
+      openConfirmDialog({
+        title: t("error_title", "Error"),
+        description:
+          err?.message ||
+          t("failed_back_to_portal", "Failed to return to group portal."),
+        iconType: "danger",
+        hideCancel: true,
+      });
+    } finally {
+      setIsBackingToPortal(false);
+    }
+  };
+
+  const userName =
+    profile?.groupName ||
+    profile?.custName ||
+    profile?.FIRSTNAME ||
+    profile?.storeName ||
+    "Merchant";
+
   const userInitials = userName.substring(0, 2).toUpperCase();
 
   useEffect(() => setMounted(true), []);
@@ -169,13 +224,38 @@ export function Header({ title = "Dashboard", setIsMobileOpen }) {
           <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
             {title}
           </h1>
-          <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 dark:text-white/70 font-semibold">
-            {t("welcome_back", "Welcome back")}, {userName}
+          <p className="hidden sm:flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-white/70 font-semibold">
+            <span>
+              {t("welcome_back", "Welcome back")}, {userName}
+            </span>
+            {isSoftLogin && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                {t("acting_as_merchant", "Soft Login")}
+              </span>
+            )}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Soft Login "Back to Portal" Button */}
+        {isSoftLogin && (
+          <button
+            type="button"
+            onClick={handleBackToPortal}
+            disabled={isBackingToPortal}
+            className="inline-flex items-center gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 active:scale-[0.98] transition-all shadow-sm shrink-0 cursor-pointer"
+            title={t("backToPortal", "Back to Portal")}
+          >
+            {isBackingToPortal ? (
+              <div className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shrink-0" />
+            ) : (
+              <ArrowLeft size={14} className="shrink-0" />
+            )}
+            <span>{t("backToPortal", "Back to Portal")}</span>
+          </button>
+        )}
+
         {/* Language Switcher */}
         <LanguageSwitcher />
 

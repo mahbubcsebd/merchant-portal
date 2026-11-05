@@ -1,7 +1,7 @@
 import { useLanguage } from '@/components/globals/LanguageProvider';
 import { loginWithPin, resendOTP, verifyOTP } from '@/lib/api/endpoints';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Lock, Mail } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -55,6 +55,7 @@ const getFormSchema = (t) =>
 
 export function LoginForm() {
   const router = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpValue, setOtpValue] = useState('');
@@ -80,21 +81,36 @@ export function LoginForm() {
     mutationFn: (values) =>
       loginWithPin({ username: values.email, pin: values.pin }),
     onSuccess: (data) => {
-      if (data.status === 'success') {
+      if (data.status === "success") {
+        const isGroup =
+          data.isMerchantGroup === true || data.isMerchantGroup === "true";
+        if (isGroup) {
+          localStorage.setItem("is_merchant_group", "true");
+        } else {
+          localStorage.removeItem("is_merchant_group");
+        }
+        localStorage.removeItem("is_soft_login");
+
+        queryClient.removeQueries({ queryKey: ["userProfile"] });
+        queryClient.removeQueries({ queryKey: ["userSession"] });
+        queryClient.removeQueries({ queryKey: ["accounts"] });
+        queryClient.removeQueries({ queryKey: ["dashboardInfo"] });
+        queryClient.removeQueries({ queryKey: ["transactions"] });
+
         if (data.show_otp) {
           setShowOtpDialog(true);
         } else {
           const sessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-          localStorage.setItem('session_active_id', sessionId);
-          localStorage.setItem('is_authenticated', 'true');
-          router('/dashboard');
+          localStorage.setItem("session_active_id", sessionId);
+          localStorage.setItem("is_authenticated", "true");
+          router("/dashboard");
         }
       } else {
         setServerError(
           data.message ||
             t(
-              'invalid_credentials_try_again',
-              'Invalid credentials. Please try again.',
+              "invalid_credentials_try_again",
+              "Invalid credentials. Please try again.",
             ),
         );
       }
@@ -103,8 +119,8 @@ export function LoginForm() {
       setServerError(
         error?.response?.data?.message ||
           t(
-            'server_connection_error',
-            'Something went wrong connecting to the server.',
+            "server_connection_error",
+            "Something went wrong connecting to the server.",
           ),
       );
     },
@@ -113,20 +129,29 @@ export function LoginForm() {
   const verifyOTPMutation = useMutation({
     mutationFn: (values) => verifyOTP({ otp: values.otp }),
     onSuccess: (data) => {
-      if (data.status === 'success' && data.statusCode === 0) {
+      if (data.status === "success" && (data.statusCode === 0 || data.statusCode === "0" || !data.statusCode)) {
+        if (data.isMerchantGroup === true || data.isMerchantGroup === "true") {
+          localStorage.setItem("is_merchant_group", "true");
+        }
+        queryClient.removeQueries({ queryKey: ["userProfile"] });
+        queryClient.removeQueries({ queryKey: ["userSession"] });
+        queryClient.removeQueries({ queryKey: ["accounts"] });
+        queryClient.removeQueries({ queryKey: ["dashboardInfo"] });
+        queryClient.removeQueries({ queryKey: ["transactions"] });
+
         const sessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        localStorage.setItem('session_active_id', sessionId);
-        localStorage.setItem('is_authenticated', 'true');
+        localStorage.setItem("session_active_id", sessionId);
+        localStorage.setItem("is_authenticated", "true");
         setShowOtpDialog(false);
-        router('/dashboard');
+        router("/dashboard");
       } else {
         setOtpError(true);
         setOtpErrorMessage(
           data.message ||
-            t('invalid_otp_code', 'Invalid OTP code. Please try again.'),
+            t("invalid_otp_code", "Invalid OTP code. Please try again."),
         );
         setTimeout(() => {
-          setOtpValue('');
+          setOtpValue("");
         }, 800);
       }
     },

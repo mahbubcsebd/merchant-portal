@@ -66,7 +66,14 @@ const ALL_TRANSACTION_TYPES = [
 
 export default function LiveTransactionsPage() {
   const { t } = useLanguage();
-  const { profile, accounts, currency } = useDashboardContext();
+  const {
+    profile,
+    accounts,
+    currency,
+    isMerchantGroup,
+    isSoftLogin,
+    merchantGroupAccounts,
+  } = useDashboardContext();
   const { openDetailDialog } = useDialog();
   const queryClient = useQueryClient();
   const welcomeData = queryClient.getQueryData(["welcome"]);
@@ -77,24 +84,30 @@ export default function LiveTransactionsPage() {
   const [cashier, setCashier] = useState("selected");
   const [terminal, setTerminal] = useState("selected");
 
+  const isBranchFilterEnabled = !isMerchantGroup || isSoftLogin;
+
   // Fetch dropdown options
   const { data: subData } = useQuery({
     queryKey: ["getSubsidiaries"],
     queryFn: () => getSubsidiaries(),
     staleTime: 0,
+    enabled: isBranchFilterEnabled,
   });
 
   const { data: cashierData } = useQuery({
     queryKey: ["getCashierList"],
     queryFn: () => getCashierList(),
     staleTime: 0,
+    enabled: isBranchFilterEnabled,
   });
 
   const { data: terminalData } = useQuery({
     queryKey: ["listOfTerminal"],
     queryFn: () => listOfTerminal(),
     staleTime: 0,
+    enabled: isBranchFilterEnabled,
   });
+
 
   const subOptions = useMemo(
     () => [
@@ -129,7 +142,13 @@ export default function LiveTransactionsPage() {
     [terminalData, t],
   );
 
-  const currentAccountId = currency || accounts?.[0]?.ACCOUNTNUMBER || "";
+  const currentAccountId = useMemo(() => {
+    if (isMerchantGroup && !isSoftLogin && merchantGroupAccounts?.length > 0) {
+      return merchantGroupAccounts;
+    }
+    return currency || accounts?.[0]?.ACCOUNTNUMBER || "";
+  }, [isMerchantGroup, isSoftLogin, merchantGroupAccounts, currency, accounts]);
+
   const tableRef = useRef(null);
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -149,6 +168,13 @@ export default function LiveTransactionsPage() {
     }
   }, [currentAccountId]);
 
+  const isAccountIdReady = useMemo(() => {
+    if (Array.isArray(appliedFilters.accountId)) {
+      return appliedFilters.accountId.length > 0;
+    }
+    return Boolean(appliedFilters.accountId);
+  }, [appliedFilters.accountId]);
+
   const {
     data: txData,
     isFetching,
@@ -157,8 +183,9 @@ export default function LiveTransactionsPage() {
     queryKey: ["transactionHistory", appliedFilters],
     queryFn: () => transactionHistory(appliedFilters),
     staleTime: 0,
-    enabled: !!appliedFilters.accountId,
+    enabled: isAccountIdReady,
   });
+
 
   const rawTransactions = txData?.transactionHistories || [];
 
@@ -451,49 +478,67 @@ export default function LiveTransactionsPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-6 min-h-[500px]">
-        {/* Dropdowns Grid (Branch, Cashier, Terminal ID & Filter button) */}
-        <div className="flex flex-col xl:flex-row gap-4 mb-5 items-stretch xl:items-end">
-          <GlobalSelect
-            label={t("myQr_subsidiary", "Branch")}
-            value={branch}
-            onChange={setBranch}
-            containerClassName="flex-1 min-w-[180px]"
-            labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={subOptions}
-          />
-          <GlobalSelect
-            label={t("cashier", "Cashier")}
-            value={cashier}
-            onChange={setCashier}
-            containerClassName="flex-1 min-w-[180px]"
-            labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={cashierOptions}
-          />
-          <GlobalSelect
-            label={t("myqr_terminalID", "Terminal ID")}
-            value={terminal}
-            onChange={setTerminal}
-            containerClassName="flex-1 min-w-[180px]"
-            labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-            options={terminalOptions}
-          />
-          <div className="flex items-center gap-2 shrink-0">
-            <GlobalButton
-              onClick={handleApplyFilter}
-              variant="primary"
-              className="flex-1 xl:flex-none h-10 px-8 text-xs font-bold uppercase tracking-wider"
-            >
-              {t("global_filter", "Filter")}
-            </GlobalButton>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="h-10 px-4 text-xs font-semibold text-slate-500 hover:text-[#2563eb] dark:text-white/60 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-            >
-              {t("resetFilter", "Reset Filter")}
-            </button>
+        {/* Aggregated Notice for Merchant Group */}
+        {isMerchantGroup && !isSoftLogin && (
+          <div className="mb-5 px-4 py-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-500/10 border border-blue-200/60 dark:border-blue-500/20 text-xs text-[#2563eb] dark:text-blue-400 font-medium flex items-center justify-between">
+            <span>
+              {t(
+                "aggregated_tx_notice",
+                "Viewing aggregated live transactions across all linked merchant accounts.",
+              )}
+            </span>
+            <span className="font-bold text-[11px] px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-500/20">
+              {merchantGroupAccounts?.length || 0} {t("accounts", "Accounts")}
+            </span>
           </div>
-        </div>
+        )}
+
+        {/* Dropdowns Grid (Branch, Cashier, Terminal ID & Filter button) — Hidden in group admin mode */}
+        {isBranchFilterEnabled && (
+          <div className="flex flex-col xl:flex-row gap-4 mb-5 items-stretch xl:items-end">
+            <GlobalSelect
+              label={t("myQr_subsidiary", "Branch")}
+              value={branch}
+              onChange={setBranch}
+              containerClassName="flex-1 min-w-[180px]"
+              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
+              options={subOptions}
+            />
+            <GlobalSelect
+              label={t("cashier", "Cashier")}
+              value={cashier}
+              onChange={setCashier}
+              containerClassName="flex-1 min-w-[180px]"
+              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
+              options={cashierOptions}
+            />
+            <GlobalSelect
+              label={t("myqr_terminalID", "Terminal ID")}
+              value={terminal}
+              onChange={setTerminal}
+              containerClassName="flex-1 min-w-[180px]"
+              labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
+              options={terminalOptions}
+            />
+            <div className="flex items-center gap-2 shrink-0">
+              <GlobalButton
+                onClick={handleApplyFilter}
+                variant="primary"
+                className="flex-1 xl:flex-none h-10 px-8 text-xs font-bold uppercase tracking-wider"
+              >
+                {t("global_filter", "Filter")}
+              </GlobalButton>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="h-10 px-4 text-xs font-semibold text-slate-500 hover:text-[#2563eb] dark:text-white/60 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+              >
+                {t("resetFilter", "Reset Filter")}
+              </button>
+            </div>
+          </div>
+        )}
+
 
         {/* Segmented Tab Filters (Status & Transaction Type) — Positioned on the right side of the table */}
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2.5 mb-6 pt-3 border-t border-slate-100 dark:border-white/5 max-w-full">

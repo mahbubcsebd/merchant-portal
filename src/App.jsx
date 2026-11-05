@@ -32,6 +32,7 @@ import DashboardPayBillsTemplates from "./pages/dashboard/pay-bills/templates/pa
 import DashboardReports from "./pages/dashboard/reports/page";
 import DashboardTransfer from "./pages/dashboard/transfer/page";
 import DashboardMerchantOperations from "./pages/dashboard/merchant-operations/page";
+import DashboardMerchantGroup from "./pages/dashboard/merchant-group/page";
 
 function BootLoader({ children }) {
   const { isLoading } = useQuery({
@@ -119,6 +120,10 @@ export default function App() {
             <Route
               path="merchant-operations"
               element={<DashboardMerchantOperations />}
+            />
+            <Route
+              path="merchant-group"
+              element={<DashboardMerchantGroup />}
             />
             <Route path="transfer" element={<DashboardTransfer />} />
           </Route>

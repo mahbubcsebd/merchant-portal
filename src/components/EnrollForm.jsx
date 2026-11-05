@@ -10,6 +10,9 @@ import {
   AlertCircle,
   ChevronsUpDown,
   Search,
+  Plus,
+  Users,
+  CheckCircle2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -21,8 +24,11 @@ import {
   verifyMerchantOTP,
   resendMerchantOTP,
   welcomeApi,
+  merchantGroupSearch,
+  merchantGroupAdd,
 } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import { useDialog } from "@/components/globals/DialogProvider";
 import {
   Popover,
   PopoverContent,
@@ -30,6 +36,7 @@ import {
 } from "@/components/ui/popover";
 import { InputOTP, InputOTPSlot } from "@/components/ui/input-otp";
 import { cn } from "@/lib/utils";
+import GroupFormFields from "@/components/merchant-group/GroupFormFields";
 import { getDynamicCountryOptions } from "@/lib/constants/countries";
 import {
   enforceAlphanumericSpace,
@@ -136,6 +143,7 @@ export function EnrollForm() {
     staleTime: Infinity,
   });
   const { t } = useLanguage();
+  const { openFormDialog, openGlobalPopup } = useDialog();
 
   const [step, setStep] = useState("form"); // 'form' | 'confirm' | 'otp' | 'success'
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,6 +154,14 @@ export function EnrollForm() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Merchant Group State
+  const [isMerchantGroup, setIsMerchantGroup] = useState(false);
+  const [groupSearchId, setGroupSearchId] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupSearchError, setGroupSearchError] = useState("");
+  const [isSearchingGroup, setIsSearchingGroup] = useState(false);
+
 
   const countryCodesList = useMemo(
     () => getDynamicCountryOptions(welcomeData),
@@ -225,6 +241,174 @@ export function EnrollForm() {
     setStep(nextStep);
   }
 
+  // Group Search Handler
+  const handleSearchGroup = async () => {
+    const term = groupSearchId.trim();
+    setGroupSearchError("");
+    if (!term) {
+      setGroupSearchError(t("enter_group_id", "Please enter Group ID."));
+      return;
+    }
+    setIsSearchingGroup(true);
+    try {
+      const res = await merchantGroupSearch({ groupId: term });
+      if (
+        res?.status === "success" &&
+        (res?.statusCode === 0 || res?.statusCode === "0")
+      ) {
+        const records = res.records || [];
+        if (records.length > 0) {
+          setSelectedGroup({
+            groupId: String(records[0].groupId),
+            groupName: records[0].groupName || "",
+          });
+          setGroupSearchError("");
+        } else {
+          setSelectedGroup(null);
+          setGroupSearchError(t("group_not_found", "Group not found."));
+        }
+      } else {
+        setSelectedGroup(null);
+        setGroupSearchError(
+          res?.message || t("group_not_found", "Group not found."),
+        );
+      }
+    } catch (err) {
+      setSelectedGroup(null);
+      setGroupSearchError(
+        err?.message ||
+          t("group_search_error", "Unable to search groups. Please try again."),
+      );
+    } finally {
+      setIsSearchingGroup(false);
+    }
+  };
+
+  // Open Create New Group Form Dialog (matches Add Branch / Add Cashier architecture)
+  const handleOpenCreateGroupDialog = (initialValues = {}) => {
+    openFormDialog({
+      title: t("create_new_group", "Create New Group"),
+      isView: false,
+      submitText: t("buttonsSave", "Save"),
+      size: "sm:max-w-4xl",
+      disableAutoValidation: false,
+      content: <GroupFormFields data={initialValues} />,
+      onSave: async (values, setFormErrors) => {
+        const errors = {};
+        if (!values.groupName?.trim()) {
+          errors.groupName = `${t("pleaseEnter", "Please enter")} ${t("mg_groupName", "Group Name")}`;
+        }
+        if (!values.email?.trim()) {
+          errors.email = `${t("pleaseEnter", "Please enter")} ${t("ms_agentEmail", "Group Email")}`;
+        } else if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) {
+          errors.email = t("invalid_email", "Please enter a valid email address.");
+        }
+        if (!values.walletPin) {
+          errors.walletPin = `${t("pleaseEnter", "Please enter")} ${t("mg_walletPin", "Wallet PIN")}`;
+        } else if (values.walletPin.length !== 6) {
+          errors.walletPin = t("pin_digit_error", "Wallet PIN must be exactly 6 digits.");
+        }
+        if (!values.confirmPin) {
+          errors.confirmPin = `${t("pleaseEnter", "Please enter")} ${t("mg_walletConfirmPin", "Confirm Wallet PIN")}`;
+        } else if (values.confirmPin !== values.walletPin) {
+          errors.confirmPin = t("pin_mismatch", "Wallet PIN and Confirm PIN do not match.");
+        }
+
+        if (Object.keys(errors).length > 0) {
+          setFormErrors(errors);
+          return false;
+        }
+
+        try {
+          const cleanMobileDial = (values.mobileDial || "").replace("+", "").trim();
+          let cleanMobile = (values.mobilePhone || "").trim();
+          if (cleanMobileDial && cleanMobile && !cleanMobile.startsWith(cleanMobileDial)) {
+            cleanMobile = `${cleanMobileDial}${cleanMobile}`;
+          }
+
+          const cleanBusinessDial = (values.businessDial || "").replace("+", "").trim();
+          let cleanBusiness = (values.businessPhone || "").trim();
+          if (cleanBusinessDial && cleanBusiness && !cleanBusiness.startsWith(cleanBusinessDial)) {
+            cleanBusiness = `${cleanBusinessDial}${cleanBusiness}`;
+          }
+
+          const payload = {
+            groupName: values.groupName?.trim() || "",
+            email: values.email?.trim() || "",
+            status: values.status || "Active",
+            walletPin: values.walletPin || "",
+            confirmPin: values.confirmPin || "",
+            languageId: values.languageId || "en",
+            mobilePhone: cleanMobile,
+            businessPhone: cleanBusiness,
+            website: values.website?.trim() || "",
+            addrStreetNo: values.addrStreetNo?.trim() || "",
+            addrStreetName: values.addrStreetName?.trim() || "",
+            unitName: values.unitName?.trim() || "",
+            city: values.city?.trim() || "",
+            state: values.state?.trim() || "",
+            country: values.country || "93",
+            zipCode: values.zipCode?.trim() || "",
+            businessType: values.businessType || "COR",
+            businessCategory: values.businessCategory?.trim() || "",
+          };
+
+          const res = await merchantGroupAdd(payload);
+          if (
+            res?.status === "success" &&
+            (res?.statusCode === 0 || res?.statusCode === "0")
+          ) {
+            const createdGroupId =
+              res?.records?.groupId ||
+              res?.records?.[0]?.groupId ||
+              res?.data?.groupId;
+
+            if (createdGroupId) {
+              setSelectedGroup({
+                groupId: String(createdGroupId),
+                groupName: payload.groupName,
+              });
+              setGroupSearchId(String(createdGroupId));
+              setGroupSearchError("");
+            }
+            openGlobalPopup({
+              title: t("success_title", "Success"),
+              description:
+                res?.message ||
+                t(
+                  "group_created_success",
+                  `Group created and selected: ${createdGroupId || payload.groupName}`,
+                ),
+              type: "success",
+            });
+            return true;
+          } else {
+            openGlobalPopup({
+              title: t("error_title", "Error"),
+              description:
+                res?.message ||
+                t("failed_create_group", "Merchant group creation failed."),
+              type: "error",
+              onClose: () => handleOpenCreateGroupDialog(values),
+            });
+            return false;
+          }
+        } catch (err) {
+          openGlobalPopup({
+            title: t("error_title", "Error"),
+            description:
+              err?.message ||
+              t("failed_create_group", "Merchant group creation failed."),
+            type: "error",
+            onClose: () => handleOpenCreateGroupDialog(values),
+          });
+          return false;
+        }
+      },
+    });
+  };
+
+
   // Step 1 Form Submission → Move to Step 2 (Confirm Details)
   function onFormSubmit() {
     setApiError("");
@@ -251,6 +435,9 @@ export function EnrollForm() {
         phCountryCode: values.countryCode,
         challenge: [],
         custType: "C",
+        ...(isMerchantGroup && selectedGroup?.groupId
+          ? { groupId: selectedGroup.groupId }
+          : {}),
       };
 
       const res = await registerMerchant(payload);
@@ -600,6 +787,122 @@ export function EnrollForm() {
               )}
             </div>
 
+            {/* Merchant Group Section */}
+            <div className="pt-2 pb-1 border-t border-b border-slate-100 dark:border-white/5 space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-4 h-4 shrink-0">
+                  <input
+                    id="isMerchantGroup"
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={isMerchantGroup}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIsMerchantGroup(checked);
+                      if (!checked) {
+                        setSelectedGroup(null);
+                        setGroupSearchId("");
+                        setGroupSearchError("");
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 rounded border border-slate-300 dark:border-white/20 peer-checked:border-[#2563eb] peer-checked:bg-[#2563eb] transition-all bg-white dark:bg-white/5" />
+                  <Check
+                    size={12}
+                    className="text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+                    strokeWidth={3}
+                  />
+                </div>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t(
+                    "is_merchant_group_label",
+                    "Is this merchant part of a group?",
+                  )}
+                </span>
+              </label>
+
+              {isMerchantGroup && (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-3 animate-[fade-down_0.2s_ease-out]">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      {t("search_by_group_id", "Search by Unique Group ID")}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={groupSearchId}
+                        onChange={(e) => setGroupSearchId(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSearchGroup();
+                          }
+                        }}
+                        placeholder={t("enter_group_id", "Enter Group ID")}
+                        className="flex-1 h-9 px-3 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#2563eb] transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchGroup}
+                        disabled={isSearchingGroup}
+                        className="h-9 px-3.5 text-xs font-semibold rounded-lg bg-[#2563eb] text-white hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0 cursor-pointer"
+                      >
+                        {isSearchingGroup ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Search size={13} />
+                        )}
+                        <span>{t("search", "Search")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Found Group Display */}
+                  {selectedGroup && (
+                    <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-xs flex items-center justify-between text-emerald-800 dark:text-emerald-300">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2
+                          size={16}
+                          className="text-emerald-500 shrink-0"
+                        />
+                        <span className="font-semibold truncate">
+                          {selectedGroup.groupId} : {selectedGroup.groupName}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedGroup(null);
+                          setGroupSearchId("");
+                        }}
+                        className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0 ml-2 cursor-pointer"
+                      >
+                        {t("change", "Change")}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Group Search Error / Not Found */}
+                  {groupSearchError && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-red-500 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                        <span>{groupSearchError}</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateGroupDialog}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#2563eb] dark:text-blue-400 hover:underline cursor-pointer"
+                      >
+                        <Plus size={13} />
+                        <span>{t("create_new_group", "Create New Group")}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Checkboxes */}
             <div className="space-y-3 pt-1">
               {/* Terms */}
@@ -773,6 +1076,18 @@ export function EnrollForm() {
                 +{formValues.countryCode} {formValues.phoneNumber}
               </span>
             </div>
+
+            {/* Merchant Group (if selected) */}
+            {isMerchantGroup && selectedGroup && (
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 sm:w-1/2">
+                  {t("mg_title", "Merchant Group")}
+                </span>
+                <span className="text-sm text-slate-600 dark:text-slate-400 sm:w-1/2 text-left sm:text-right font-medium">
+                  {selectedGroup.groupId} : {selectedGroup.groupName}
+                </span>
+              </div>
+            )}
 
             {/* Cross App Consent */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3.5 bg-white dark:bg-[#131c31] gap-1">

@@ -357,3 +357,27 @@ export async function getDetailOperationCashier(payload = {}) {
   return post("/getDetailOperationCashier", payload);
 }
 
+// -------------------------------------------------------
+// Merchant Group APIs
+// -------------------------------------------------------
+export async function merchantGroupSearch(payload = {}) {
+  return post("/merchantGroup/search", payload);
+}
+
+export async function merchantGroupAdd(payload = {}) {
+  return post("/merchantGroup/add", payload);
+}
+
+export async function getGroupMerchants(payload = {}) {
+  return post("/getGroupMerchants", payload);
+}
+
+export async function loginMerchantForGroup(payload = {}) {
+  return post("/loginMerchantForGroup", payload);
+}
+
+export async function logoutMerchantForGroup(payload = {}) {
+  return post("/logoutMerchantForGroup", payload);
+}
+
+

@@ -20,6 +20,7 @@ import {
 
 import { Link } from "react-router-dom";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useProfileImage } from "@/hooks/useProfileImage";
 // remove old from '@/pages/dashboard/context';
@@ -32,92 +33,135 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
   const { t } = useLanguage();
   const pathname = useLocation().pathname;
   const navigate = useNavigate();
-  const { profile } = useDashboardContext();
+  const { profile, isMerchantGroup, isSoftLogin } = useDashboardContext();
   const { data: profileImage } = useProfileImage(profile);
   const { openConfirmDialog } = useDialog();
 
-  const MENU_GROUPS = [
-    {
-      groupLabel: t("menu_overview", "OVERVIEW"),
-      items: [
-        {
-          label: t("dashboard", "Dashboard"),
-          href: "/dashboard",
-          icon: LayoutDashboard,
-        },
-        {
-          label: t("business_profile", "Business Profile"),
-          href: "/dashboard/business-profile",
-          icon: Briefcase,
-        },
-        {
-          label: t("live_transactions", "Live Transactions"),
-          href: "/dashboard/live-transactions",
-          icon: RefreshCcw,
-        },
-      ],
-    },
-    {
-      groupLabel: t("menu_operations", "OPERATIONS"),
-      items: [
-        {
-          label: t("merchant_operations", "Merchant Operations"),
-          href: "/dashboard/merchant-operations",
-          icon: PieChart,
-        },
-        {
-          label: t("manage_cashiers", "Manage Cashiers"),
-          href: "/dashboard/manage-cashiers",
-          icon: Users,
-        },
-        {
-          label: t("branches", "Branches"),
-          href: "/dashboard/branches",
-          icon: Store,
-        },
-        {
-          label: t("reports", "Reports"),
-          href: "/dashboard/reports",
-          icon: FileText,
-        },
-      ],
-    },
-    {
-      groupLabel: t("menu_transfers", "TRANSFERS"),
-      items: [
-        {
-          label: t("pay_bills", "Pay Bills"),
-          href: "/dashboard/pay-bills",
-          icon: CreditCard,
-        },
-        {
-          label: t("transfer_to_bank", "Transfer To Bank"),
-          href: "/dashboard/transfer",
-          icon: Landmark,
-        },
-      ],
-    },
-    {
-      groupLabel: t("menu_settings", "SETTINGS"),
-      items: [
-        {
-          label: t("admin", "Administration"),
-          href: "/dashboard/admin",
-          icon: Settings,
-        },
-        {
-          label: t("help", "Help"),
-          href: "/dashboard/help",
-          icon: HelpCircle,
-        },
-        {
-          label: t("contact_us", "Contact Us"),
-          href: "/dashboard/contact",
-          icon: Phone,
-        },
-      ],
-    },
-  ];
+  const MENU_GROUPS = useMemo(
+    () => [
+      {
+        groupLabel: t("menu_overview", "OVERVIEW"),
+        items: [
+          {
+            label: t("dashboard", "Dashboard"),
+            href: "/dashboard",
+            icon: LayoutDashboard,
+          },
+          {
+            label: t("business_profile", "Business Profile"),
+            href: "/dashboard/business-profile",
+            icon: Briefcase,
+          },
+          {
+            label: t("live_transactions", "Live Transactions"),
+            href: "/dashboard/live-transactions",
+            icon: RefreshCcw,
+          },
+          {
+            label: t("mg_title", "Merchant Group"),
+            href: "/dashboard/merchant-group",
+            icon: Users,
+          },
+        ],
+      },
+      {
+        groupLabel: t("menu_operations", "OPERATIONS"),
+        items: [
+          {
+            label: t("merchant_operations", "Merchant Operations"),
+            href: "/dashboard/merchant-operations",
+            icon: PieChart,
+          },
+          {
+            label: t("manage_cashiers", "Manage Cashiers"),
+            href: "/dashboard/manage-cashiers",
+            icon: Users,
+          },
+          {
+            label: t("branches", "Branches"),
+            href: "/dashboard/branches",
+            icon: Store,
+          },
+          {
+            label: t("reports", "Reports"),
+            href: "/dashboard/reports",
+            icon: FileText,
+          },
+        ],
+      },
+      {
+        groupLabel: t("menu_transfers", "TRANSFERS"),
+        items: [
+          {
+            label: t("pay_bills", "Pay Bills"),
+            href: "/dashboard/pay-bills",
+            icon: CreditCard,
+          },
+          {
+            label: t("transfer_to_bank", "Transfer To Bank"),
+            href: "/dashboard/transfer",
+            icon: Landmark,
+          },
+        ],
+      },
+      {
+        groupLabel: t("menu_settings", "SETTINGS"),
+        items: [
+          {
+            label: t("admin", "Administration"),
+            href: "/dashboard/admin",
+            icon: Settings,
+          },
+          {
+            label: t("help", "Help"),
+            href: "/dashboard/help",
+            icon: HelpCircle,
+          },
+          {
+            label: t("contact_us", "Contact Us"),
+            href: "/dashboard/contact",
+            icon: Phone,
+          },
+        ],
+      },
+    ],
+    [t],
+  );
+
+  const filteredMenuGroups = useMemo(() => {
+    return MENU_GROUPS.map((group) => {
+      const items = group.items.filter((item) => {
+        // Merchant Group tab: visible ONLY when isMerchantGroup is active AND not in soft-login mode
+        if (item.href === "/dashboard/merchant-group") {
+          return isMerchantGroup && !isSoftLogin;
+        }
+
+        // Transfers (Pay Bills & Transfer to Bank):
+        // NEVER visible for Merchant Group (neither in group admin mode nor in soft-login mode)
+        if (
+          item.href === "/dashboard/pay-bills" ||
+          item.href === "/dashboard/transfer"
+        ) {
+          return !isMerchantGroup;
+        }
+
+        // Operations & Admin items (hideForGroup in portal-uat):
+        // Hidden in group aggregated overview, visible in soft-login mode and for standard merchants
+        if (
+          item.href === "/dashboard/merchant-operations" ||
+          item.href === "/dashboard/manage-cashiers" ||
+          item.href === "/dashboard/branches" ||
+          item.href === "/dashboard/reports" ||
+          item.href === "/dashboard/admin"
+        ) {
+          return !isMerchantGroup || isSoftLogin;
+        }
+
+        return true;
+      });
+      return { ...group, items };
+    }).filter((group) => group.items.length > 0);
+  }, [MENU_GROUPS, isMerchantGroup, isSoftLogin]);
 
   const BOTTOM_MENU_ITEMS = [
     { label: t("leftMenuLogout", "Logout"), href: "/", icon: LogOut },
@@ -138,6 +182,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
         }
         localStorage.removeItem("is_authenticated");
         localStorage.removeItem("session_active_id");
+        localStorage.removeItem("is_merchant_group");
+        localStorage.removeItem("is_soft_login");
         navigate("/");
       },
     });
@@ -260,7 +306,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onClose }) {
           isCollapsed ? "px-2" : "px-3",
         )}
       >
-        {MENU_GROUPS.map((group, groupIdx) => (
+        {filteredMenuGroups.map((group, groupIdx) => (
           <div key={group.groupLabel || groupIdx} className="space-y-1">
             {!isCollapsed ? (
               <div className="px-4 pt-2 pb-1 text-[11px] font-bold tracking-wider text-slate-400 dark:text-white/40 uppercase select-none">
