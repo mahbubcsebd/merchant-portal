@@ -8,14 +8,39 @@ export function useBeneficiaries() {
     queryKey: ["beneficiaries"],
     queryFn: async () => {
       const response = await getBeneficiaries();
-      if (
-        response.status !== "success" ||
-        (response.statusCode !== "0" && response.statusCode !== 0)
-      ) {
-        throw new Error(response.message || "Failed to fetch beneficiaries");
+
+      const isSuccess =
+        response?.status === "success" &&
+        (response?.statusCode === "0" ||
+          response?.statusCode === 0 ||
+          response?.statusCode === undefined);
+
+      const msg = (response?.message || "").toLowerCase();
+      const isEmpty =
+        (!isSuccess ||
+          (Array.isArray(response?.records) && response.records.length === 0) ||
+          (Array.isArray(response?.payees) && response.payees.length === 0)) &&
+        (msg.includes("no beneficiary") ||
+          msg.includes("no payees") ||
+          msg.includes("add beneficiary") ||
+          msg.includes("no record") ||
+          msg.includes("empty") ||
+          (Array.isArray(response?.records) && response.records.length === 0) ||
+          (Array.isArray(response?.payees) && response.payees.length === 0));
+
+      if (isSuccess || isEmpty) {
+        const list =
+          response?.records ||
+          response?.payees ||
+          response?.data ||
+          [];
+        list.emptyMessage = response?.message || "";
+        return list;
       }
-      return response.records || response.payees || response.data || [];
+
+      throw new Error(response?.message || "Failed to fetch beneficiaries");
     },
+    staleTime: 0,
   });
 
   const createBeneficiaryMutation = useMutation({
@@ -59,5 +84,6 @@ export function useBeneficiaries() {
     createBeneficiaryMutation,
     updateBeneficiaryMutation,
     deleteBeneficiaryMutation,
+    emptyMessage: beneficiariesQuery.data?.emptyMessage || "",
   };
 }

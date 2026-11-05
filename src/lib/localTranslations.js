@@ -35,6 +35,8 @@ export const LOCAL_TRANSLATIONS = Object.freeze({
     verification_link_sent_email:
       "Merchant verification link has been sent to your registered email address. Please check your inbox to complete enrollment.",
     dob_required: "Please Enter Date of Birth",
+    dob_min_age_error:
+      "Date of birth cannot be a future date and must be at least 18 years from today.",
     request_submitted: "Request Submitted",
     forgot_pin_success_desc:
       "If the details match, instructions to reset your PIN have been sent to your email.",
@@ -105,6 +107,8 @@ export const LOCAL_TRANSLATIONS = Object.freeze({
     verification_link_sent_email:
       "De verificatielink voor handelaren is verzonden naar uw geregistreerde e-mailadres. Controleer uw inbox om de inschrijving te voltooien.",
     dob_required: "Voer uw geboortedatum in",
+    dob_min_age_error:
+      "Geboortedatum mag niet in de toekomst liggen en moet minimaal 18 jaar vanaf vandaag zijn.",
     request_submitted: "Verzoek ingediend",
     forgot_pin_success_desc:
       "Als de gegevens overeenkomen, zijn de instructies om uw pincode opnieuw in te stellen naar uw e-mailadres verzonden.",
@@ -180,6 +184,8 @@ export const LOCAL_TRANSLATIONS = Object.freeze({
     verification_link_sent_email:
       "Le lien de vérification marchand a été envoyé à votre adresse e-mail enregistrée. Consultez votre boîte de réception pour finaliser l'inscription.",
     dob_required: "Veuillez saisir votre date de naissance",
+    dob_min_age_error:
+      "La date de naissance ne peut pas être future et doit être d'au moins 18 ans à compter d'aujourd'hui.",
     request_submitted: "Demande envoyée",
     forgot_pin_success_desc:
       "Si les informations correspondent, les instructions pour réinitialiser votre code PIN ont été envoyées à votre adresse e-mail.",
@@ -253,6 +259,8 @@ export const LOCAL_TRANSLATIONS = Object.freeze({
     verification_link_sent_email:
       "El enlace de verificación del comerciante se envió a su correo electrónico registrado. Revise su bandeja de entrada para completar la inscripción.",
     dob_required: "Ingrese su fecha de nacimiento",
+    dob_min_age_error:
+      "La fecha de nacimiento no puede ser una fecha futura y debe ser de al menos 18 años a partir de hoy.",
     request_submitted: "Solicitud enviada",
     forgot_pin_success_desc:
       "Si los datos coinciden, se han enviado a su correo electrónico las instrucciones para restablecer su PIN.",

@@ -20,6 +20,7 @@ import {
   User,
   ShieldCheck,
   Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalButton from "@/components/globals/GlobalButton";
@@ -60,6 +61,7 @@ export default function ManageBeneficiaries({
   const [pageSize, setPageSize] = useState(10);
 
   const beneficiaries = beneficiariesQuery.data || [];
+  const emptyApiMessage = beneficiariesQuery.data?.emptyMessage || "";
 
   const filteredBeneficiaries = useMemo(() => {
     return beneficiaries.filter((b) => {
@@ -435,8 +437,27 @@ export default function ManageBeneficiaries({
             </p>
           </div>
         ) : beneficiariesQuery.isError ? (
-          <div className="py-16 text-center text-red-500 text-sm">
-            {t("error_loading_beneficiaries", "Error loading beneficiaries.")}
+          <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-center justify-center text-red-500 mb-4">
+              <AlertCircle size={26} />
+            </div>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              {t("error_loading_beneficiaries", "Error loading beneficiaries")}
+            </h4>
+            <p className="text-xs text-red-500 dark:text-red-400 max-w-md mb-5">
+              {beneficiariesQuery.error?.message ||
+                t(
+                  "something_went_wrong_try_again",
+                  "Something went wrong. Please try again.",
+                )}
+            </p>
+            <GlobalButton
+              variant="secondary"
+              onClick={() => beneficiariesQuery.refetch()}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider"
+            >
+              {t("retry", "Retry")}
+            </GlobalButton>
           </div>
         ) : filteredBeneficiaries.length === 0 ? (
           <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
@@ -448,10 +469,17 @@ export default function ManageBeneficiaries({
                 ? t("no_matching_beneficiaries", "No matching beneficiaries found")
                 : t("no_beneficiaries_yet", "No beneficiaries added yet")}
             </h4>
-            <p className="text-xs text-slate-500 dark:text-white/50 max-w-sm mb-5">
+            <p className="text-xs text-slate-500 dark:text-white/50 max-w-md mb-5">
               {searchTerm
-                ? t("try_different_search", "Try searching with a different term or clear the search.")
-                : t("add_first_beneficiary_hint", "Add your first bank beneficiary to start transferring funds quickly and safely.")}
+                ? t(
+                    "try_different_search",
+                    "Try searching with a different term or clear the search.",
+                  )
+                : emptyApiMessage ||
+                  t(
+                    "add_first_beneficiary_hint",
+                    "Add your first bank beneficiary to start transferring funds quickly and safely.",
+                  )}
             </p>
             {searchTerm ? (
               <GlobalButton

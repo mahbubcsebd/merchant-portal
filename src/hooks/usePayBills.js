@@ -17,12 +17,35 @@ export function usePayBills() {
     queryKey: ["userBillers"],
     queryFn: async () => {
       const response = await getUserBiller();
-      if (response.status !== "success") {
-        throw new Error(response.message || "Failed to fetch user billers");
+
+      const isSuccess =
+        response?.status === "success" &&
+        (response?.statusCode === "0" ||
+          response?.statusCode === 0 ||
+          response?.statusCode === undefined);
+
+      const msg = (response?.message || "").toLowerCase();
+      const isEmpty =
+        (!isSuccess ||
+          (Array.isArray(response?.userBillers) &&
+            response.userBillers.length === 0)) &&
+        (msg.includes("no bill template") ||
+          msg.includes("no template") ||
+          msg.includes("create bill template") ||
+          msg.includes("no record") ||
+          msg.includes("empty") ||
+          (Array.isArray(response?.userBillers) &&
+            response.userBillers.length === 0));
+
+      if (isSuccess || isEmpty) {
+        const list = response?.userBillers || response?.data || [];
+        list.emptyMessage = response?.message || "";
+        return list;
       }
-      return response.userBillers || [];
+
+      throw new Error(response?.message || "Failed to fetch user billers");
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 0,
   });
 
   // 2. Fetch Biller Details dynamically
@@ -127,5 +150,6 @@ export function usePayBills() {
     createBillTemplateMutation,
     updateBillTemplateMutation,
     deleteBillTemplateMutation,
+    emptyMessage: userBillersQuery.data?.emptyMessage || "",
   };
 }
