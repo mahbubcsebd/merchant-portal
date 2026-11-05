@@ -19,7 +19,7 @@ import GlobalInput from "@/components/globals/GlobalInput";
 import {
   registerMerchant,
   verifyMerchantOTP,
-  resendOTP,
+  resendMerchantOTP,
   welcomeApi,
 } from "@/lib/api/endpoints";
 import { useLanguage } from "@/components/globals/LanguageProvider";
@@ -279,20 +279,14 @@ export function EnrollForm() {
     }
   }
 
-  // Resend OTP → Trigger /walletmc/resendOTP API
+  // Resend OTP → Trigger /walletmc/resendMerchantOTP API
   async function handleResendOTP() {
     setIsSubmitting(true);
     setApiError("");
     setResendSuccessMsg("");
     try {
-      const values = getValues();
-      const payload = {
-        custType: "C",
-        emailID: values.emailID,
-        phoneNumber: `${values.countryCode}${values.phoneNumber}`,
-      };
-
-      const res = await resendOTP(payload);
+      // Old app sends empty body; backend resolves registration from session.
+      const res = await resendMerchantOTP({ custType: "C" });
 
       if (res?.status === "success" || res?.statusCode === 0) {
         setOtpCode("");

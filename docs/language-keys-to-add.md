@@ -44,3 +44,5 @@ Notes
 - Keys not listed (storeName, merCrEmail, merCrPhoneNo, agreement, yes, no, next, buttonContinue, ...) already come translated from the server (visible in the Dutch screenshots).
 - The list covers keys that are new in the merchant portal v2; if the server already has some, only the missing ones need adding.
 - Server-returned API error messages (e.g. "This merchant is already registered") are not in this list; the backend must translate those itself.
+
+- Added 21 more keys (uptime, processed, all_rights_reserved, contact_*, back_to_dashboard, toggle_theme, privacy_*, last_updated, official_agreement): same values live in src/lib/localTranslations.js (nl/fr/es); server may add them later.

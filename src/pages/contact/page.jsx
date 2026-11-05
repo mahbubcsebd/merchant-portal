@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 
 import { Contact, Phone, PhoneCall, Printer, MapPin, Globe } from "lucide-react"
 import GlobalButton from "@/components/globals/GlobalButton"
+import { useLanguage } from "@/components/globals/LanguageProvider"
 
 export default function ContactPage() {
+  const { t } = useLanguage()
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-50 dark:bg-[#0a0f1c] text-slate-900 dark:text-white transition-colors">
       
@@ -27,7 +30,7 @@ export default function ContactPage() {
 
         {/* Title */}
         <h2 className="text-2xl font-bold mb-8 w-full text-left border-b border-slate-200 dark:border-white/10 pb-4">
-          Contact Us
+          {t("contact_us", "Contact Us")}
         </h2>
 
         {/* Details */}
@@ -35,28 +38,28 @@ export default function ContactPage() {
           
           <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-4">
             <span className="w-28 font-semibold text-slate-700 dark:text-white/80 shrink-0 flex items-center gap-2 text-sm">
-              <Phone size={16} className="text-slate-400" /> Phone
+              <Phone size={16} className="text-slate-400" /> {t("contact_phone", "Phone")}
             </span>
             <span className="text-slate-600 dark:text-white/60 text-sm">416-572-2191</span>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-4">
             <span className="w-28 font-semibold text-slate-700 dark:text-white/80 shrink-0 flex items-center gap-2 text-sm">
-              <PhoneCall size={16} className="text-emerald-500" /> Whatsapp
+              <PhoneCall size={16} className="text-emerald-500" /> {t("contact_whatsapp", "Whatsapp")}
             </span>
             <span className="text-slate-600 dark:text-white/60 text-sm">416-572-2191</span>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-4">
             <span className="w-28 font-semibold text-slate-700 dark:text-white/80 shrink-0 flex items-center gap-2 text-sm">
-              <Printer size={16} className="text-slate-400" /> Fax
+              <Printer size={16} className="text-slate-400" /> {t("contact_fax", "Fax")}
             </span>
             <span className="text-slate-600 dark:text-white/60 text-sm">416-352-7754</span>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-4">
             <span className="w-28 font-semibold text-slate-700 dark:text-white/80 shrink-0 flex items-center gap-2 text-sm">
-              <MapPin size={16} className="text-rose-500" /> Address
+              <MapPin size={16} className="text-rose-500" /> {t("contact_address", "Address")}
             </span>
             <span className="text-slate-600 dark:text-white/60 text-sm leading-relaxed">
               mPayNetwork Inc, Corporate Office, TD Canada Trust Tower, 161 Bay St., 27th Floor Toronto, ON M5J2S1
@@ -65,7 +68,7 @@ export default function ContactPage() {
 
           <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-4">
             <span className="w-28 font-semibold text-slate-700 dark:text-white/80 shrink-0 flex items-center gap-2 text-sm">
-              <Globe size={16} className="text-blue-500" /> Website
+              <Globe size={16} className="text-blue-500" /> {t("contact_website", "Website")}
             </span>
             <a href="https://www.mpaynetwork.com" target="_blank" rel="noopener noreferrer" className="text-[#2563eb] hover:underline text-sm font-medium transition-colors">
               https://www.mpaynetwork.com
@@ -81,7 +84,7 @@ export default function ContactPage() {
               variant="secondary"
               className="px-8 text-xs font-bold uppercase tracking-wider"
             >
-              Back To Dashboard
+              {t("back_to_dashboard", "Back To Dashboard")}
             </GlobalButton>
           </Link>
         </div>

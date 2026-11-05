@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from "
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getLangPack } from "@/lib/api/endpoints";
 import { globalDefaultParams } from "@/lib/api/api";
+import { LOCAL_TRANSLATIONS } from "@/lib/localTranslations";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English", flag: "🇺🇸" },
@@ -169,12 +170,19 @@ export function LanguageProvider({ children }) {
       return cleanAsterisks(overrides[key]);
     }
 
+    // Local translations apply to non-English only, so English keeps each
+    // call site's own fallback wording.
+    const localValue =
+      langKey === "en" ? undefined : LOCAL_TRANSLATIONS[langKey]?.[key];
+
     const raw =
       translationMap[key] !== undefined
         ? translationMap[key]
-        : fallback !== undefined
-          ? fallback
-          : key;
+        : localValue !== undefined
+          ? localValue
+          : fallback !== undefined
+            ? fallback
+            : key;
     return cleanAsterisks(raw);
   };
 
