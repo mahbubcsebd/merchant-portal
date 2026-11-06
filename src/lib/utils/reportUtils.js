@@ -1,4 +1,5 @@
 import { format, parse } from "date-fns";
+import { getAssetUrl } from "@/lib/utils/assetUtils";
 
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
@@ -58,7 +59,7 @@ export function openPrintWindow({
     )
     .join("");
 
-  const logoUrl = window.location.origin + "/images/logo.svg";
+  const logoUrl = window.location.origin + getAssetUrl("/images/logo.svg");
 
   const html = `<!DOCTYPE html>
 <html lang="en">

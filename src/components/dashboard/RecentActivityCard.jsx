@@ -16,27 +16,28 @@ import {
 import { useDashboardContext } from "@/pages/dashboard/context";
 import { useLanguage } from "@/components/globals/LanguageProvider";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getAssetUrl } from "@/lib/utils/assetUtils";
 
 // Local image icon mappings from public/images/activity/
 const SVG_ICON_MAP = {
-  PAYTOPHONE: "/images/activity/payPhoneNo.svg",
-  SCANTOPAY: "/images/activity/qr-code-scan2pay.svg",
-  PAYQRCODE: "/images/activity/qr-code-payByCode.svg",
-  PAYTOBANK: "/images/activity/pay2Bank.svg",
-  PAYTOEMAIL: "/images/activity/payPhoneNo.svg",
-  PAYBILL: "/images/activity/payBills.svg",
-  TOPUP: "/images/activity/mobile-recharge-icon.svg",
-  SPEXPENSE: "/images/activity/split_expanse.svg",
-  FORGOTPASSWORD: "/images/activity/payPhoneNo.svg",
-  USERACTIVATED: "/images/activity/user_outline.png",
-  PROFBYQR: "/images/activity/qr-code-payByCode.svg",
-  REQBYQR: "/images/activity/qr-code-payByCode.svg",
-  SCANCOLLET: "/images/activity/icon_scanToCollect.svg",
-  SCANTOCOLLECT: "/images/activity/icon_scanToCollect.svg",
-  SCANGALERY: "/images/activity/gallery.svg",
-  REMINDER: "/images/activity/notification.png",
-  ALERT: "/images/activity/notification.png",
-  PROMOTION: "/images/activity/notification.png",
+  PAYTOPHONE: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  SCANTOPAY: getAssetUrl("/images/activity/qr-code-scan2pay.svg"),
+  PAYQRCODE: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  PAYTOBANK: getAssetUrl("/images/activity/pay2Bank.svg"),
+  PAYTOEMAIL: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  PAYBILL: getAssetUrl("/images/activity/payBills.svg"),
+  TOPUP: getAssetUrl("/images/activity/mobile-recharge-icon.svg"),
+  SPEXPENSE: getAssetUrl("/images/activity/split_expanse.svg"),
+  FORGOTPASSWORD: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  USERACTIVATED: getAssetUrl("/images/activity/user_outline.png"),
+  PROFBYQR: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  REQBYQR: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  SCANCOLLET: getAssetUrl("/images/activity/icon_scanToCollect.svg"),
+  SCANTOCOLLECT: getAssetUrl("/images/activity/icon_scanToCollect.svg"),
+  SCANGALERY: getAssetUrl("/images/activity/gallery.svg"),
+  REMINDER: getAssetUrl("/images/activity/notification.png"),
+  ALERT: getAssetUrl("/images/activity/notification.png"),
+  PROMOTION: getAssetUrl("/images/activity/notification.png"),
 };
 
 // Lucide icon fallbacks with specific styles

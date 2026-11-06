@@ -19,15 +19,37 @@ import { forgotPin } from "@/lib/api/endpoints"
 import { useDialog } from "@/components/globals/DialogProvider"
 import { useLanguage } from "@/components/globals/LanguageProvider"
 
-const getFormSchema = (t) =>
-  z.object({
+const getFormSchema = (t) => {
+  const today = new Date();
+  const maxDobDate = new Date(
+    today.getFullYear() - 18,
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+
+  return z.object({
     email: z
       .string()
       .min(1, { message: t("email_required", "Email Address is required.") })
       .email({ message: t("invalid_email", "Please enter a valid Email Address.") })
       .max(80, { message: t("email_max_error", "Email Address cannot exceed 80 characters.") }),
-    dob: z.date({ error: t("dob_required", "Please Enter Date of Birth") }),
-  })
+    dob: z
+      .date({ error: t("dob_required", "Please Enter Date of Birth") })
+      .refine(
+        (val) => val <= maxDobDate,
+        {
+          message: t(
+            "dob_min_age_error",
+            "Date of birth cannot be a future date and must be at least 18 years from today.",
+          ),
+        },
+      ),
+  });
+};
 
 export function ForgotPinForm() {
   const navigate = useNavigate()

@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Building2,
   Hash,
+  AlertCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDialog } from "@/components/globals/DialogProvider";
@@ -43,6 +44,8 @@ export default function ManageBillTemplatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const emptyApiMessage = userBillersQuery.data?.emptyMessage || "";
 
   const templates = useMemo(() => {
     return (userBillersQuery.data || []).map((b, index) => ({
@@ -301,8 +304,27 @@ export default function ManageBillTemplatesPage() {
             </p>
           </div>
         ) : userBillersQuery.isError ? (
-          <div className="py-16 text-center text-red-500 text-sm">
-            {t("error_loading_templates", "Error loading bill templates.")}
+          <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-center justify-center text-red-500 mb-4">
+              <AlertCircle size={26} />
+            </div>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              {t("error_loading_templates", "Error loading bill templates")}
+            </h4>
+            <p className="text-xs text-red-500 dark:text-red-400 max-w-md mb-5">
+              {userBillersQuery.error?.message ||
+                t(
+                  "something_went_wrong_try_again",
+                  "Something went wrong. Please try again.",
+                )}
+            </p>
+            <GlobalButton
+              variant="secondary"
+              onClick={() => userBillersQuery.refetch()}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider"
+            >
+              {t("retry", "Retry")}
+            </GlobalButton>
           </div>
         ) : filteredTemplates.length === 0 ? (
           <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
@@ -314,10 +336,17 @@ export default function ManageBillTemplatesPage() {
                 ? t("no_matching_templates", "No matching templates found")
                 : t("no_templates_yet", "No bill templates found")}
             </h4>
-            <p className="text-xs text-slate-500 dark:text-white/50 max-w-sm mb-5">
+            <p className="text-xs text-slate-500 dark:text-white/50 max-w-md mb-5">
               {searchTerm
-                ? t("try_different_search", "Try searching with a different term or clear the search.")
-                : t("create_first_template_hint", "Create your first template to save your frequent utility and service payments.")}
+                ? t(
+                    "try_different_search",
+                    "Try searching with a different term or clear the search.",
+                  )
+                : emptyApiMessage ||
+                  t(
+                    "create_first_template_hint",
+                    "Create your first template to save your frequent utility and service payments.",
+                  )}
             </p>
             {searchTerm ? (
               <GlobalButton

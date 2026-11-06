@@ -10,25 +10,26 @@ import {
   ArrowUpRight,
   QrCode,
 } from "lucide-react";
+import { getAssetUrl } from "@/lib/utils/assetUtils";
 
 // Mapping of transaction types/keywords to real SVG/PNG activity icons in public/images/activity/
 const ACTIVITY_ICON_MAP = {
-  PAYTOPHONE: "/images/activity/payPhoneNo.svg",
-  SCANTOPAY: "/images/activity/qr-code-scan2pay.svg",
-  PAYQRCODE: "/images/activity/qr-code-payByCode.svg",
-  PAYTOBANK: "/images/activity/pay2Bank.svg",
-  PAYTOEMAIL: "/images/activity/payPhoneNo.svg",
-  PAYBILL: "/images/activity/payBills.svg",
-  TOPUP: "/images/activity/mobile-recharge-icon.svg",
-  SPEXPENSE: "/images/activity/split_expanse.svg",
-  FORGOTPASSWORD: "/images/activity/payPhoneNo.svg",
-  USERACTIVATED: "/images/activity/user_outline.png",
-  PROFBYQR: "/images/activity/qr-code-payByCode.svg",
-  REQBYQR: "/images/activity/qr-code-payByCode.svg",
-  SCANCOLLET: "/images/activity/icon_scanToCollect.svg",
-  SCANTOCOLLECT: "/images/activity/icon_scanToCollect.svg",
-  SCANGALERY: "/images/activity/gallery.svg",
-  DEFAULT: "/images/activity/qr-code-payByCode.svg",
+  PAYTOPHONE: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  SCANTOPAY: getAssetUrl("/images/activity/qr-code-scan2pay.svg"),
+  PAYQRCODE: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  PAYTOBANK: getAssetUrl("/images/activity/pay2Bank.svg"),
+  PAYTOEMAIL: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  PAYBILL: getAssetUrl("/images/activity/payBills.svg"),
+  TOPUP: getAssetUrl("/images/activity/mobile-recharge-icon.svg"),
+  SPEXPENSE: getAssetUrl("/images/activity/split_expanse.svg"),
+  FORGOTPASSWORD: getAssetUrl("/images/activity/payPhoneNo.svg"),
+  USERACTIVATED: getAssetUrl("/images/activity/user_outline.png"),
+  PROFBYQR: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  REQBYQR: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
+  SCANCOLLET: getAssetUrl("/images/activity/icon_scanToCollect.svg"),
+  SCANTOCOLLECT: getAssetUrl("/images/activity/icon_scanToCollect.svg"),
+  SCANGALERY: getAssetUrl("/images/activity/gallery.svg"),
+  DEFAULT: getAssetUrl("/images/activity/qr-code-payByCode.svg"),
 };
 
 function resolveActivityIcon(txnId = "", txnName = "") {
