@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   TrendingDown,
   TrendingUp,
@@ -11,10 +11,56 @@ import { useLanguage } from "@/components/globals/LanguageProvider";
 export function OperationSummaryCards({ storeData, currency }) {
   const { t } = useLanguage();
 
+  const totals = useMemo(() => {
+    const cashiers = storeData?.cashiers || [];
+
+    // 1. Check if backend provided root-level totals (camelCase or UPPERCASE)
+    const rootDebit = storeData?.totalDebit ?? storeData?.TOTALDEBIT;
+    const rootCredit =
+      storeData?.totalCredit ??
+      storeData?.TOTALCREDIT ??
+      storeData?.TOTALCREIDT;
+    const rootCashIn = storeData?.totalCashIn ?? storeData?.TOTALCASHIN;
+    const rootCashOut = storeData?.totalCashOut ?? storeData?.TOTALCASHOUT;
+
+    if (
+      rootDebit !== undefined ||
+      rootCredit !== undefined ||
+      rootCashIn !== undefined ||
+      rootCashOut !== undefined
+    ) {
+      return {
+        debit: parseFloat(rootDebit) || 0,
+        credit: parseFloat(rootCredit) || 0,
+        cashIn: parseFloat(rootCashIn) || 0,
+        cashOut: parseFloat(rootCashOut) || 0,
+      };
+    }
+
+    // 2. Fallback: Aggregate totals from the branch cashiers list
+    return cashiers.reduce(
+      (acc, c) => ({
+        debit:
+          acc.debit + (parseFloat(c.TOTALDEBIT || c.totalDebit) || 0),
+        credit:
+          acc.credit +
+          (parseFloat(
+            c.TOTALCREIDT || c.TOTALCREDIT || c.totalCredit,
+          ) || 0),
+        cashIn:
+          acc.cashIn + (parseFloat(c.TOTALCASHIN || c.totalCashIn) || 0),
+        cashOut:
+          acc.cashOut +
+          (parseFloat(c.TOTALCASHOUT || c.totalCashOut) || 0),
+      }),
+      { debit: 0, credit: 0, cashIn: 0, cashOut: 0 },
+    );
+  }, [storeData]);
+
   const metrics = [
     {
       title: t("total_debit", "Total Debit"),
-      amount: storeData?.totalDebit || 0,
+      amount: totals.debit,
       description: t("total_debits_charged", "Total debits processed today"),
       icon: TrendingDown,
       color: "text-rose-600 dark:text-rose-400",
@@ -22,7 +68,7 @@ export function OperationSummaryCards({ storeData, currency }) {
     },
     {
       title: t("total_credit", "Total Credit"),
-      amount: storeData?.totalCredit || 0,
+      amount: totals.credit,
       description: t("total_credits_received", "Total credits received today"),
       icon: TrendingUp,
       color: "text-emerald-600 dark:text-emerald-400",
@@ -30,7 +76,7 @@ export function OperationSummaryCards({ storeData, currency }) {
     },
     {
       title: t("total_cash_in", "Total Cash In"),
-      amount: storeData?.totalCashIn || 0,
+      amount: totals.cashIn,
       description: t("cash_inflow_to_bins", "Cash inflow deposited into tills"),
       icon: ArrowDownLeft,
       color: "text-[#2563eb] dark:text-blue-400",
@@ -38,7 +84,7 @@ export function OperationSummaryCards({ storeData, currency }) {
     },
     {
       title: t("total_cash_out", "Total Cash Out"),
-      amount: storeData?.totalCashOut || 0,
+      amount: totals.cashOut,
       description: t("cash_disbursed_from_bins", "Cash disbursed or paid out"),
       icon: ArrowUpRight,
       color: "text-amber-600 dark:text-amber-400",

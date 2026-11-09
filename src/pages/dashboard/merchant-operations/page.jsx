@@ -22,7 +22,18 @@ export default function MerchantOperationsPage() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { openConfirmDialog, openGlobalPopup } = useDialog();
-  const { currency } = useDashboardContext();
+  const { currency: activeAccountId, accounts } = useDashboardContext();
+
+  const currentAccount = useMemo(() => {
+    return (
+      accounts?.find(
+        (a) => (a.ACCOUNTNUMBER || a.ACCOUNTNO) === activeAccountId,
+      ) || accounts?.[0]
+    );
+  }, [accounts, activeAccountId]);
+
+  const currencyCode =
+    currentAccount?.CURSHRTNAME || currentAccount?.CURCODE || "";
 
   const [selectedBranch, setSelectedBranch] = useState("");
   const [operationDate, setOperationDate] = useState(() => new Date());
@@ -450,7 +461,7 @@ export default function MerchantOperationsPage() {
       />
 
       {/* ── Financial Reconciliations & Totals ─────────────────── */}
-      <OperationSummaryCards storeData={storeData} currency={currency} />
+      <OperationSummaryCards storeData={storeData} currency={currencyCode} />
 
       {/* ── Active Cashiers & Till Bins Section ──────────────────── */}
       <ActiveCashiersTable
@@ -458,7 +469,7 @@ export default function MerchantOperationsPage() {
         isLoading={isLoadingStore}
         selectedBranchName={selectedBranchName}
         displayDate={displayDate}
-        currency={currency}
+        currency={currencyCode}
         expandedCashierId={expandedCashierId}
         onToggleHistory={toggleCashierHistory}
         onCloseCashBin={handleCloseCashBin}

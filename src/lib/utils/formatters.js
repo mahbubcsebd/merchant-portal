@@ -22,11 +22,26 @@ export const formatDate = (dateString) => {
   return str;
 };
 
-export const formatAmount = (amt) => {
-  if (!amt) return "0.00";
-  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(
-    parseFloat(amt),
-  );
+export const formatAmount = (currOrAmt, maybeAmt) => {
+  let amt = currOrAmt;
+  let curr = "";
+
+  if (maybeAmt !== undefined) {
+    curr =
+      currOrAmt && isNaN(Number(currOrAmt)) ? String(currOrAmt).trim() : "";
+    amt = maybeAmt;
+  }
+
+  if (amt === undefined || amt === null || amt === "" || isNaN(Number(amt))) {
+    return curr ? `${curr} 0.00` : "0.00";
+  }
+
+  const formatted = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(parseFloat(amt));
+
+  return curr ? `${curr} ${formatted}` : formatted;
 };
 
 export const getTransactionStatusCode = (txOrStatus) => {
