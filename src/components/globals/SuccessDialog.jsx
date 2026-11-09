@@ -12,6 +12,7 @@ export default function SuccessDialog({
   title = "Success",
   message = "Operation completed successfully.",
   details = {},
+  confirmText,
   onClose,
 }) {
   const { t } = useLanguage();
@@ -61,7 +62,7 @@ export default function SuccessDialog({
           onClick={onClose}
           className="w-full max-w-[150px] uppercase font-bold h-10 text-xs"
         >
-          {t("buttonDone", "Done")}
+          {confirmText || t("buttonOK", t("buttonDone", "OK"))}
         </GlobalButton>
       </div>
     </div>

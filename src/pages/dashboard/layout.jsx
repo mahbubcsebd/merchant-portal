@@ -10,6 +10,7 @@ import {
   getPortalNotifications,
   transactionHistory,
   updateSession,
+  logout,
 } from "@/lib/api/endpoints";
 import { useDialog } from "@/components/globals/DialogProvider";
 import { useLanguage } from "@/components/globals/LanguageProvider";
@@ -327,11 +328,21 @@ export default function DashboardLayout() {
             )}
           </p>
           <ChangePinView
-            onSuccess={() =>
-              queryClient.invalidateQueries({
-                queryKey: ["userProfile"],
-              })
-            }
+            onSuccess={async () => {
+              try {
+                await logout();
+              } catch (err) {
+                console.error("Logout after PIN change error:", err);
+              } finally {
+                localStorage.removeItem("is_authenticated");
+                localStorage.removeItem("session_active_id");
+                try {
+                  localStorage.setItem("profileImage", "");
+                } catch (e) {}
+                queryClient.clear();
+                navigate("/", { replace: true });
+              }
+            }}
           />
         </div>
       </div>

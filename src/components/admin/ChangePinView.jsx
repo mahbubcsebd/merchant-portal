@@ -40,16 +40,23 @@ export default function ChangePinView({ onSuccess }) {
     mutationFn: (payload) => changePIN(payload),
     onSuccess: (data) => {
       if (data.status === "success") {
-        openSuccessDialog({
-          title: t("success", "Success"),
-          message: data.message || "PIN changed successfully.",
-        });
         setFormData({
           oldPin: "",
           newPin: "",
           confirmPin: "",
         });
-        if (onSuccess) onSuccess();
+        openSuccessDialog({
+          title: t("success", "Success"),
+          message:
+            data.message ||
+            t("pin_changed_success", "PIN changed successfully."),
+          confirmText: t("buttonOK", "OK"),
+          onClose: () => {
+            if (onSuccess) {
+              onSuccess(data);
+            }
+          },
+        });
       } else {
         openConfirmDialog({
           title: t("error", "Error"),

@@ -91,15 +91,27 @@ export function ForgotPinForm() {
       if (res?.status === "success" || res?.statusCode === 0) {
         openConfirmDialog({
           title: t("request_submitted", "Request Submitted"),
-          description: res?.message || t("forgot_pin_success_desc", "If the details match, instructions to reset your PIN have been sent to your email."),
-          confirmText: t("back_to_login", t("authenticateSignIn", "Back to Login")),
+          description:
+            res?.message ||
+            t(
+              "forgot_pin_success_desc",
+              "If the details match, instructions to reset your PIN have been sent to your email.",
+            ),
+          confirmText: t(
+            "back_to_login",
+            t("authenticateSignIn", "Back to Login"),
+          ),
           iconType: "success",
           hideCancel: true,
           onConfirm: () => {
-            reset()
-            navigate("/")
+            reset();
+            navigate("/");
           },
-        })
+          onClose: () => {
+            reset();
+            navigate("/");
+          },
+        });
       } else {
         setApiError(res?.message || t("invalid_details_try_again", "Invalid details. Please try again"))
       }
