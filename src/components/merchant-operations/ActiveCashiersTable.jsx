@@ -1,7 +1,17 @@
-import React from "react";
-import { Store, Users, AlertTriangle, Receipt, ChevronUp, ChevronDown } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Loader2,
+  Lock,
+  Receipt,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  X,
+} from "lucide-react";
 import { formatAmount } from "@/lib/utils/formatters";
 import { useLanguage } from "@/components/globals/LanguageProvider";
+import GlobalInput from "@/components/globals/GlobalInput";
+import GlobalPagination from "@/components/globals/GlobalPagination";
 import { CashierTransactionsDrawer } from "./CashierTransactionsDrawer";
 
 export function ActiveCashiersTable({
@@ -19,167 +29,294 @@ export function ActiveCashiersTable({
 }) {
   const { t } = useLanguage();
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'open' | 'closed'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Reset page when branch/cashiers change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [cashiers]);
+
+  // Counts for filter pills
+  const counts = useMemo(() => {
+    const openCount = cashiers.filter((c) => c.CASHBINSTATUS === "Y").length;
+    const closedCount = cashiers.length - openCount;
+    return {
+      all: cashiers.length,
+      open: openCount,
+      closed: closedCount,
+    };
+  }, [cashiers]);
+
+  // Filtered cashiers by search & status
+  const filteredCashiers = useMemo(() => {
+    return cashiers.filter((c) => {
+      // 1. Status filter
+      if (statusFilter === "open" && c.CASHBINSTATUS !== "Y") return false;
+      if (statusFilter === "closed" && c.CASHBINSTATUS === "Y") return false;
+
+      // 2. Search query filter (cashier ID)
+      if (searchTerm.trim()) {
+        const query = searchTerm.trim().toLowerCase();
+        const idMatch = String(c.CASHIERID || "").toLowerCase().includes(query);
+        return idMatch;
+      }
+
+      return true;
+    });
+  }, [cashiers, statusFilter, searchTerm]);
+
+  // Paginated slice
+  const paginatedCashiers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredCashiers.slice(start, start + pageSize);
+  }, [filteredCashiers, currentPage, pageSize]);
+
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-      {/* Table / Section Header */}
-      <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-[#2563eb] dark:text-blue-400 flex items-center justify-center shrink-0">
-            <Users size={18} />
-          </div>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+      {/* ── Header with Title, Note, Search & Filter Controls ─── */}
+      <div className="p-5 border-b border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {t("active_cashiers_tills", "Active Cashiers & Cash Bins")}
-              </h3>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                {cashiers.length}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {selectedBranchName} • {displayDate}
-            </p>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t("active_cashiers", "Active Cashiers")}
+            </h3>
+            {cashiers.length > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {t(
+                  "close_all_cashiers_note",
+                  "Note: Please close all cashiers before end of day close",
+                )}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-200/60 dark:border-amber-500/20">
-          <AlertTriangle size={15} className="shrink-0" />
-          <span>
-            {t(
-              "close_all_cashiers_note",
-              "Note: Please close all cashiers before end of day close.",
-            )}
-          </span>
-        </div>
+        {/* Search & Status Filter Bar (visible when cashiers exist) */}
+        {cashiers.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            {/* Status Segmented Filter */}
+            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-0.5 text-xs font-semibold self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("all");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                  statusFilter === "all"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {t("all", "All")} ({counts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("open");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                  statusFilter === "open"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {t("open", "Open")} ({counts.open})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("closed");
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                  statusFilter === "closed"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {t("closed", "Closed")} ({counts.closed})
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <GlobalInput
+                placeholder={t("search_cashier_id", "Search Cashier ID...")}
+                leftIcon={<Search size={14} />}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                inputClassName="h-9 text-xs pl-9 pr-8"
+                containerClassName="w-full"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-0.5 cursor-pointer"
+                  title={t("clear_search", "Clear search")}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Content: Loading, Empty, or Table */}
+      {/* ── Content: Loading, Empty, or Table ──────────────────── */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400 dark:text-slate-500">
-          <div className="w-8 h-8 border-3 border-[#2563eb] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-semibold">
-            {t("loading_cashier_data", "Loading cashier till status...")}
-          </p>
+        <div className="py-16 flex items-center justify-center gap-2 text-slate-400">
+          <Loader2 size={18} className="animate-spin text-[#2563eb]" />
+          <span className="text-xs font-medium">
+            {t("loading", "Loading...")}
+          </span>
         </div>
       ) : cashiers.length === 0 ? (
-        <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
-            <Store size={26} />
-          </div>
-          <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-            {t("no_active_cashiers", "No active cashiers for this operating session")}
-          </h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+        <div className="py-12 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {t(
-              "no_cashiers_opened_bin_desc",
-              "No cashier has opened a cash bin or recorded transactions under this branch for the selected date.",
+              "no_cashiers_opened_bin",
+              "No cashiers has opened Cash Bin.",
             )}
           </p>
         </div>
+      ) : filteredCashiers.length === 0 ? (
+        <div className="py-12 px-4 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+            {t(
+              "no_matching_cashiers",
+              "No cashiers match your search or filter criteria.",
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm("");
+              setStatusFilter("all");
+              setCurrentPage(1);
+            }}
+            className="text-xs font-semibold text-[#2563eb] hover:underline cursor-pointer"
+          >
+            {t("clear_filters", "Clear filters")}
+          </button>
+        </div>
       ) : (
-        <div>
-          {/* Desktop Table View */}
+        <>
+          {/* ── Desktop Table ────────────────────────────────── */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50/80 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80">
+                <tr className="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="py-3 px-5">{t("cashier_id", "Cashier ID")}</th>
                   <th className="py-3 px-5">{t("bin_status", "Bin Status")}</th>
-                  <th className="py-3 px-5 text-right">{t("total_debit", "Total Debit")}</th>
-                  <th className="py-3 px-5 text-right">{t("total_credit", "Total Credit")}</th>
-                  <th className="py-3 px-5 text-right">{t("total_cash_in", "Cash In")}</th>
-                  <th className="py-3 px-5 text-right">{t("total_cash_out", "Cash Out")}</th>
-                  <th className="py-3 px-5 text-center">{t("actions", "Actions")}</th>
+                  <th className="py-3 px-5 text-right">
+                    {t("total_debit", "Total Debit")}
+                  </th>
+                  <th className="py-3 px-5 text-right">
+                    {t("total_credit", "Total Credit")}
+                  </th>
+                  <th className="py-3 px-5 text-right">
+                    {t("total_cash_in", "Total Cash In")}
+                  </th>
+                  <th className="py-3 px-5 text-right">
+                    {t("total_cash_out", "Total Cash Out")}
+                  </th>
+                  <th className="py-3 px-5 text-center">
+                    {t("action", "Action")}
+                  </th>
+                  <th className="py-3 px-5 text-center">
+                    {t("history", "History")}
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
-                {cashiers.map((c) => {
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {paginatedCashiers.map((c, idx) => {
                   const isBinOpen = c.CASHBINSTATUS === "Y";
                   const isExpanded = expandedCashierId === c.CASHIERID;
 
                   return (
                     <React.Fragment key={c.CASHIERID}>
                       <tr
-                        className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
-                          isExpanded ? "bg-blue-50/30 dark:bg-blue-500/[0.03]" : ""
-                        }`}
+                        className={`transition-colors ${
+                          isExpanded
+                            ? "bg-blue-50/70 dark:bg-white/[0.06]"
+                            : idx % 2 === 0
+                              ? "bg-white dark:bg-transparent"
+                              : "bg-blue-50/50 dark:bg-white/[0.02]"
+                        } hover:bg-slate-50 dark:hover:bg-white/[0.04]`}
                       >
-                        {/* Cashier ID */}
-                        <td className="py-4 px-5 font-bold text-slate-900 dark:text-white">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" />
-                            <span>{c.CASHIERID}</span>
-                          </div>
+                        <td className="py-3.5 px-5 font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                          {c.CASHIERID}
                         </td>
-
-                        {/* Bin Status */}
-                        <td className="py-4 px-5">
-                          {isBinOpen ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              {t("cash_bin_opened", "Cash Bin Opened")}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                              {t("cash_bin_closed_today", "Cash Bin Closed")}
-                            </span>
-                          )}
+                        <td className="py-3.5 px-5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          {isBinOpen
+                            ? t("cash_bin_opened", "Cash Bin Opened")
+                            : t(
+                                "cash_bin_closed_today",
+                                "Cash Bin Closed For Today",
+                              )}
                         </td>
-
-                        {/* Financials */}
-                        <td className="py-4 px-5 text-right font-semibold text-rose-600 dark:text-rose-400">
+                        <td className="py-3.5 px-5 text-right font-medium text-slate-800 dark:text-slate-200">
                           {formatAmount(currency, c.TOTALDEBIT || 0)}
                         </td>
-                        <td className="py-4 px-5 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                        <td className="py-3.5 px-5 text-right font-medium text-slate-800 dark:text-slate-200">
                           {formatAmount(currency, c.TOTALCREIDT || 0)}
                         </td>
-                        <td className="py-4 px-5 text-right font-semibold text-blue-600 dark:text-blue-400">
+                        <td className="py-3.5 px-5 text-right font-medium text-slate-800 dark:text-slate-200">
                           {formatAmount(currency, c.TOTALCASHIN || 0)}
                         </td>
-                        <td className="py-4 px-5 text-right font-semibold text-amber-600 dark:text-amber-400">
+                        <td className="py-3.5 px-5 text-right font-medium text-slate-800 dark:text-slate-200">
                           {formatAmount(currency, c.TOTALCASHOUT || 0)}
                         </td>
-
-                        {/* Actions */}
-                        <td className="py-4 px-5">
-                          <div className="flex items-center justify-center gap-2">
-                            {isBinOpen && (
-                              <button
-                                type="button"
-                                onClick={() => onCloseCashBin(c)}
-                                disabled={isClosingBin}
-                                className="h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 text-xs font-semibold transition-all cursor-pointer border border-rose-200/60 dark:border-rose-500/20"
-                              >
-                                {t("close_bin", "Close Cash Bin")}
-                              </button>
-                            )}
-
+                        <td className="py-3.5 px-5 text-center whitespace-nowrap">
+                          {isBinOpen && (
                             <button
                               type="button"
-                              onClick={() => onToggleHistory(c.CASHIERID)}
-                              className={`h-8 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                                isExpanded
-                                  ? "bg-[#2563eb] text-white border-[#2563eb] shadow-xs"
-                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/80"
-                              }`}
+                              onClick={() => onCloseCashBin(c)}
+                              disabled={isClosingBin}
+                              className="h-8 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5 shadow-2xs"
                             >
-                              <Receipt size={13} />
-                              <span>{t("transactions", "Transactions")}</span>
-                              {isExpanded ? (
-                                <ChevronUp size={13} />
-                              ) : (
-                                <ChevronDown size={13} />
-                              )}
+                              <Lock size={12} />
+                              <span>{t("close_cash_bin", "Close Cash Bin")}</span>
                             </button>
-                          </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-5 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => onToggleHistory(c.CASHIERID)}
+                            className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer border inline-flex items-center gap-1.5 ${
+                              isExpanded
+                                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-2xs"
+                                : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            }`}
+                          >
+                            <Receipt size={13} />
+                            <span>{t("transaction_history", "Transaction History")}</span>
+                            {isExpanded ? (
+                              <ChevronUp size={12} />
+                            ) : (
+                              <ChevronDown size={12} />
+                            )}
+                          </button>
                         </td>
                       </tr>
 
-                      {/* Expandable Transaction History Row */}
+                      {/* Expanded Transaction History */}
                       {isExpanded && (
-                        <tr className="bg-slate-50/60 dark:bg-slate-900/40">
-                          <td colSpan={7} className="p-4 sm:p-6">
+                        <tr className="bg-slate-50/80 dark:bg-slate-800/20">
+                          <td colSpan={8} className="p-5">
                             <CashierTransactionsDrawer
                               cashierId={c.CASHIERID}
                               transactions={cashierTransactions}
@@ -196,105 +333,129 @@ export function ActiveCashiersTable({
             </table>
           </div>
 
-          {/* Mobile Card Feed View */}
-          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/80 p-4 space-y-4">
-            {cashiers.map((c) => {
+          {/* ── Mobile Cards ─────────────────────────────────── */}
+          <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-800">
+            {paginatedCashiers.map((c) => {
               const isBinOpen = c.CASHBINSTATUS === "Y";
               const isExpanded = expandedCashierId === c.CASHIERID;
 
               return (
-                <div key={c.CASHIERID} className="pt-4 first:pt-0 space-y-3">
+                <div key={c.CASHIERID} className="p-4 space-y-3">
+                  {/* Cashier ID + Status */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span className="font-bold text-sm text-slate-900 dark:text-white">
-                        {c.CASHIERID}
-                      </span>
-                    </div>
-                    {isBinOpen ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                        {t("open", "Open")}
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {t("closed", "Closed")}
-                      </span>
-                    )}
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">
+                      {c.CASHIERID}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {isBinOpen
+                        ? t("cash_bin_opened", "Cash Bin Opened")
+                        : t(
+                            "cash_bin_closed_today",
+                            "Cash Bin Closed",
+                          )}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl">
+                  {/* Financial Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50/60 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/60">
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block mb-0.5">
                         {t("total_debit", "Debit")}
                       </span>
-                      <span className="font-semibold text-rose-600 dark:text-rose-400">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
                         {formatAmount(currency, c.TOTALDEBIT || 0)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block mb-0.5">
                         {t("total_credit", "Credit")}
                       </span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
                         {formatAmount(currency, c.TOTALCREIDT || 0)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block mb-0.5">
                         {t("total_cash_in", "Cash In")}
                       </span>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
                         {formatAmount(currency, c.TOTALCASHIN || 0)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block mb-0.5">
                         {t("total_cash_out", "Cash Out")}
                       </span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
                         {formatAmount(currency, c.TOTALCASHOUT || 0)}
                       </span>
                     </div>
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="flex items-center gap-2">
                     {isBinOpen && (
                       <button
                         type="button"
                         onClick={() => onCloseCashBin(c)}
                         disabled={isClosingBin}
-                        className="flex-1 h-9 rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 text-xs font-semibold"
+                        className="flex-1 h-9 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        {t("close_bin", "Close Bin")}
+                        <Lock size={13} />
+                        <span>{t("close_cash_bin", "Close Cash Bin")}</span>
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => onToggleHistory(c.CASHIERID)}
-                      className="flex-1 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5"
+                      className={`flex-1 h-9 rounded-lg border text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                        isExpanded
+                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white"
+                          : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                      }`}
                     >
                       <Receipt size={13} />
-                      <span>{t("transactions", "Transactions")}</span>
+                      <span>{t("transaction_history", "Transaction History")}</span>
+                      {isExpanded ? (
+                        <ChevronUp size={12} />
+                      ) : (
+                        <ChevronDown size={12} />
+                      )}
                     </button>
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-3">
-                      <CashierTransactionsDrawer
-                        cashierId={c.CASHIERID}
-                        transactions={cashierTransactions}
-                        isLoading={isLoadingTxns}
-                        currency={currency}
-                      />
-                    </div>
+                    <CashierTransactionsDrawer
+                      cashierId={c.CASHIERID}
+                      transactions={cashierTransactions}
+                      isLoading={isLoadingTxns}
+                      currency={currency}
+                    />
                   )}
                 </div>
               );
             })}
           </div>
-        </div>
+
+          {/* ── Table Pagination ────────────────────────────── */}
+          {filteredCashiers.length > 0 && (
+            <div className="px-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <GlobalPagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalRecords={filteredCashiers.length}
+                currentCount={paginatedCashiers.length}
+                onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+                pageSizeOptions={[5, 10, 20, 50]}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
-

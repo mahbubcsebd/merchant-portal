@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
@@ -68,7 +68,7 @@ export default function MerchantOperationsPage() {
   }, [subsidiariesData, t]);
 
   // Auto-select first branch when list loads if none selected
-  useMemo(() => {
+  useEffect(() => {
     if (!selectedBranch && branchOptions.length > 1) {
       setSelectedBranch(branchOptions[1].value);
     }
@@ -352,88 +352,49 @@ export default function MerchantOperationsPage() {
   const isOpened = Boolean(storeData?.openedStore);
   const isClosed = Boolean(storeData?.closedStore);
 
+  // Status meta for the OperationControlBar (message from API)
   const storeStatusMeta = useMemo(() => {
-    if (!selectedBranch) {
-      return {
-        label: t("select_branch_to_view", "Select a branch to view status"),
-        badge: t("pending_selection", "Pending"),
-        color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-        indicator: "bg-slate-400",
-      };
-    }
-    if (isLoadingStore) {
-      return {
-        label: t("loading_status", "Checking store operational state..."),
-        badge: t("checking", "Checking..."),
-        color: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
-        indicator: "bg-blue-500 animate-pulse",
-      };
-    }
     if (isStillOpenPrevious) {
       return {
         label:
           storeData?.message ||
-          t("previous_session_still_open", "Previous operating session is still open. Force close required."),
-        badge: t("action_required", "Action Required"),
-        color: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20",
-        indicator: "bg-amber-500",
+          t(
+            "previous_session_still_open",
+            "The Branch previous operations have not been closed yet. Please close before opening new operation.",
+          ),
       };
     }
-    if (isOpened && !isClosed) {
-      return {
-        label: t("store_active_desc", "Branch store is actively open and accepting transactions today."),
-        badge: t("store_opened", "Store Opened"),
-        color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20",
-        indicator: "bg-emerald-500",
-      };
-    }
-    return {
-      label: t("store_closed_desc", "Store is currently closed for the selected date."),
-      badge: t("store_closed_for_today", "Store Closed"),
-      color: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20",
-      indicator: "bg-rose-500",
-    };
-  }, [selectedBranch, isLoadingStore, isStillOpenPrevious, isOpened, isClosed, storeData, t]);
+    return { label: "" };
+  }, [isStillOpenPrevious, storeData, t]);
 
   const cashiers = storeData?.cashiers || [];
   const transactions = cashierTxnData?.transactions || [];
 
   return (
-    <div className="w-full pb-10 space-y-6">
+    <div className="w-full pb-10 space-y-5">
       {/* ── Page Header ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
-            {t("operations", "Operations")}
-          </p>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            {t("merchant_operations", "Merchant Operations")}
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {t(
-              "merchant_operations_desc",
-              "Manage branch daily store opening/closing, active cashier till bins, and live cash reconciliations.",
-            )}
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          {t("merchant_operations", "Merchant Operations")}
+        </h2>
 
         {selectedBranch && (
           <button
             type="button"
             onClick={() => refetchStore()}
             disabled={isFetchingStore}
-            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.04)] disabled:opacity-50 cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
           >
             <RefreshCw
-              size={14}
-              className={isFetchingStore ? "animate-spin text-blue-600" : ""}
+              size={13}
+              className={isFetchingStore ? "animate-spin" : ""}
             />
             <span>{t("refresh", "Refresh")}</span>
           </button>
         )}
       </div>
 
-      {/* ── Filter & Store Control Bar ─────────────────────────── */}
+      {/* ── Branch Selection + Store Status + Action ──────────── */}
       <OperationControlBar
         selectedBranch={selectedBranch}
         onBranchChange={(val) => {
@@ -460,10 +421,10 @@ export default function MerchantOperationsPage() {
         isForceClosing={forceCloseMutation.isPending}
       />
 
-      {/* ── Financial Reconciliations & Totals ─────────────────── */}
+      {/* ── Totals Summary ─────────────────────────────────── */}
       <OperationSummaryCards storeData={storeData} currency={currencyCode} />
 
-      {/* ── Active Cashiers & Till Bins Section ──────────────────── */}
+      {/* ── Active Cashiers ────────────────────────────────── */}
       <ActiveCashiersTable
         cashiers={cashiers}
         isLoading={isLoadingStore}

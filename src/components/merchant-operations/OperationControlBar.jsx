@@ -1,6 +1,5 @@
 import React from "react";
-import { Lock, Unlock, Power, Loader2 } from "lucide-react";
-import GlobalSelect from "@/components/globals/GlobalSelect";
+import { Loader2, MapPin, Lock, Unlock, Power } from "lucide-react";
 import GlobalButton from "@/components/globals/GlobalButton";
 import GlobalDatePicker from "@/components/globals/GlobalDatePicker";
 import { useLanguage } from "@/components/globals/LanguageProvider";
@@ -26,108 +25,137 @@ export function OperationControlBar({
 }) {
   const { t } = useLanguage();
 
-  return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
-        {/* Dropdown Filters (Branch & Date) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 max-w-2xl">
-          <GlobalSelect
-            label={t("branch_name", "Branch Name")}
-            value={selectedBranch}
-            onChange={onBranchChange}
-            options={branchOptions}
-            disabled={isLoadingBranches}
-            containerClassName="w-full"
-            labelClassName="text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5"
-          />
+  // Filter out the placeholder "Select Branch" option
+  const branches = branchOptions.filter((b) => b.value !== "");
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-white/70 mb-1.5">
-              {t("operation_date", "Operation Date")}
+  // Simple status text matching portal_uat
+  let statusText = "";
+  if (isStillOpenPrevious) {
+    statusText = t("store_not_opened_yet", "Store Not Opened Yet");
+  } else if (isOpened && !isClosed) {
+    statusText = t("store_opened", "Store Opened");
+  } else {
+    statusText = t("store_closed_for_today", "Store Closed For Today");
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+      {/* ── Branch Tabs + Date Picker ────────────────────────── */}
+      <div className="p-5 space-y-4">
+        {/* Label */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+            {t("branch_name", "Branch Name")}
+          </label>
+
+          {/* Date Picker — aligned right on desktop */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+              {t("date", "Date")}
             </label>
-            <GlobalDatePicker
-              value={operationDate}
-              onChange={onDateChange}
-              placeholder={t("select_date", "Select Date")}
-              className="h-10"
-            />
+            <div className="w-44">
+              <GlobalDatePicker
+                value={operationDate}
+                onChange={onDateChange}
+                placeholder={t("select_date", "Select Date")}
+                className="h-9 text-xs"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Action Buttons (Open Store, Close Store, Force Close) */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-2 lg:pt-0">
-          {isStillOpenPrevious ? (
-            <GlobalButton
-              variant="danger"
-              onClick={onForceCloseStore}
-              disabled={isForceClosing}
-              className="h-10 px-5 text-xs font-bold uppercase tracking-wider flex items-center gap-2"
-            >
-              {isForceClosing ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <Power size={15} />
-              )}
-              <span>{t("force_close_store", "Force Close Previous")}</span>
-            </GlobalButton>
-          ) : isOpened && !isClosed ? (
-            <GlobalButton
-              variant="danger"
-              onClick={onCloseStore}
-              disabled={isClosing}
-              className="h-10 px-6 text-xs font-bold uppercase tracking-wider flex items-center gap-2"
-            >
-              {isClosing ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <Lock size={15} />
-              )}
-              <span>{t("close_store", "Close Store")}</span>
-            </GlobalButton>
-          ) : (
-            <GlobalButton
-              variant="primary"
-              onClick={onOpenStore}
-              disabled={isOpening || !selectedBranch}
-              className="h-10 px-6 text-xs font-bold uppercase tracking-wider flex items-center gap-2"
-            >
-              {isOpening ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <Unlock size={15} />
-              )}
-              <span>{t("open_store", "Open Store")}</span>
-            </GlobalButton>
-          )}
-        </div>
+        {/* Branch Tabs */}
+        {isLoadingBranches ? (
+          <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+            <Loader2 size={14} className="animate-spin" />
+            <span>{t("loading_branches", "Loading branches...")}</span>
+          </div>
+        ) : branches.length === 0 ? (
+          <p className="text-xs text-slate-400 py-2">
+            {t("no_branches", "No branches available.")}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {branches.map((branch) => {
+              const isActive = branch.value === selectedBranch;
+              return (
+                <button
+                  key={branch.value}
+                  type="button"
+                  onClick={() => onBranchChange(branch.value)}
+                  className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                    isActive
+                      ? "bg-[#2563eb] text-white border-[#2563eb] shadow-sm"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                  }`}
+                >
+                  <MapPin size={13} className={isActive ? "text-white/80" : "text-slate-400"} />
+                  <span>{branch.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Status Callout Banner */}
-      <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5">
-          <span
-            className={`w-2.5 h-2.5 rounded-full shrink-0 ${storeStatusMeta.indicator}`}
-          />
-          <span className="font-semibold text-slate-800 dark:text-slate-200">
-            {t("store_status", "Store Status")}:
-          </span>
-          <span className="text-slate-600 dark:text-slate-400">
-            {storeStatusMeta.label}
-          </span>
-        </div>
+      {/* ── Status + Action Row ──────────────────────────────── */}
+      {selectedBranch && (
+        <div className="px-5 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t("store_status", "Store Status")}:{" "}
+              <span className="font-bold text-slate-900 dark:text-white">
+                {statusText}
+              </span>
+            </p>
+            {isStillOpenPrevious && storeStatusMeta?.label && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {storeStatusMeta.label}
+              </p>
+            )}
+          </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${storeStatusMeta.color}`}
-          >
-            {storeStatusMeta.badge}
-          </span>
-          <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">
-            • {displayDate}
-          </span>
+          <div className="shrink-0">
+            {isStillOpenPrevious ? (
+              <GlobalButton
+                variant="danger"
+                size="sm"
+                onClick={onForceCloseStore}
+                disabled={isForceClosing}
+                isLoading={isForceClosing}
+                loadingText={t("closing", "Closing...")}
+                leftIcon={<Power size={14} />}
+              >
+                {t("force_close", "Force Close")}
+              </GlobalButton>
+            ) : isOpened && !isClosed ? (
+              <GlobalButton
+                variant="danger"
+                size="sm"
+                onClick={onCloseStore}
+                disabled={isClosing}
+                isLoading={isClosing}
+                loadingText={t("closing", "Closing...")}
+                leftIcon={<Lock size={14} />}
+              >
+                {t("close_store", "Close Store")}
+              </GlobalButton>
+            ) : (
+              <GlobalButton
+                variant="primary"
+                size="sm"
+                onClick={onOpenStore}
+                disabled={isOpening || !selectedBranch}
+                isLoading={isOpening}
+                loadingText={t("opening", "Opening...")}
+                leftIcon={<Unlock size={14} />}
+              >
+                {t("open_store", "Open Store")}
+              </GlobalButton>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
-
