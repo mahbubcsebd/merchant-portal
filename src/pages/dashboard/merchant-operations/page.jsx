@@ -51,19 +51,80 @@ export default function MerchantOperationsPage() {
     return format(operationDate, "MMMM d, yyyy");
   }, [operationDate]);
 
-  // 1. Fetch Branches (Subsidiaries)
-  const { data: subsidiariesData, isLoading: isLoadingBranches } = useQuery({
-    queryKey: ["getSubsidiaries"],
-    queryFn: () => getSubsidiaries(),
+  // 1. Fetch Branches (Subsidiaries) with store status
+  const {
+    data: subsidiariesData,
+    isLoading: isLoadingBranches,
+    refetch: refetchBranches,
+  } = useQuery({
+    queryKey: ["getSubsidiaries", { includeStoreStatus: true }],
+    queryFn: () => getSubsidiaries({ includeStoreStatus: true }),
     staleTime: 0,
   });
 
   const branchOptions = useMemo(() => {
     const list = subsidiariesData?.data || [];
-    const opts = list.map((sub) => ({
-      value: String(sub.CORPCUSTSUBID || sub.id || ""),
-      label: sub.SUBNAME || sub.name || `Branch #${sub.CORPCUSTSUBID}`,
-    }));
+    const storeStatusList = Array.isArray(subsidiariesData?.storeStatus)
+      ? subsidiariesData.storeStatus
+      : [];
+
+    // Create a fast lookup map by subsidiaryId (string-normalized)
+    const statusMap = new Map();
+    storeStatusList.forEach((item) => {
+      if (
+        item &&
+        item.subsidiaryId !== undefined &&
+        item.subsidiaryId !== null
+      ) {
+        statusMap.set(String(item.subsidiaryId).trim(), item);
+      }
+    });
+
+    const opts = list.map((sub) => {
+      const subId = String(sub.CORPCUSTSUBID || sub.id || "").trim();
+      const statusObj = statusMap.get(subId);
+
+      let isOpened = false;
+      let isClosed = false;
+      let isStillOpenPrevious = false;
+      let hasStatusInfo = false;
+
+      if (statusObj) {
+        hasStatusInfo = true;
+        isStillOpenPrevious = Boolean(statusObj.stillOpenStore);
+        isOpened = Boolean(statusObj.openedStore);
+        isClosed = Boolean(statusObj.closedStore);
+      } else if (
+        sub.openedStore !== undefined ||
+        sub.closedStore !== undefined ||
+        sub.stillOpenStore !== undefined
+      ) {
+        // Fallback if status was attached directly to the subsidiary
+        hasStatusInfo = true;
+        isStillOpenPrevious = Boolean(sub.stillOpenStore);
+        isOpened = Boolean(sub.openedStore);
+        isClosed = Boolean(sub.closedStore);
+      }
+
+      // High-level status key for UI color: "opened" (Green) | "closed" (Red) | "not_opened" (Grey)
+      let statusKey = "not_opened";
+      if (isOpened && !isClosed) {
+        statusKey = "opened";
+      } else if (isClosed) {
+        statusKey = "closed";
+      }
+
+      return {
+        value: subId,
+        label: sub.SUBNAME || sub.name || `Branch #${subId}`,
+        raw: sub,
+        hasStatusInfo,
+        statusKey,
+        isOpened,
+        isClosed,
+        isStillOpenPrevious,
+      };
+    });
     return [{ value: "", label: t("select_branch", "Select Branch") }, ...opts];
   }, [subsidiariesData, t]);
 
@@ -116,6 +177,9 @@ export default function MerchantOperationsPage() {
         queryClient.invalidateQueries({
           queryKey: ["getOperationStore", selectedBranch, formattedApiDate],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["getSubsidiaries"],
+        });
       } else {
         openGlobalPopup({
           title: t("notice", "Notice"),
@@ -154,6 +218,9 @@ export default function MerchantOperationsPage() {
         });
         queryClient.invalidateQueries({
           queryKey: ["getOperationStore", selectedBranch, formattedApiDate],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["getSubsidiaries"],
         });
       } else {
         openGlobalPopup({
@@ -196,6 +263,9 @@ export default function MerchantOperationsPage() {
         queryClient.invalidateQueries({
           queryKey: ["getOperationStore", selectedBranch, formattedApiDate],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["getSubsidiaries"],
+        });
       } else {
         openGlobalPopup({
           title: t("error", "Error"),
@@ -235,6 +305,9 @@ export default function MerchantOperationsPage() {
         });
         queryClient.invalidateQueries({
           queryKey: ["getOperationStore", selectedBranch, formattedApiDate],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["getSubsidiaries"],
         });
       } else {
         openGlobalPopup({
@@ -372,22 +445,34 @@ export default function MerchantOperationsPage() {
 
   return (
     <div className="w-full pb-10 space-y-5">
-      {/* ── Page Header ────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-          {t("merchant_operations", "Merchant Operations")}
-        </h2>
+      {/* ── Page Header ─────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1b55ad] dark:text-blue-400 mb-1">
+            {t("operations", "Operations")}
+          </p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            {t("merchant_operations", "Merchant Operations")}
+          </h2>
+        </div>
 
         {selectedBranch && (
           <button
             type="button"
-            onClick={() => refetchStore()}
-            disabled={isFetchingStore}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+            onClick={() => {
+              refetchStore();
+              refetchBranches();
+            }}
+            disabled={isFetchingStore || isLoadingBranches}
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold shadow-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw
-              size={13}
-              className={isFetchingStore ? "animate-spin" : ""}
+              size={14}
+              className={
+                isFetchingStore || isLoadingBranches
+                  ? "animate-spin text-[#2563eb]"
+                  : ""
+              }
             />
             <span>{t("refresh", "Refresh")}</span>
           </button>
