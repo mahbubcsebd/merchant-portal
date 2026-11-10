@@ -296,10 +296,10 @@ export function ActiveCashiersTable({
                           <button
                             type="button"
                             onClick={() => onToggleHistory(c.CASHIERID)}
-                            className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer border inline-flex items-center gap-1.5 ${
+                            className={`h-8 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer border inline-flex items-center gap-1.5 ${
                               isExpanded
-                                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-2xs"
-                                : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                ? "bg-[#1d4ed8] text-white border-[#1d4ed8] shadow-inner ring-2 ring-blue-500/20"
+                                : "bg-[#2563eb] hover:bg-[#1d4ed8] text-white border-[#2563eb] shadow-2xs"
                             }`}
                           >
                             <Receipt size={13} />
@@ -335,7 +335,7 @@ export function ActiveCashiersTable({
 
           {/* ── Mobile Cards ─────────────────────────────────── */}
           <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-800">
-            {paginatedCashiers.map((c) => {
+            {paginatedCashiers.map((c, idx) => {
               const isBinOpen = c.CASHBINSTATUS === "Y";
               const isExpanded = expandedCashierId === c.CASHIERID;
 
@@ -411,10 +411,10 @@ export function ActiveCashiersTable({
                     <button
                       type="button"
                       onClick={() => onToggleHistory(c.CASHIERID)}
-                      className={`flex-1 h-9 rounded-lg border text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                      className={`flex-1 h-9 rounded-lg border text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         isExpanded
-                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white"
-                          : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                          ? "bg-[#1d4ed8] text-white border-[#1d4ed8] ring-2 ring-blue-500/20"
+                          : "bg-[#2563eb] hover:bg-[#1d4ed8] text-white border-[#2563eb] shadow-2xs"
                       }`}
                     >
                       <Receipt size={13} />
