@@ -203,7 +203,7 @@ export function RecentActivityCard() {
         const meta = resolveActivityMeta(notif);
 
         return {
-          id: notif.msgId || index,
+          id: `${notif.msgId || "act"}-${index}`,
           title,
           description: msg,
           date,

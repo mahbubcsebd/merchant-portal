@@ -490,6 +490,7 @@ export default function MerchantOperationsPage() {
         isLoadingBranches={isLoadingBranches}
         operationDate={operationDate}
         onDateChange={(date) => {
+          if (date && date > new Date()) return;
           setOperationDate(date);
           setExpandedCashierId(null);
         }}

@@ -142,6 +142,7 @@ export function OperationControlBar({
                 onChange={onDateChange}
                 placeholder={t("select_date", "Select Date")}
                 className="h-9 text-xs"
+                maxDate={new Date()}
               />
             </div>
           </div>
@@ -181,13 +182,13 @@ export function OperationControlBar({
           </p>
         ) : (
           <div className="flex flex-wrap gap-2 pt-0.5">
-            {branches.map((branch) => {
+            {branches.map((branch, idx) => {
               const isActive = branch.value === selectedBranch;
               const styles = getBranchButtonStyles(branch, isActive);
 
               return (
                 <button
-                  key={branch.value}
+                  key={`branch-${branch.value}-${idx}`}
                   type="button"
                   onClick={() => onBranchChange(branch.value)}
                   title={styles.tooltip || undefined}

@@ -246,7 +246,7 @@ export function ActiveCashiersTable({
                   const isExpanded = expandedCashierId === c.CASHIERID;
 
                   return (
-                    <React.Fragment key={c.CASHIERID}>
+                    <React.Fragment key={`${c.CASHIERID}-${idx}`}>
                       <tr
                         className={`transition-colors ${
                           isExpanded
@@ -340,7 +340,10 @@ export function ActiveCashiersTable({
               const isExpanded = expandedCashierId === c.CASHIERID;
 
               return (
-                <div key={c.CASHIERID} className="p-4 space-y-3">
+                <div
+                  key={`mobile-cashier-${c.CASHIERID}-${idx}`}
+                  className="p-4 space-y-3"
+                >
                   {/* Cashier ID + Status */}
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-slate-900 dark:text-white">

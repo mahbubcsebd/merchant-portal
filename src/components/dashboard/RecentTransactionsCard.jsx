@@ -61,13 +61,15 @@ export function RecentTransactionsCard() {
       }).format(amt)}`;
 
       return {
-        id: tx.confirmationNumber || idx,
+        id: `${tx.confirmationNumber || tx.txnId || "tx"}-${tx.txnDebitCreditCode || ""}-${idx}`,
         title,
         date: formattedDate,
         status: statusLabel,
         amountFormatted: formattedAmount,
         isIncoming,
-        isBill: (tx.txnCode || "").toUpperCase().includes("BILL") || title.toLowerCase().includes("bill"),
+        isBill:
+          (tx.txnCode || "").toUpperCase().includes("BILL") ||
+          title.toLowerCase().includes("bill"),
       };
     });
   }, [transactions]);
@@ -145,9 +147,9 @@ export function RecentTransactionsCard() {
 
           {/* Table Body */}
           <div className="divide-y divide-slate-50 dark:divide-slate-800/40">
-            {formattedList.map((tx) => (
+            {formattedList.map((tx, idx) => (
               <div
-                key={tx.id}
+                key={tx.id || `recent-tx-${idx}`}
                 className="grid grid-cols-12 items-center py-2.5 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
               >
                 {/* Transaction column: Icon + Name */}

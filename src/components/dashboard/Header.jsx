@@ -340,7 +340,7 @@ export function Header({ title = "Dashboard", setIsMobileOpen }) {
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100 dark:divide-white/5">
-                  {notifications.map((notif) => {
+                  {notifications.map((notif, idx) => {
                     const unread = isUnread(notif);
                     const meta =
                       notificationMeta[notif.notificationType] ||
@@ -348,7 +348,7 @@ export function Header({ title = "Dashboard", setIsMobileOpen }) {
                     const IconComponent = meta.icon;
                     return (
                       <li
-                        key={notif.msgId}
+                        key={`notif-${notif.msgId || idx}-${idx}`}
                         onClick={() => {
                           markAsRead(notif.msgId);
                           openConfirmDialog({

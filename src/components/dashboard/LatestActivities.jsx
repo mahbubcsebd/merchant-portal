@@ -112,9 +112,9 @@ export function LatestActivities() {
               {t("no_recent_activities", "No recent activities found.")}
             </div>
           ) : (
-            recentNotifications.map((activity) => (
+            recentNotifications.map((activity, idx) => (
               <div
-                key={activity.msgId}
+                key={`activity-${activity.msgId || idx}-${idx}`}
                 className="flex items-start gap-4 px-5 py-3.5
                   hover:bg-slate-50 dark:hover:bg-white/[0.03]
                   transition-colors"
