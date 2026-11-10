@@ -35,6 +35,43 @@ export default function TransferForm({ setView }) {
   const { errors, validate, clearError, clearAllErrors } = useFormValidation();
   const { t } = useLanguage();
 
+  const hasTriggeredNoBeneficiaryRef = React.useRef(false);
+
+  useEffect(() => {
+    if (beneficiariesQuery.isLoading) return;
+
+    const list = beneficiariesQuery.data || [];
+    const isNoBeneficiary = beneficiariesQuery.isError || list.length === 0;
+
+    if (isNoBeneficiary && !hasTriggeredNoBeneficiaryRef.current) {
+      hasTriggeredNoBeneficiaryRef.current = true;
+      const errorMsg =
+        beneficiariesQuery.error?.message ||
+        beneficiariesQuery.data?.emptyMessage ||
+        t("no_beneficiaries_found", "No beneficiary found");
+
+      openGlobalPopup({
+        title: t("error", "Error"),
+        description: errorMsg,
+        type: "error",
+        buttonText: "OK",
+        onClose: () => {
+          closeDialog();
+          setView("manage_beneficiaries");
+        },
+      });
+    }
+  }, [
+    beneficiariesQuery.isLoading,
+    beneficiariesQuery.isError,
+    beneficiariesQuery.data,
+    beneficiariesQuery.error,
+    openGlobalPopup,
+    closeDialog,
+    setView,
+    t,
+  ]);
+
   const [formData, setFormData] = useState({
     to: "",
     from: "",

@@ -308,63 +308,39 @@ export default function ManageBillTemplatesPage() {
             <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-center justify-center text-red-500 mb-4">
               <AlertCircle size={26} />
             </div>
-            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              {t("error_loading_templates", "Error loading bill templates")}
-            </h4>
-            <p className="text-xs text-red-500 dark:text-red-400 max-w-md mb-5">
-              {userBillersQuery.error?.message ||
-                t(
-                  "something_went_wrong_try_again",
-                  "Something went wrong. Please try again.",
-                )}
+            <p className="text-sm font-semibold text-red-500 dark:text-red-400 max-w-md">
+              {userBillersQuery.error?.message}
             </p>
-            <GlobalButton
-              variant="secondary"
-              onClick={() => userBillersQuery.refetch()}
-              className="h-9 px-4 text-xs font-bold uppercase tracking-wider"
-            >
-              {t("retry", "Retry")}
-            </GlobalButton>
           </div>
         ) : filteredTemplates.length === 0 ? (
           <div className="py-16 px-4 flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-white/30 mb-4">
               <Receipt size={26} />
             </div>
-            <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              {searchTerm
-                ? t("no_matching_templates", "No matching templates found")
-                : t("no_templates_yet", "No bill templates found")}
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-white/50 max-w-md mb-5">
-              {searchTerm
-                ? t(
+            {searchTerm ? (
+              <>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                  {t("no_matching_templates", "No matching templates found")}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-white/50 max-w-md mb-5">
+                  {t(
                     "try_different_search",
                     "Try searching with a different term or clear the search.",
-                  )
-                : emptyApiMessage ||
-                  t(
-                    "create_first_template_hint",
-                    "Create your first template to save your frequent utility and service payments.",
                   )}
-            </p>
-            {searchTerm ? (
-              <GlobalButton
-                variant="secondary"
-                onClick={() => setSearchTerm("")}
-                className="h-9 px-4 text-xs font-bold uppercase tracking-wider"
-              >
-                {t("clear_search", "Clear Search")}
-              </GlobalButton>
+                </p>
+                <GlobalButton
+                  variant="secondary"
+                  onClick={() => setSearchTerm("")}
+                  className="h-9 px-4 text-xs font-bold uppercase tracking-wider"
+                >
+                  {t("clear_search", "Clear Search")}
+                </GlobalButton>
+              </>
             ) : (
-              <GlobalButton
-                variant="primary"
-                onClick={() => handleAddClick()}
-                className="h-9 px-4 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
-              >
-                <Plus size={15} />
-                {t("create.bill_template", "Create Bill Template")}
-              </GlobalButton>
+              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">
+                {emptyApiMessage ||
+                  t("no_templates_found", "No bill templates found")}
+              </p>
             )}
           </div>
         ) : (

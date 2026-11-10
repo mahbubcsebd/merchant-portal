@@ -7,7 +7,13 @@ import {
 } from "@/components/ui/dialog";
 import GlobalButton from "./GlobalButton";
 
-export default function GlobalPopup({ title, description, type = "error", onClose }) {
+export default function GlobalPopup({
+  title,
+  description,
+  type = "error",
+  buttonText,
+  onClose,
+}) {
   const isError = type === "error";
 
   return (
@@ -38,7 +44,7 @@ export default function GlobalPopup({ title, description, type = "error", onClos
           onClick={onClose} 
           className="w-full max-w-[150px] uppercase font-bold h-10 text-xs"
         >
-          Close
+          {buttonText || "OK"}
         </GlobalButton>
       </div>
     </div>

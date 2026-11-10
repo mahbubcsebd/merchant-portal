@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import GlobalInput from "@/components/globals/GlobalInput";
 import GlobalSelect from "@/components/globals/GlobalSelect";
 import GlobalButton from "@/components/globals/GlobalButton";
@@ -32,6 +32,43 @@ export default function PayBillsPage() {
   } = useDialog();
 
   const { errors, validate, clearError, clearAllErrors } = useFormValidation();
+  const navigate = useNavigate();
+  const hasTriggeredNoTemplatesRef = useRef(false);
+
+  useEffect(() => {
+    if (userBillersQuery.isLoading) return;
+
+    const list = userBillersQuery.data || [];
+    const isNoTemplates = userBillersQuery.isError || list.length === 0;
+
+    if (isNoTemplates && !hasTriggeredNoTemplatesRef.current) {
+      hasTriggeredNoTemplatesRef.current = true;
+      const errorMsg =
+        userBillersQuery.error?.message ||
+        userBillersQuery.data?.emptyMessage ||
+        t("no_templates_found", "No bill templates found");
+
+      openGlobalPopup({
+        title: t("error", "Error"),
+        description: errorMsg,
+        type: "error",
+        buttonText: "OK",
+        onClose: () => {
+          closeDialog();
+          navigate("/dashboard/pay-bills/templates");
+        },
+      });
+    }
+  }, [
+    userBillersQuery.isLoading,
+    userBillersQuery.isError,
+    userBillersQuery.data,
+    userBillersQuery.error,
+    openGlobalPopup,
+    closeDialog,
+    navigate,
+    t,
+  ]);
 
   const [biller, setBiller] = useState("");
   const [billerDetails, setBillerDetails] = useState(null);
