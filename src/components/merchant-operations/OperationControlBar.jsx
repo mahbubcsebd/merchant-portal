@@ -280,8 +280,8 @@ export function OperationControlBar({
                   }}
                   className={`group relative text-left p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-3.5 shrink-0 ${
                     branches.length > 4
-                      ? "w-[calc(25%-0.65rem)] min-w-[240px]"
-                      : "flex-1 min-w-[220px]"
+                      ? "w-[calc(25%-0.65rem)] min-w-[240px] max-w-[320px]"
+                      : "flex-1 min-w-[240px] max-w-[320px]"
                   } ${
                     isActive
                       ? "border-[#2563eb] bg-blue-50/50 dark:bg-blue-950/25 ring-2 ring-[#2563eb]/20 shadow-xs"
